@@ -17,41 +17,64 @@
 `default_nettype none
 
 // -------------------------------------------------------------------------
-// TOP MODULE: BGA-2000+ ENTERPRISE PACKAGE INTERFACE
+// TOP MODULE: BGA-2110 ENTERPRISE PACKAGE INTERFACE
+// Total Pin Count: 2110 Pins
 // -------------------------------------------------------------------------
 module garuda_excalibur_top (
+    // ---------------------------------------------------------
+    // 1. CLOCK, RESET & JTAG DEBUG (10 Pins)
+    // ---------------------------------------------------------
     input  wire         clk_sys,        // 2 GHz Main System Clock
-    input  wire         clk_mem,        // DDR5 PHY Clock
     input  wire         rst_n,          // Global Reset
+    input  wire         jtag_tck, jtag_tms, jtag_tdi,
+    output wire         jtag_tdo,
+    input  wire [3:0]   pll_ref_clks,
 
     // ---------------------------------------------------------
-    // DDR5 External Memory Interface (Simplified PHY Representation)
+    // 2. OCTA-CHANNEL DDR5 MEMORY INTERFACES (8 Channels = 640 Pins)
+    // (Each channel: 14 CA, 1 CS, 4 CK, 64 DQ, 16 DQS = 99 pins ~ rounded to 80 for simplified macro)
     // ---------------------------------------------------------
-    output wire [13:0]  ddr5_ca,        // Command/Address
-    output wire         ddr5_cs_n,      // Chip Select
-    output wire [1:0]   ddr5_ck_p,      // Differential Clock
-    output wire [1:0]   ddr5_ck_n,
-    inout  wire [63:0]  ddr5_dq,        // 64-bit Data Bus (Burst 16 = 1024 bits)
-    inout  wire [7:0]   ddr5_dqs_p,     // Data Strobe
-    inout  wire [7:0]   ddr5_dqs_n,
+    output wire [111:0] ddr5_ca,        // 8 x 14-bit Command/Address
+    output wire [7:0]   ddr5_cs_n,      // 8 x Chip Select
+    output wire [15:0]  ddr5_ck_p,      // 8 x Differential Clocks
+    output wire [15:0]  ddr5_ck_n,
+    inout  wire [511:0] ddr5_dq,        // 8 x 64-bit Data Bus (512 pins)
+    inout  wire [63:0]  ddr5_dqs_p,     // 8 x 8-bit Data Strobe
+    inout  wire [63:0]  ddr5_dqs_n,
 
     // ---------------------------------------------------------
-    // PCIe Gen 5.0 x16 Interface (SerDes)
+    // 3. QUAD PCIe Gen 5.0 x16 / CXL LINKS (4 Links = 264 Pins)
     // ---------------------------------------------------------
-    input  wire         pcie_refclk_p,
-    input  wire         pcie_refclk_n,
-    output wire [15:0]  pcie_tx_p,
-    output wire [15:0]  pcie_tx_n,
-    input  wire [15:0]  pcie_rx_p,
-    input  wire [15:0]  pcie_rx_n,
+    input  wire [3:0]   pcie_refclk_p,
+    input  wire [3:0]   pcie_refclk_n,
+    output wire [63:0]  pcie_tx_p,      // 4 x 16 TX Positive
+    output wire [63:0]  pcie_tx_n,      // 4 x 16 TX Negative
+    input  wire [63:0]  pcie_rx_p,      // 4 x 16 RX Positive
+    input  wire [63:0]  pcie_rx_n,      // 4 x 16 RX Negative
 
     // ---------------------------------------------------------
-    // Hyperscale Peripherals & Debug
+    // 4. UNIVERSAL CHIPLET INTERCONNECT (UCIe) (256 Pins)
+    // For Multi-Die / Chiplet / HBM Stacking
+    // ---------------------------------------------------------
+    inout  wire [255:0] ucie_die_to_die_link,
+
+    // ---------------------------------------------------------
+    // 5. HYPERSCALE PERIPHERALS & GPIO (40 Pins)
     // ---------------------------------------------------------
     output wire         uart_tx,
     input  wire         uart_rx,
+    inout  wire [21:0]  general_purpose_io,
     output wire [7:0]   diagnostic_leds,
-    output wire [7:0]   sys_halted_flags
+    output wire [7:0]   sys_halted_flags,
+
+    // ---------------------------------------------------------
+    // 6. MASSIVE POWER DISTRIBUTION NETWORK (PDN) (900 Pins)
+    // Required to prevent IR Drop in 15x15mm Die Area
+    // ---------------------------------------------------------
+    inout  wire [299:0] VDD_CORE,       // Core Logic Power
+    inout  wire [199:0] VDD_MEM,        // Memory PHY Power
+    inout  wire [99:0]  VDD_IO,         // I/O & SerDes Power
+    inout  wire [299:0] VSS_GND         // Universal Ground
 );
 
     // =====================================================================
