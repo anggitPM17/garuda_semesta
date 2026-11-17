@@ -1,8 +1,10 @@
-# GARUDA SEMESTA - Quad-Core SMP SoC v8.0 (Omni Beyond Limits ASIC Edition)
+# GARUDA SEMESTA - Quad-Core SMP SoC v9.0 (Gold Master Silicon Edition)
 
-Sistem perangkat keras (SoC) mikroelektronika Beyond Limits berbasis **Quad-Core SMP** dengan **Neuromorphic Spiking Neural Network (SNN) Synaptic Accelerator**, **Hardware Tensor Transformer Engine (GEMM AI Acceleration)**, **Post-Quantum Cryptography (PQC NIST Kyber/Dilithium) Hardware Lattice Engine**, **Hardware Actor Supervisor Tree Engine (One-for-One Recovery)**, **4-Lane 32-bit SIMD Vector Edge AI Coprocessor**, **Automotive & Spacecraft Dual-Core Lockstep Safety Mode (ISO 26262 ASIL-D / DO-254)**, **Hardware AES-128 Cryptographic Accelerator**, **2-Way Set-Associative L1 Data Cache**, **AXI4-Lite Bus Bridge**, **Tiny Tapeout 8 (TT08) Pinout Compliant**, **Hardware UART Serial Console**, **Hardware Timer Wheel & Event Loop Unit**, **Hardware Inter-Core Mailbox (IPC)**, **Active Hardware Garbage Collector (HW-GC)**, dan **GARUDA Compiler Toolchain v8.0 Omni** (43-bit Bitstream ISA).
+Sistem perangkat keras (SoC) mikroelektronika Gold Master berbasis **Quad-Core SMP** dengan **Neuromorphic Spiking Neural Network (SNN) Synaptic Accelerator**, **Hardware Tensor Transformer Engine (GEMM AI Acceleration)**, **Post-Quantum Cryptography (PQC NIST Kyber/Dilithium) Hardware Lattice Engine**, **Hardware Actor Supervisor Tree Engine (One-for-One Recovery)**, **4-Lane 32-bit SIMD Vector Edge AI Coprocessor**, **Automotive & Spacecraft Dual-Core Lockstep Safety Mode (ISO 26262 ASIL-D / DO-254)**, **Hardware AES-128 Cryptographic Accelerator**, **2-Way Set-Associative L1 Data Cache**, **AXI4-Lite Bus Bridge**, **Tiny Tapeout 8 (TT08) Pinout Compliant**, **Hardware UART Serial Console**, **Hardware Timer Wheel & Event Loop Unit**, **Hardware Inter-Core Mailbox (IPC)**, **Active Hardware Garbage Collector (HW-GC)**, dan **GARUDA Compiler Toolchain v9.0 Gold Master** (43-bit Bitstream ISA).
 
-## 🚀 Fitur Beyond Limits v8.0 Omni
+**Pembuat & Arsitek Sistem**: **Anggit Prasetyo Mituhu**
+
+## 🚀 Fitur Gold Master v9.0
 
 - **Neuromorphic Spiking Neural Network (SNN) Synaptic Accelerator**: Akselerator sinapsis otak buatan (Address `46`) berbasis model *Leaky Integrate-and-Fire (LIF)* untuk pemrosesan AI daya ultra-rendah dan pengenalan pola lonjakan (Pin `uo_out[6]`).
 - **Hardware Tensor Transformer Engine (GEMM)**: Akselerator perkalian matriks hardware FP8/INT8 terdedikasi (Address `48`) untuk inferensi Deep Learning, LLM, dan model Transformer skala besar.
@@ -19,33 +21,16 @@ Sistem perangkat keras (SoC) mikroelektronika Beyond Limits berbasis **Quad-Core
 - **Quad-Core SMP Architecture**: Core 0 (PID 0), Core 1 (PID 1), Core 2 (PID 2), dan Core 3 (PID 3) berjalan paralel dengan eksekusi independen.
 - **Hardware Inter-Core Mailbox (IPC)**: Komunikasi antar-proses (Core to Core) berkecepatan tinggi via register Mailbox hardware.
 - **Active Hardware Garbage Collector (HW-GC)**: Modul HW-GC terintegrasi (`3'b100`) untuk reklamasi memori otomatis dan sinyal `gc_object_freed`.
-- **AI Compiler Agent v8.0 Omni (`garuda_compiler.py`)**: Penerjemah instruksi bahasa GARUDA ke format Verilog ROM Hex (`instruction_rom[...]`).
+- **AI Compiler Agent v9.0 Gold Master (`garuda_compiler.py`)**: Penerjemah instruksi bahasa GARUDA ke format Verilog ROM Hex (`instruction_rom[...]`).
 
 ## 📁 Struktur Repositori
 
 - `src/project.v` : Kode Sumber Verilog RTL Utama (`tt_um_garuda`, `garuda_`, `garuda_cpu_core`, `garuda_memory_controller`, `garuda_neuromorphic_core`, `garuda_transformer_engine`, `garuda_pqc_engine`, `garuda_vector_unit`, `garuda_crypto_core`, `garuda_uart_tx`)
-- `garuda_compiler.py` : Toolchain Compiler & Assembler Python v8.0 Omni
-- `README.md` : Dokumentasi Arsitektur Sistem v8.0 Omni Beyond Limits
+- `garuda_compiler.py` : Toolchain Compiler & Assembler Python v9.0 Gold Master
+- `LICENSE` : Lisensi Resmi Apache 2.0 (Hak Cipta © 2026 Anggit Prasetyo Mituhu)
+- `README.md` : Dokumentasi Resmi Arsitektur Sistem v9.0
 
-## 🛠️ Penggunaan Compiler
+## 📄 Lisensi & Hak Cipta
 
-Jalankan compiler Python v8.0 Omni:
-
-```bash
-python garuda_compiler.py
-```
-
-Output Verilog ROM (`43'h...`):
-```verilog
-// =========================================================
-// AUTO-GENERATED GARUDA ROM BY AI COMPILER AGENT v8.0 OMNI
-// Target Architecture: GARUDA SEMESTA Quad-Core Omni Beyond Limits ASIC (43-bit Bitstream)
-// =========================================================
-instruction_rom[0] = 43'h10140000000;
-instruction_rom[1] = 43'h200e000000FF;
-instruction_rom[2] = 43'h201000020003;
-instruction_rom[3] = 43'h201212345678;
-instruction_rom[4] = 43'h201f00000047;
-instruction_rom[5] = 43'h40140000000;
-instruction_rom[6] = 43'h00000000000;
-```
+Dipublikasikan di bawah **Apache License 2.0**.
+Hak Cipta © 2026 **Anggit Prasetyo Mituhu**. Seluruh hak dilindungi undang-undang.

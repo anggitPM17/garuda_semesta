@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """
-GARUDA Compiler & Assembler Toolchain v8.0 OMNI (Beyond Limits Edition)
-Translates GARUDA instructions into 43-bit binary/hex machine instructions
-for the GARUDA SEMESTA Quad-Core Omni Beyond Limits ASIC architecture (Verilog ROM output).
+GARUDA Compiler & Assembler Toolchain v9.0 GOLD MASTER (Production Silicon Edition)
+Copyright (c) 2026 Anggit Prasetyo Mituhu. All rights reserved.
+Licensed under the Apache License, Version 2.0
+"""
 
 Bitstream Format (43-bit):
 [Opcode: 3 bit][PID: 2 bit][Alamat/Target: 6 bit][Size: 4 bit][Data/Payload: 32 bit]

@@ -1,17 +1,9 @@
 // =========================================================================
-// GARUDA SEMESTA - Quad-Core SMP SoC v8.0 OMNI (Beyond Limits Hyperscale ASIC)
+// GARUDA SEMESTA - Quad-Core SMP SoC v9.0 GOLD MASTER (RTL DESIGN FREEZE)
+// Production Silicon & Tiny Tapeout ASIC Ready Architecture
 // Top-Level Module: tt_um_garuda & garuda_
-// Features:
-// 1. Tiny Tapeout 8 (TT08) & OpenLane ASIC Compliant Pinout
-// 2. Neuromorphic Spiking Neural Network (SNN) Brain-Inspired Accelerator
-// 3. Photonic Coherent Waveguide Bus Emulator & Optical Interconnect
-// 4. Autonomous Self-Healing Silicon Hardware Circuit Reconfiguration
-// 5. Hardware Tensor Transformer Engine (GEMM AI Acceleration)
-// 6. Post-Quantum Cryptography (PQC) Lattice Accelerator (NIST Compliant)
-// 7. Hardware Actor Supervision Tree Engine (One-for-One Auto-Recovery)
-// 8. 4-Lane 32-bit SIMD Vector Edge AI & DSP Coprocessor
-// 9. Dual-Core Lockstep Automotive & Spacecraft Safety Mode (ISO 26262 ASIL-D)
-// 10. Hardware AES-128 Crypto, L1 Cache, UART Console & Timer Wheel
+// Copyright (c) 2026 Anggit Prasetyo Mituhu. All rights reserved.
+// Licensed under the Apache License, Version 2.0
 // =========================================================================
 
 `default_nettype none
