@@ -3,7 +3,6 @@
 GARUDA Compiler & Assembler Toolchain v9.0 GOLD MASTER (Production Silicon Edition)
 Copyright (c) 2026 Anggit Prasetyo Mituhu. All rights reserved.
 Licensed under the Apache License, Version 2.0
-"""
 
 Bitstream Format (43-bit):
 [Opcode: 3 bit][PID: 2 bit][Alamat/Target: 6 bit][Size: 4 bit][Data/Payload: 32 bit]
@@ -34,7 +33,7 @@ class GarudaCompiler:
 
     def compile_instruction(self, opcode, pid, addr_or_target, size, data):
         """
-        Membentuk bitstream 43-bit sesuai spesifikasi decoder CPU Core GARUDA SEMESTA v8.0 Omni.
+        Membentuk bitstream 43-bit sesuai spesifikasi decoder CPU Core GARUDA SEMESTA v9.0.
         - Opcode       : 3 bit  (bit 42..40)
         - PID          : 2 bit  (bit 39..38, PID 0..3)
         - Addr/Target  : 6 bit  (bit 37..32)
@@ -126,8 +125,8 @@ class GarudaCompiler:
     def generate_verilog_rom(self, output_file=None):
         lines = [
             "// =========================================================",
-            "// AUTO-GENERATED GARUDA ROM BY AI COMPILER AGENT v8.0 OMNI",
-            "// Target Architecture: GARUDA SEMESTA Quad-Core Omni Beyond Limits ASIC (43-bit Bitstream)",
+            "// AUTO-GENERATED GARUDA ROM BY AI COMPILER AGENT v9.0 GOLD MASTER",
+            "// Target Architecture: GARUDA SEMESTA Quad-Core Gold Master ASIC (43-bit Bitstream)",
             "// ========================================================="
         ]
         for idx, inst in enumerate(self.rom_binary):
@@ -143,13 +142,13 @@ class GarudaCompiler:
 
 if __name__ == "__main__":
     compiler = GarudaCompiler()
-    # Program Demonstrasi v8.0 Omni: Neuromorphic SNN + Tensor GEMM + PQC Quantum + SIMD Vector AI + AES-128 Crypto + UART + Mailbox IPC + HW-GC
+    # Program Demonstrasi v9.0 Gold Master
     compiler.alloc(pid=0, size=4)
-    compiler.neuromorphic_spike(pid=0, synapse_weight=0x000000FF)        # Akselerator Neuromorphic Spiking Neural Network (SNN)
-    compiler.gemm_transformer_op(pid=0, matrix_data=0x00020003)           # Akselerator Hardware Tensor GEMM Transformer (Matrix Multiply)
-    compiler.pqc_lattice_op(pid=0, input_data=0x12345678)               # Akselerator Post-Quantum Cryptography (PQC Kyber/Dilithium)
-    compiler.print_uart(pid=0, char='G')                                 # Cetak karakter 'G' via Hardware UART TX
-    compiler.gc_free(pid=0, size=4)                                      # Active HW-GC Free
+    compiler.neuromorphic_spike(pid=0, synapse_weight=0x000000FF)
+    compiler.gemm_transformer_op(pid=0, matrix_data=0x00020003)
+    compiler.pqc_lattice_op(pid=0, input_data=0x12345678)
+    compiler.print_uart(pid=0, char='G')
+    compiler.gc_free(pid=0, size=4)
     compiler.halt(pid=0)
 
     print(compiler.generate_verilog_rom())
