@@ -223,13 +223,12 @@ module garuda_noc_router_memory_controller (
     reg [31:0] ddr_proxy_mem [0:4095];
 
     // UART Simulation
-    always @(posedge clk) begin
-        // Very simplified packet extraction for Core 0 simulation
-        wire [335:0] core0_tx = core_tx_packets[335:0];
-        wire [15:0]  header   = core0_tx[335:320];
-        wire [63:0]  addr     = core0_tx[319:256];
-        wire [31:0]  data     = core0_tx[31:0];
+    wire [335:0] core0_tx = core_tx_packets[335:0];
+    wire [15:0]  header   = core0_tx[335:320];
+    wire [63:0]  addr     = core0_tx[319:256];
+    wire [31:0]  data     = core0_tx[31:0];
 
+    always @(posedge clk) begin
         if (!reset_n) begin
             uart_tx <= 1'b1;
             core_mpu_faults <= 8'h00;
