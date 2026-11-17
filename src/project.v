@@ -198,21 +198,23 @@ module garuda_cpu_core #(parameter [1:0] CORE_ID = 2'b00) (
                 instruction_rom[0] = {3'b001, 2'b01, 6'd0, 4'd4, 32'h00000000}; // ALLOC PID 1
                 instruction_rom[1] = {3'b010, 2'b01, 6'd2, 4'd0, 32'h22222222}; // WRITE PID 1
                 instruction_rom[2] = {3'b000, 2'b01, 6'd0, 4'd0, 32'h00000000}; // HALT
+                instruction_rom[3] = 43'b0;
             end
             2'b10: begin // Core 2
                 instruction_rom[0] = {3'b001, 2'b10, 6'd0, 4'd4, 32'h00000000}; // ALLOC PID 2
                 instruction_rom[1] = {3'b010, 2'b10, 6'd2, 4'd0, 32'h33333333}; // WRITE PID 2
                 instruction_rom[2] = {3'b000, 2'b10, 6'd0, 4'd0, 32'h00000000}; // HALT
+                instruction_rom[3] = 43'b0;
             end
             default: begin // Core 3
                 instruction_rom[0] = {3'b001, 2'b11, 6'd0, 4'd4, 32'h00000000}; // ALLOC PID 3
                 instruction_rom[1] = {3'b010, 2'b11, 6'd2, 4'd0, 32'h44444444}; // WRITE PID 3
                 instruction_rom[2] = {3'b000, 2'b11, 6'd0, 4'd0, 32'h00000000}; // HALT
+                instruction_rom[3] = 43'b0;
             end
         endcase
 
-        for (idx = 3; idx < 16; idx = idx + 1) begin
-            if (CORE_ID == 2'b00 && idx == 3) continue;
+        for (idx = 4; idx < 16; idx = idx + 1) begin
             instruction_rom[idx] = 43'b0;
         end
     end
