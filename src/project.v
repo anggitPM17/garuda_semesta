@@ -1,6 +1,11 @@
 // =========================================================================
-// GARUDA SEMESTA - Quad-Core SMP SoC v1.0 (Advanced Architecture)
-// Features: 4-Core SMP, Hardware Mailbox (IPC), Active HW-GC, MPU Isolation
+// GARUDA SEMESTA - Quad-Core SMP SoC v2.0 (Enterprise ASIC Architecture)
+// Features:
+// 1. Quad-Core SMP Architecture (Core 0..3)
+// 2. Hardware Mailbox Inter-Core IPC & Real-Time IRQ Vector
+// 3. Hardware MPU Isolation & Fault Trap Protection Unit
+// 4. Active Hardware Garbage Collection (HW-GC) Engine
+// 5. Hardware Cycle & Performance Profiling Counters
 // =========================================================================
 
 module garuda_ (
@@ -10,6 +15,8 @@ module garuda_ (
     output wire [7:0] core1_pc,
     output wire [7:0] core2_pc,
     output wire [7:0] core3_pc,
+    output wire [3:0] irq_vector,
+    output wire [3:0] mpu_fault_vector,
     output wire smp_halted
 );
 
@@ -59,7 +66,6 @@ module garuda_ (
     wire        shared_oom;
     wire        shared_trap;
     wire        shared_gc_freed;
-    wire [3:0]  mb_pending;
 
     wire core0_halt, core1_halt, core2_halt, core3_halt;
 
@@ -116,7 +122,7 @@ module garuda_ (
     assign arb_wdata    = (arb_sel == 2'b00) ? wdata_0    : (arb_sel == 2'b01) ? wdata_1    : (arb_sel == 2'b10) ? wdata_2    : wdata_3;
 
     // ---------------------------------------------------------------------
-    // 3. ADVANCED SHARED MEMORY CONTROLLER, HW-GC & MAILBOX
+    // 3. ADVANCED SHARED MEMORY CONTROLLER, HW-GC, MAILBOX & MPU
     // ---------------------------------------------------------------------
     garuda_memory_controller mem_ctrl (
         .clk(clk),
@@ -145,7 +151,8 @@ module garuda_ (
         .active_running_pid(),
         .runtime_fault_trap(shared_trap),
         .gc_object_freed(shared_gc_freed),
-        .mb_pending(mb_pending)
+        .mb_pending(irq_vector),
+        .mpu_fault_vector(mpu_fault_vector)
     );
 
     assign smp_halted = core0_halt && core1_halt && core2_halt && core3_halt;
@@ -278,7 +285,7 @@ endmodule
 
 
 // =========================================================================
-// MODULE: ADVANCED MEMORY CONTROLLER WITH HW-GC & MAILBOX
+// MODULE: ADVANCED MEMORY CONTROLLER WITH HW-GC, MAILBOX & MPU FAULT TRAP
 // =========================================================================
 module garuda_memory_controller (
     input wire clk,
@@ -318,12 +325,14 @@ module garuda_memory_controller (
     output reg [1:0] active_running_pid,
     output reg       runtime_fault_trap,
     output reg       gc_object_freed,
-    output reg [3:0] mb_pending
+    output reg [3:0] mb_pending,
+    output reg [3:0] mpu_fault_vector
 );
 
     reg [31:0] private_mem [0:255];
     reg [31:0] shared_mem [0:63];
     reg [31:0] mailbox_mem [0:3];
+    reg [31:0] cycle_counter;
 
     reg [5:0] heap_ptr_0;
     reg [5:0] heap_ptr_1;
@@ -350,6 +359,8 @@ module garuda_memory_controller (
             l2_cache_hit       <= 1'b0;
             gc_object_freed    <= 1'b0;
             mb_pending         <= 4'b0000;
+            mpu_fault_vector   <= 4'b0000;
+            cycle_counter      <= 32'd0;
 
             heap_ptr_0         <= 6'd0;
             heap_ptr_1         <= 6'd0;
@@ -363,45 +374,59 @@ module garuda_memory_controller (
             gc_object_freed    <= 1'b0;
             access_error       <= 1'b0;
             active_running_pid <= process_id;
+            cycle_counter      <= cycle_counter + 1'b1;
 
             if (cmd_valid) begin
                 ready <= 1'b1;
-                case (runtime_cmd)
-                    3'b011: begin // ALLOC
-                        if ((current_heap_ptr + alloc_size) <= 6'd63) begin
-                            allocated_address <= current_heap_ptr;
+
+                // Hardware Memory Protection Unit (MPU) Bound Checking
+                if (address > 6'd63) begin
+                    access_error                  <= 1'b1;
+                    runtime_fault_trap            <= 1'b1;
+                    mpu_fault_vector[process_id]  <= 1'b1;
+                end
+                else begin
+                    case (runtime_cmd)
+                        3'b011: begin // ALLOC
+                            if ((current_heap_ptr + alloc_size) <= 6'd63) begin
+                                allocated_address <= current_heap_ptr;
+                                case (process_id)
+                                    2'b00: heap_ptr_0 <= heap_ptr_0 + alloc_size;
+                                    2'b01: heap_ptr_1 <= heap_ptr_1 + alloc_size;
+                                    2'b10: heap_ptr_2 <= heap_ptr_2 + alloc_size;
+                                    2'b11: heap_ptr_3 <= heap_ptr_3 + alloc_size;
+                                endcase
+                            end else begin
+                                out_of_memory <= 1'b1;
+                            end
+                        end
+                        3'b010: begin // WRITE / MAILBOX SEND
+                            if (address >= 6'd60) begin
+                                mailbox_mem[target_process_id] <= write_data;
+                                mb_pending[target_process_id]  <= 1'b1;
+                            end else begin
+                                private_mem[private_address] <= write_data;
+                            end
+                        end
+                        3'b001: begin // READ
+                            if (address == 6'd58) begin
+                                read_data <= cycle_counter; // Profiling Cycle Counter
+                            end else begin
+                                read_data <= private_mem[private_address];
+                            end
+                        end
+                        3'b100: begin // ACTIVE HW-GC FREE
+                            gc_object_freed <= 1'b1;
                             case (process_id)
-                                2'b00: heap_ptr_0 <= heap_ptr_0 + alloc_size;
-                                2'b01: heap_ptr_1 <= heap_ptr_1 + alloc_size;
-                                2'b10: heap_ptr_2 <= heap_ptr_2 + alloc_size;
-                                2'b11: heap_ptr_3 <= heap_ptr_3 + alloc_size;
+                                2'b00: if (heap_ptr_0 >= alloc_size) heap_ptr_0 <= heap_ptr_0 - alloc_size;
+                                2'b01: if (heap_ptr_1 >= alloc_size) heap_ptr_1 <= heap_ptr_1 - alloc_size;
+                                2'b10: if (heap_ptr_2 >= alloc_size) heap_ptr_2 <= heap_ptr_2 - alloc_size;
+                                2'b11: if (heap_ptr_3 >= alloc_size) heap_ptr_3 <= heap_ptr_3 - alloc_size;
                             endcase
-                        end else begin
-                            out_of_memory <= 1'b1;
                         end
-                    end
-                    3'b010: begin // WRITE / MAILBOX SEND
-                        if (address >= 6'd60) begin
-                            mailbox_mem[target_process_id] <= write_data;
-                            mb_pending[target_process_id]  <= 1'b1;
-                        end else begin
-                            private_mem[private_address] <= write_data;
-                        end
-                    end
-                    3'b001: begin // READ
-                        read_data <= private_mem[private_address];
-                    end
-                    3'b100: begin // ACTIVE HW-GC FREE
-                        gc_object_freed <= 1'b1;
-                        case (process_id)
-                            2'b00: if (heap_ptr_0 >= alloc_size) heap_ptr_0 <= heap_ptr_0 - alloc_size;
-                            2'b01: if (heap_ptr_1 >= alloc_size) heap_ptr_1 <= heap_ptr_1 - alloc_size;
-                            2'b10: if (heap_ptr_2 >= alloc_size) heap_ptr_2 <= heap_ptr_2 - alloc_size;
-                            2'b11: if (heap_ptr_3 >= alloc_size) heap_ptr_3 <= heap_ptr_3 - alloc_size;
-                        endcase
-                    end
-                    default: begin end
-                endcase
+                        default: begin end
+                    endcase
+                end
             end
         end
     end
