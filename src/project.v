@@ -3,7 +3,7 @@
 // Arsitektur Multi-Core dengan Isolasi Memori & Shared Bus Arbiter
 // =========================================================================
 
-module garuda_soc_top (
+module garuda_ (
     input wire clk,
     input wire reset_n,
     output wire [7:0] core0_pc,
