@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-GARUDA Compiler & Assembler Toolchain v1.0 (Quad-Core & HW-GC Enabled)
+GARUDA Compiler & Assembler Toolchain v3.0 (Silicon & Tiny Tapeout ASIC Ready)
 Translates GARUDA instructions into 43-bit binary/hex machine instructions
 for the GARUDA SEMESTA Quad-Core SoC architecture (Verilog ROM output).
 
@@ -10,8 +10,8 @@ Bitstream Format (43-bit):
 Opcode Mapping:
   0b000 (0): NOP / HALT
   0b001 (1): ALLOC (Alokasi heap privat untuk proses)
-  0b010 (2): WRITE / SEND MSG (Menulis data ke memori atau Mailbox Inter-Core)
-  0b011 (3): READ (Membaca data dari memori)
+  0b010 (2): WRITE / SEND MSG / UART TX / TIMER (Menulis data ke memori/periferal)
+  0b011 (3): READ (Membaca data dari memori / Cycle counter)
   0b100 (4): GC FREE (Pembersihan memori Garbage Collection Hardware)
 """
 
@@ -59,12 +59,22 @@ class GarudaCompiler:
     def write(self, pid, address, data):
         return self.compile_instruction('WRITE', pid=pid, addr_or_target=address, size=0, data=data)
 
+    def print_uart(self, pid, char):
+        # Hardware UART Serial Console Address 62
+        ascii_code = ord(char) if isinstance(char, str) else char
+        return self.compile_instruction('WRITE', pid=pid, addr_or_target=62, size=0, data=ascii_code)
+
+    def set_timer(self, pid, ticks):
+        # Hardware Timer Wheel Address 61
+        return self.compile_instruction('WRITE', pid=pid, addr_or_target=61, size=0, data=ticks)
+
     def send_mailbox(self, src_pid, target_pid, payload):
-        # Mailbox address >= 60
+        # Mailbox Target Address 60
         return self.compile_instruction('SEND_MSG', pid=src_pid, addr_or_target=60 + (target_pid & 0x3), size=0, data=payload)
 
-    def read(self, pid, address):
-        return self.compile_instruction('READ', pid=pid, addr_or_target=address, size=0, data=0)
+    def read_cycle_counter(self, pid):
+        # Profiling Cycle Counter Address 58
+        return self.compile_instruction('READ', pid=pid, addr_or_target=58, size=0, data=0)
 
     def gc_free(self, pid, size):
         return self.compile_instruction('GC_FREE', pid=pid, addr_or_target=0, size=size, data=0)
@@ -75,7 +85,7 @@ class GarudaCompiler:
     def generate_verilog_rom(self, output_file=None):
         lines = [
             "// =========================================================",
-            "// AUTO-GENERATED GARUDA ROM BY AI COMPILER AGENT v1.0",
+            "// AUTO-GENERATED GARUDA ROM BY AI COMPILER AGENT v3.0",
             "// Target Architecture: GARUDA SEMESTA Quad-Core SoC (43-bit Bitstream)",
             "// ========================================================="
         ]
@@ -92,11 +102,12 @@ class GarudaCompiler:
 
 if __name__ == "__main__":
     compiler = GarudaCompiler()
-    # Program Simulasi Quad-Core + Hardware Mailbox + HW-GC
+    # Program Demonstrasi v3.0: Hardware UART + Mailbox IPC + Timer Wheel + HW-GC
     compiler.alloc(pid=0, size=4)
-    compiler.write(pid=0, address=2, data=0x11111111)
-    compiler.send_mailbox(src_pid=0, target_pid=1, payload=0xCAFEBABE) # IPC Mailbox ke PID 1
-    compiler.gc_free(pid=0, size=4)                                  # Active HW-GC Free
+    compiler.print_uart(pid=0, char='G')                               # Cetak karakter 'G' via Hardware UART TX
+    compiler.send_mailbox(src_pid=0, target_pid=1, payload=0xCAFEBABE) # Mailbox IPC ke PID 1
+    compiler.set_timer(pid=0, ticks=100)                               # Set Hardware Timer Wheel (100 ticks)
+    compiler.gc_free(pid=0, size=4)                                    # Active HW-GC Free
     compiler.halt(pid=0)
 
     print(compiler.generate_verilog_rom())
