@@ -310,6 +310,9 @@ module garuda_memory_controller (
             out_of_memory      <= 1'b0;
             runtime_fault_trap <= 1'b0;
             active_running_pid <= 2'b00;
+            cache_hit          <= 1'b0;
+            l2_cache_hit       <= 1'b0;
+            gc_object_freed    <= 1'b0;
 
             heap_ptr_0         <= 6'd0;
             heap_ptr_1         <= 6'd0;
@@ -318,6 +321,9 @@ module garuda_memory_controller (
         end
         else begin
             ready              <= 1'b0;
+            cache_hit          <= 1'b0;
+            l2_cache_hit       <= 1'b0;
+            gc_object_freed    <= 1'b0;
             active_running_pid <= process_id;
 
             if (cmd_valid) begin
