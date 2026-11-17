@@ -1,0 +1,13 @@
+{
+    "DESIGN_NAME": "garuda_excalibur_top",
+    "VERILOG_FILES": "dir::../src/project.v",
+    "CLOCK_PORT": "clk_sys",
+    "CLOCK_PERIOD": 0.5,
+    "FP_SIZING": "absolute",
+    "DIE_AREA": "0 0 15000 15000",
+    "FP_PIN_ORDER_CFG": "dir::pin_order.cfg",
+    "VDD_NETS": ["VDD", "VDDA"],
+    "GND_NETS": ["VSS", "VSSA"],
+    "PL_TARGET_DENSITY": 0.65,
+    "ROUTING_CORES": 16
+}
