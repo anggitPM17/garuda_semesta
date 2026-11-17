@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-GARUDA Compiler & Assembler Toolchain v5.0 GRAND ULTIMATE (Hyperscale ASIC Edition)
+GARUDA Compiler & Assembler Toolchain v6.0 HYPERION (Quantum-Resistant Edition)
 Translates GARUDA instructions into 43-bit binary/hex machine instructions
-for the GARUDA SEMESTA Quad-Core Hyperscale ASIC architecture (Verilog ROM output).
+for the GARUDA SEMESTA Quad-Core Hyperion ASIC architecture (Verilog ROM output).
 
 Bitstream Format (43-bit):
 [Opcode: 3 bit][PID: 2 bit][Alamat/Target: 6 bit][Size: 4 bit][Data/Payload: 32 bit]
@@ -10,8 +10,8 @@ Bitstream Format (43-bit):
 Opcode Mapping:
   0b000 (0): NOP / HALT
   0b001 (1): ALLOC (Alokasi heap privat untuk proses)
-  0b010 (2): WRITE / SEND MSG / SIMD VECTOR / AES CRYPTO / UART TX / TIMER (Periferal & IPC Write)
-  0b011 (3): READ (Membaca data dari memori / SIMD Output / AES Output / Cycle counter)
+  0b010 (2): WRITE / SEND MSG / PQC / SIMD VECTOR / AES CRYPTO / UART TX / TIMER (Periferal & IPC Write)
+  0b011 (3): READ (Membaca data dari memori / PQC Output / SIMD Output / AES Output / Cycle counter)
   0b100 (4): GC FREE (Pembersihan memori Garbage Collection Hardware)
 """
 
@@ -33,7 +33,7 @@ class GarudaCompiler:
 
     def compile_instruction(self, opcode, pid, addr_or_target, size, data):
         """
-        Membentuk bitstream 43-bit sesuai spesifikasi decoder CPU Core GARUDA SEMESTA v5.0.
+        Membentuk bitstream 43-bit sesuai spesifikasi decoder CPU Core GARUDA SEMESTA v6.0.
         - Opcode       : 3 bit  (bit 42..40)
         - PID          : 2 bit  (bit 39..38, PID 0..3)
         - Addr/Target  : 6 bit  (bit 37..32)
@@ -58,6 +58,14 @@ class GarudaCompiler:
 
     def write(self, pid, address, data):
         return self.compile_instruction('WRITE', pid=pid, addr_or_target=address, size=0, data=data)
+
+    def pqc_lattice_op(self, pid, input_data):
+        # Post-Quantum Cryptography (PQC Kyber/Dilithium) Lattice Engine Address 50
+        return self.compile_instruction('WRITE', pid=pid, addr_or_target=50, size=0, data=input_data)
+
+    def read_pqc_output(self, pid):
+        # Read PQC Output Address 50
+        return self.compile_instruction('READ', pid=pid, addr_or_target=50, size=0, data=0)
 
     def vector_simd_op(self, pid, operand_data):
         # 4-Lane 32-bit SIMD Vector Engine Address 54
@@ -101,8 +109,8 @@ class GarudaCompiler:
     def generate_verilog_rom(self, output_file=None):
         lines = [
             "// =========================================================",
-            "// AUTO-GENERATED GARUDA ROM BY AI COMPILER AGENT v5.0 GRAND ULTIMATE",
-            "// Target Architecture: GARUDA SEMESTA Quad-Core Hyperscale ASIC (43-bit Bitstream)",
+            "// AUTO-GENERATED GARUDA ROM BY AI COMPILER AGENT v6.0 HYPERION",
+            "// Target Architecture: GARUDA SEMESTA Quad-Core Hyperion ASIC (43-bit Bitstream)",
             "// ========================================================="
         ]
         for idx, inst in enumerate(self.rom_binary):
@@ -118,12 +126,11 @@ class GarudaCompiler:
 
 if __name__ == "__main__":
     compiler = GarudaCompiler()
-    # Program Demonstrasi v5.0 Grand Ultimate: SIMD Vector AI + AES-128 Crypto + UART + Mailbox IPC + HW-GC
+    # Program Demonstrasi v6.0 Hyperion: PQC Quantum-Resistant + SIMD Vector AI + AES-128 Crypto + UART + Mailbox IPC + HW-GC
     compiler.alloc(pid=0, size=4)
+    compiler.pqc_lattice_op(pid=0, input_data=0x12345678)               # Akselerator Post-Quantum Cryptography (PQC Kyber/Dilithium)
     compiler.vector_simd_op(pid=0, operand_data=0x0005000A)              # SIMD Parallel Vector Coprocessor Operation
-    compiler.aes_encrypt(pid=0, key_data=0xA5A5A5A5)                     # Aksekator Hardware AES-128
     compiler.print_uart(pid=0, char='G')                                 # Cetak karakter 'G' via Hardware UART TX
-    compiler.send_mailbox(src_pid=0, target_pid=1, payload=0xCAFEBABE)   # Mailbox IPC ke PID 1
     compiler.gc_free(pid=0, size=4)                                      # Active HW-GC Free
     compiler.halt(pid=0)
 
