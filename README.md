@@ -14,7 +14,7 @@ Sistem perangkat keras (SoC) berbasis **Dual-Core SMP** dengan isolasi memori pr
 ## 📁 Struktur Repositori
 
 - `garuda_compiler.py` : Toolchain Compiler & Assembler Python (43-bit Bitstream Generator)
-- `main.v` : Kode Sumber Verilog RTL (`garuda_soc_top`, `garuda_cpu_core`, `garuda_memory_controller`)
+- `project.v` : Kode Sumber Verilog RTL (`garuda_soc_top`, `garuda_cpu_core`, `garuda_memory_controller`)
 - `README.md` : Dokumentasi Arsitektur Sistem
 
 ## 🛠️ Penggunaan Compiler
