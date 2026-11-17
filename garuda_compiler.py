@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-GARUDA Compiler & Assembler Toolchain
+GARUDA Compiler & Assembler Toolchain v1.0 (Quad-Core & HW-GC Enabled)
 Translates GARUDA instructions into 43-bit binary/hex machine instructions
-for the GARUDA SEMESTA SoC architecture (Verilog ROM output).
+for the GARUDA SEMESTA Quad-Core SoC architecture (Verilog ROM output).
 
 Bitstream Format (43-bit):
 [Opcode: 3 bit][PID: 2 bit][Alamat/Target: 6 bit][Size: 4 bit][Data/Payload: 32 bit]
@@ -10,9 +10,9 @@ Bitstream Format (43-bit):
 Opcode Mapping:
   0b000 (0): NOP / HALT
   0b001 (1): ALLOC (Alokasi heap privat untuk proses)
-  0b010 (2): WRITE / SEND MSG (Menulis data ke memori atau kirim pesan mailbox)
+  0b010 (2): WRITE / SEND MSG (Menulis data ke memori atau Mailbox Inter-Core)
   0b011 (3): READ (Membaca data dari memori)
-  0b100 (4): GC FREE (Pembersihan memori garbage collection)
+  0b100 (4): GC FREE (Pembersihan memori Garbage Collection Hardware)
 """
 
 import sys
@@ -35,7 +35,7 @@ class GarudaCompiler:
         """
         Membentuk bitstream 43-bit sesuai spesifikasi decoder CPU Core GARUDA SEMESTA.
         - Opcode       : 3 bit  (bit 42..40)
-        - PID          : 2 bit  (bit 39..38)
+        - PID          : 2 bit  (bit 39..38, PID 0..3)
         - Addr/Target  : 6 bit  (bit 37..32)
         - Size         : 4 bit  (bit 31..28)
         - Data/Payload : 32 bit (bit 27..0 / mask 0xFFFFFFFF)
@@ -53,11 +53,30 @@ class GarudaCompiler:
         self.rom_binary.append(binary_instruction)
         return binary_instruction
 
+    def alloc(self, pid, size):
+        return self.compile_instruction('ALLOC', pid=pid, addr_or_target=0, size=size, data=0)
+
+    def write(self, pid, address, data):
+        return self.compile_instruction('WRITE', pid=pid, addr_or_target=address, size=0, data=data)
+
+    def send_mailbox(self, src_pid, target_pid, payload):
+        # Mailbox address >= 60
+        return self.compile_instruction('SEND_MSG', pid=src_pid, addr_or_target=60 + (target_pid & 0x3), size=0, data=payload)
+
+    def read(self, pid, address):
+        return self.compile_instruction('READ', pid=pid, addr_or_target=address, size=0, data=0)
+
+    def gc_free(self, pid, size):
+        return self.compile_instruction('GC_FREE', pid=pid, addr_or_target=0, size=size, data=0)
+
+    def halt(self, pid=0):
+        return self.compile_instruction('HALT', pid=pid, addr_or_target=0, size=0, data=0)
+
     def generate_verilog_rom(self, output_file=None):
         lines = [
             "// =========================================================",
-            "// AUTO-GENERATED GARUDA ROM BY AI COMPILER AGENT",
-            "// Target Architecture: GARUDA SEMESTA SoC (43-bit Bitstream)",
+            "// AUTO-GENERATED GARUDA ROM BY AI COMPILER AGENT v1.0",
+            "// Target Architecture: GARUDA SEMESTA Quad-Core SoC (43-bit Bitstream)",
             "// ========================================================="
         ]
         for idx, inst in enumerate(self.rom_binary):
@@ -73,11 +92,11 @@ class GarudaCompiler:
 
 if __name__ == "__main__":
     compiler = GarudaCompiler()
-    # Contoh kompilasi instruksi bawaan
-    compiler.compile_instruction(opcode=1, pid=0, addr_or_target=1, size=4, data=1024)       # ALLOC
-    compiler.compile_instruction(opcode=2, pid=0, addr_or_target=1, size=4, data=0xDEADBEEF) # WRITE
-    compiler.compile_instruction(opcode=3, pid=0, addr_or_target=1, size=4, data=0)          # READ
-    compiler.compile_instruction(opcode=4, pid=0, addr_or_target=1, size=4, data=0)          # GC_FREE
-    compiler.compile_instruction(opcode=0, pid=0, addr_or_target=0, size=0, data=0)          # HALT
+    # Program Simulasi Quad-Core + Hardware Mailbox + HW-GC
+    compiler.alloc(pid=0, size=4)
+    compiler.write(pid=0, address=2, data=0x11111111)
+    compiler.send_mailbox(src_pid=0, target_pid=1, payload=0xCAFEBABE) # IPC Mailbox ke PID 1
+    compiler.gc_free(pid=0, size=4)                                  # Active HW-GC Free
+    compiler.halt(pid=0)
 
     print(compiler.generate_verilog_rom())

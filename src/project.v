@@ -1,6 +1,6 @@
 // =========================================================================
-// GARUDA SEMESTA - Dual-Core SMP SoC v0.9
-// Arsitektur Multi-Core dengan Isolasi Memori & Shared Bus Arbiter
+// GARUDA SEMESTA - Quad-Core SMP SoC v1.0 (Advanced Architecture)
+// Features: 4-Core SMP, Hardware Mailbox (IPC), Active HW-GC, MPU Isolation
 // =========================================================================
 
 module garuda_ (
@@ -8,30 +8,42 @@ module garuda_ (
     input wire reset_n,
     output wire [7:0] core0_pc,
     output wire [7:0] core1_pc,
+    output wire [7:0] core2_pc,
+    output wire [7:0] core3_pc,
     output wire smp_halted
 );
 
-    // Core 0 Interconnect wires
-    wire        req_0;
-    wire        write_en_0;
+    // Interconnect wires Core 0..3
+    wire        req_0, write_en_0, valid_0;
     wire [1:0]  pid_0;
     wire [5:0]  addr_0;
     wire [2:0]  cmd_0;
-    wire        valid_0;
     wire [3:0]  size_0;
     wire [31:0] wdata_0;
 
-    // Core 1 Interconnect wires
-    wire        req_1;
-    wire        write_en_1;
+    wire        req_1, write_en_1, valid_1;
     wire [1:0]  pid_1;
     wire [5:0]  addr_1;
     wire [2:0]  cmd_1;
-    wire        valid_1;
     wire [3:0]  size_1;
     wire [31:0] wdata_1;
 
-    // Arbiter / Shared Bus Wires menuju Memory Controller
+    wire        req_2, write_en_2, valid_2;
+    wire [1:0]  pid_2;
+    wire [5:0]  addr_2;
+    wire [2:0]  cmd_2;
+    wire [3:0]  size_2;
+    wire [31:0] wdata_2;
+
+    wire        req_3, write_en_3, valid_3;
+    wire [1:0]  pid_3;
+    wire [5:0]  addr_3;
+    wire [2:0]  cmd_3;
+    wire [3:0]  size_3;
+    wire [31:0] wdata_3;
+
+    // Arbiter / Shared Bus Wires
+    reg  [1:0]  arb_sel;
     wire        arb_req;
     wire        arb_write_en;
     wire [1:0]  arb_pid;
@@ -46,69 +58,65 @@ module garuda_ (
     wire        shared_access_error;
     wire        shared_oom;
     wire        shared_trap;
+    wire        shared_gc_freed;
+    wire [3:0]  mb_pending;
+
+    wire core0_halt, core1_halt, core2_halt, core3_halt;
 
     // ---------------------------------------------------------------------
-    // 1. DUAL CPU CORES (Core 0 & Core 1)
+    // 1. QUAD CPU CORES (Core 0, Core 1, Core 2, Core 3)
     // ---------------------------------------------------------------------
     garuda_cpu_core #( .CORE_ID(2'b00) ) core_0 (
-        .clk(clk),
-        .reset_n(reset_n),
-        .req(req_0),
-        .write_en(write_en_0),
-        .process_id(pid_0),
-        .address(addr_0),
-        .runtime_cmd(cmd_0),
-        .cmd_valid(valid_0),
-        .alloc_size(size_0),
-        .write_data(wdata_0),
-        .read_data(shared_read_data),
-        .ready(shared_ready),
-        .pc(core0_pc),
-        .halted()
+        .clk(clk), .reset_n(reset_n),
+        .req(req_0), .write_en(write_en_0), .process_id(pid_0), .address(addr_0),
+        .runtime_cmd(cmd_0), .cmd_valid(valid_0), .alloc_size(size_0), .write_data(wdata_0),
+        .read_data(shared_read_data), .ready(shared_ready), .pc(core0_pc), .halted(core0_halt)
     );
 
     garuda_cpu_core #( .CORE_ID(2'b01) ) core_1 (
-        .clk(clk),
-        .reset_n(reset_n),
-        .req(req_1),
-        .write_en(write_en_1),
-        .process_id(pid_1),
-        .address(addr_1),
-        .runtime_cmd(cmd_1),
-        .cmd_valid(valid_1),
-        .alloc_size(size_1),
-        .write_data(wdata_1),
-        .read_data(shared_read_data),
-        .ready(shared_ready),
-        .pc(core1_pc),
-        .halted()
+        .clk(clk), .reset_n(reset_n),
+        .req(req_1), .write_en(write_en_1), .process_id(pid_1), .address(addr_1),
+        .runtime_cmd(cmd_1), .cmd_valid(valid_1), .alloc_size(size_1), .write_data(wdata_1),
+        .read_data(shared_read_data), .ready(shared_ready), .pc(core1_pc), .halted(core1_halt)
+    );
+
+    garuda_cpu_core #( .CORE_ID(2'b10) ) core_2 (
+        .clk(clk), .reset_n(reset_n),
+        .req(req_2), .write_en(write_en_2), .process_id(pid_2), .address(addr_2),
+        .runtime_cmd(cmd_2), .cmd_valid(valid_2), .alloc_size(size_2), .write_data(wdata_2),
+        .read_data(shared_read_data), .ready(shared_ready), .pc(core2_pc), .halted(core2_halt)
+    );
+
+    garuda_cpu_core #( .CORE_ID(2'b11) ) core_3 (
+        .clk(clk), .reset_n(reset_n),
+        .req(req_3), .write_en(write_en_3), .process_id(pid_3), .address(addr_3),
+        .runtime_cmd(cmd_3), .cmd_valid(valid_3), .alloc_size(size_3), .write_data(wdata_3),
+        .read_data(shared_read_data), .ready(shared_ready), .pc(core3_pc), .halted(core3_halt)
     );
 
     // ---------------------------------------------------------------------
-    // 2. BUS ARBITER (Round-Robin / Priority Arbiter untuk Dual Core)
+    // 2. 4-WAY ROUND-ROBIN BUS ARBITER
     // ---------------------------------------------------------------------
-    reg core_select; // 0: Core 0 dilayani, 1: Core 1 dilayani
-
     always @(posedge clk or negedge reset_n) begin
         if (!reset_n) begin
-            core_select <= 1'b0;
+            arb_sel <= 2'b00;
         end else begin
-            core_select <= ~core_select; // Sederhana: Bergantian tiap siklus clock
+            arb_sel <= arb_sel + 1'b1; // Turn-by-turn round robin (00 -> 01 -> 10 -> 11)
         end
     end
 
-    // Multiplexing sinyal bus berdasarkan arbiter
-    assign arb_req      = core_select ? req_1 : req_0;
-    assign arb_write_en = core_select ? write_en_1 : write_en_0;
-    assign arb_pid      = core_select ? pid_1 : pid_0;
-    assign arb_addr     = core_select ? addr_1 : addr_0;
-    assign arb_cmd      = core_select ? cmd_1 : cmd_0;
-    assign arb_valid    = core_select ? valid_1 : valid_0;
-    assign arb_size     = core_select ? size_1 : size_0;
-    assign arb_wdata    = core_select ? wdata_1 : wdata_0;
+    // Multiplexing Bus Sinyal
+    assign arb_req      = (arb_sel == 2'b00) ? req_0      : (arb_sel == 2'b01) ? req_1      : (arb_sel == 2'b10) ? req_2      : req_3;
+    assign arb_write_en = (arb_sel == 2'b00) ? write_en_0 : (arb_sel == 2'b01) ? write_en_1 : (arb_sel == 2'b10) ? write_en_2 : write_en_3;
+    assign arb_pid      = (arb_sel == 2'b00) ? pid_0      : (arb_sel == 2'b01) ? pid_1      : (arb_sel == 2'b10) ? pid_2      : pid_3;
+    assign arb_addr     = (arb_sel == 2'b00) ? addr_0     : (arb_sel == 2'b01) ? addr_1     : (arb_sel == 2'b10) ? addr_2     : addr_3;
+    assign arb_cmd      = (arb_sel == 2'b00) ? cmd_0      : (arb_sel == 2'b01) ? cmd_1      : (arb_sel == 2'b10) ? cmd_2      : cmd_3;
+    assign arb_valid    = (arb_sel == 2'b00) ? valid_0    : (arb_sel == 2'b01) ? valid_1    : (arb_sel == 2'b10) ? valid_2    : valid_3;
+    assign arb_size     = (arb_sel == 2'b00) ? size_0     : (arb_sel == 2'b01) ? size_1     : (arb_sel == 2'b10) ? size_2     : size_3;
+    assign arb_wdata    = (arb_sel == 2'b00) ? wdata_0    : (arb_sel == 2'b01) ? wdata_1    : (arb_sel == 2'b10) ? wdata_2    : wdata_3;
 
     // ---------------------------------------------------------------------
-    // 3. SHARED MEMORY CONTROLLER & SUBSYSTEM
+    // 3. ADVANCED SHARED MEMORY CONTROLLER, HW-GC & MAILBOX
     // ---------------------------------------------------------------------
     garuda_memory_controller mem_ctrl (
         .clk(clk),
@@ -118,11 +126,11 @@ module garuda_ (
         .req(arb_req),
         .write_en(arb_write_en),
         .process_id(arb_pid),
-        .target_process_id(2'b00),
+        .target_process_id(arb_addr[1:0]),
         .address(arb_addr),
         .alloc_size(arb_size),
-        .gc_free_req(1'b0),
-        .gc_target_addr(6'b0),
+        .gc_free_req(arb_cmd == 3'b100),
+        .gc_target_addr(arb_addr),
         .shared_sel(1'b0),
         .shared_read_mask(4'b1111),
         .shared_write_mask(4'b1111),
@@ -136,16 +144,17 @@ module garuda_ (
         .l2_cache_hit(),
         .active_running_pid(),
         .runtime_fault_trap(shared_trap),
-        .gc_object_freed()
+        .gc_object_freed(shared_gc_freed),
+        .mb_pending(mb_pending)
     );
 
-    assign smp_halted = core0_pc > 8'd10 && core1_pc > 8'd10;
+    assign smp_halted = core0_halt && core1_halt && core2_halt && core3_halt;
 
 endmodule
 
 
 // =========================================================================
-// MODULE: CPU CORE (Parameterizable untuk Core 0 atau Core 1)
+// MODULE: CPU CORE (Parameterizable Core 0..3)
 // =========================================================================
 module garuda_cpu_core #(parameter [1:0] CORE_ID = 2'b00) (
     input wire clk,
@@ -178,19 +187,32 @@ module garuda_cpu_core #(parameter [1:0] CORE_ID = 2'b00) (
     integer idx;
 
     initial begin
-        if (CORE_ID == 2'b00) begin
-            // Program untuk Core 0 (Mengelola PID 0)
-            instruction_rom[0] = {3'b001, 2'b00, 6'd0, 4'd4, 32'h00000000}; // ALLOC PID 0
-            instruction_rom[1] = {3'b010, 2'b00, 6'd2, 4'd0, 32'h11111111}; // WRITE PID 0
-            instruction_rom[2] = {3'b000, 2'b00, 6'd0, 4'd0, 32'h00000000}; // HALT
-        end else begin
-            // Program untuk Core 1 (Mengelola PID 1)
-            instruction_rom[0] = {3'b001, 2'b01, 6'd0, 4'd4, 32'h00000000}; // ALLOC PID 1
-            instruction_rom[1] = {3'b010, 2'b01, 6'd2, 4'd0, 32'h22222222}; // WRITE PID 1
-            instruction_rom[2] = {3'b000, 2'b01, 6'd0, 4'd0, 32'h00000000}; // HALT
-        end
+        case (CORE_ID)
+            2'b00: begin // Core 0
+                instruction_rom[0] = {3'b001, 2'b00, 6'd0, 4'd4, 32'h00000000}; // ALLOC PID 0
+                instruction_rom[1] = {3'b010, 2'b00, 6'd2, 4'd0, 32'h11111111}; // WRITE PID 0
+                instruction_rom[2] = {3'b100, 2'b00, 6'd0, 4'd4, 32'h00000000}; // GC_FREE PID 0
+                instruction_rom[3] = {3'b000, 2'b00, 6'd0, 4'd0, 32'h00000000}; // HALT
+            end
+            2'b01: begin // Core 1
+                instruction_rom[0] = {3'b001, 2'b01, 6'd0, 4'd4, 32'h00000000}; // ALLOC PID 1
+                instruction_rom[1] = {3'b010, 2'b01, 6'd2, 4'd0, 32'h22222222}; // WRITE PID 1
+                instruction_rom[2] = {3'b000, 2'b01, 6'd0, 4'd0, 32'h00000000}; // HALT
+            end
+            2'b10: begin // Core 2
+                instruction_rom[0] = {3'b001, 2'b10, 6'd0, 4'd4, 32'h00000000}; // ALLOC PID 2
+                instruction_rom[1] = {3'b010, 2'b10, 6'd2, 4'd0, 32'h33333333}; // WRITE PID 2
+                instruction_rom[2] = {3'b000, 2'b10, 6'd0, 4'd0, 32'h00000000}; // HALT
+            end
+            default: begin // Core 3
+                instruction_rom[0] = {3'b001, 2'b11, 6'd0, 4'd4, 32'h00000000}; // ALLOC PID 3
+                instruction_rom[1] = {3'b010, 2'b11, 6'd2, 4'd0, 32'h44444444}; // WRITE PID 3
+                instruction_rom[2] = {3'b000, 2'b11, 6'd0, 4'd0, 32'h00000000}; // HALT
+            end
+        endcase
 
         for (idx = 3; idx < 16; idx = idx + 1) begin
+            if (CORE_ID == 2'b00 && idx == 3) continue;
             instruction_rom[idx] = 43'b0;
         end
     end
@@ -222,12 +244,22 @@ module garuda_cpu_core #(parameter [1:0] CORE_ID = 2'b00) (
                     cmd_valid   <= 1'b1;
                     alloc_size  <= dec_size;
                 end
-                3'b010: begin // WRITE
+                3'b010: begin // WRITE / SEND MSG
                     runtime_cmd <= 3'b010;
                     cmd_valid   <= 1'b1;
                     address     <= dec_addr;
                     write_data  <= dec_data;
                     write_en    <= 1'b1;
+                end
+                3'b011: begin // READ
+                    runtime_cmd <= 3'b001;
+                    cmd_valid   <= 1'b1;
+                    address     <= dec_addr;
+                end
+                3'b100: begin // GC FREE
+                    runtime_cmd <= 3'b100;
+                    cmd_valid   <= 1'b1;
+                    alloc_size  <= dec_size;
                 end
                 default: begin
                     runtime_cmd <= 3'b000;
@@ -244,7 +276,7 @@ endmodule
 
 
 // =========================================================================
-// MODULE: GARUDA MEMORY CONTROLLER (Subsistem Memori Terpusat)
+// MODULE: ADVANCED MEMORY CONTROLLER WITH HW-GC & MAILBOX
 // =========================================================================
 module garuda_memory_controller (
     input wire clk,
@@ -283,11 +315,13 @@ module garuda_memory_controller (
 
     output reg [1:0] active_running_pid,
     output reg       runtime_fault_trap,
-    output reg       gc_object_freed
+    output reg       gc_object_freed,
+    output reg [3:0] mb_pending
 );
 
     reg [31:0] private_mem [0:255];
     reg [31:0] shared_mem [0:63];
+    reg [31:0] mailbox_mem [0:3];
 
     reg [5:0] heap_ptr_0;
     reg [5:0] heap_ptr_1;
@@ -313,6 +347,7 @@ module garuda_memory_controller (
             cache_hit          <= 1'b0;
             l2_cache_hit       <= 1'b0;
             gc_object_freed    <= 1'b0;
+            mb_pending         <= 4'b0000;
 
             heap_ptr_0         <= 6'd0;
             heap_ptr_1         <= 6'd0;
@@ -324,6 +359,7 @@ module garuda_memory_controller (
             cache_hit          <= 1'b0;
             l2_cache_hit       <= 1'b0;
             gc_object_freed    <= 1'b0;
+            access_error       <= 1'b0;
             active_running_pid <= process_id;
 
             if (cmd_valid) begin
@@ -338,10 +374,29 @@ module garuda_memory_controller (
                                 2'b10: heap_ptr_2 <= heap_ptr_2 + alloc_size;
                                 2'b11: heap_ptr_3 <= heap_ptr_3 + alloc_size;
                             endcase
+                        end else begin
+                            out_of_memory <= 1'b1;
                         end
                     end
-                    3'b010: begin // WRITE
-                        private_mem[private_address] <= write_data;
+                    3'b010: begin // WRITE / MAILBOX SEND
+                        if (address >= 6'd60) begin
+                            mailbox_mem[target_process_id] <= write_data;
+                            mb_pending[target_process_id]  <= 1'b1;
+                        end else begin
+                            private_mem[private_address] <= write_data;
+                        end
+                    end
+                    3'b001: begin // READ
+                        read_data <= private_mem[private_address];
+                    end
+                    3'b100: begin // ACTIVE HW-GC FREE
+                        gc_object_freed <= 1'b1;
+                        case (process_id)
+                            2'b00: if (heap_ptr_0 >= alloc_size) heap_ptr_0 <= heap_ptr_0 - alloc_size;
+                            2'b01: if (heap_ptr_1 >= alloc_size) heap_ptr_1 <= heap_ptr_1 - alloc_size;
+                            2'b10: if (heap_ptr_2 >= alloc_size) heap_ptr_2 <= heap_ptr_2 - alloc_size;
+                            2'b11: if (heap_ptr_3 >= alloc_size) heap_ptr_3 <= heap_ptr_3 - alloc_size;
+                        endcase
                     end
                     default: begin end
                 endcase
