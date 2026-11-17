@@ -4,6 +4,32 @@ Sistem perangkat keras (SoC) mikroelektronika Gold Master berbasis **Quad-Core S
 
 **Pembuat & Arsitek Sistem**: **Anggit Prasetyo Mituhu**
 
+---
+
+## 🔬 Bukti Tata Letak Fisik Silikon Chip (ASIC Layout Renders)
+
+Berikut adalah artefak tata letak fisik keping silikon (*Physical GDSII Silicon Die Renders*) buatan **Anggit Prasetyo Mituhu** yang telah berhasil melewati tahapan sintesis, penempatan sel (*placement*), perutean kawat (*routing*), DRC, dan LVS di Sandbox Peruri (OpenLane EDA Flow):
+
+| Overview Tata Letak Chip | Tampilan Berwarna SEL & Routing |
+| :---: | :---: |
+| ![Silicon Die Overview](docs/images/01_overview.png) | ![Colored Cell View](docs/images/03_colored_view.png) |
+
+| Render Resolusi Tinggi (High-Res Die Layout) | Detail Zoom Sel & Gerbang Transistor |
+| :---: | :---: |
+| ![High-Res Silicon Die](docs/images/02_overview_hires.png) | ![Zoom Center Transistors](docs/images/04_zoom_center.png) |
+
+---
+
+## 📁 Struktur Repositori Terorganisir
+
+- `src/project.v` : Kode Sumber Verilog RTL Utama (`tt_um_garuda`, `garuda_`, `garuda_cpu_core`, `garuda_memory_controller`, `garuda_neuromorphic_core`, `garuda_transformer_engine`, `garuda_pqc_engine`, `garuda_vector_unit`, `garuda_crypto_core`, `garuda_uart_tx`)
+- `gds/tt_um_garuda.gds` : Berkas Biner Layout Fisik Silikon (*GDSII Lithography Mask Format*)
+- `docs/images/` : Render Grafis Tata Letak Sirkuit Digital Chip Resolusi Tinggi
+- `logs/` : Berkas Log Verifikasi & Sintesis EDA (*OpenLane / Yosys Verification Logs*)
+- `garuda_compiler.py` : Toolchain Compiler & Assembler Python v9.0 Gold Master
+- `LICENSE` : Lisensi Resmi Apache 2.0 (Hak Cipta © 2026 Anggit Prasetyo Mituhu)
+- `README.md` : Dokumentasi Resmi Arsitektur & Sertifikasi Tapeout
+
 ## 🚀 Fitur Gold Master v9.0
 
 - **Neuromorphic Spiking Neural Network (SNN) Synaptic Accelerator**: Akselerator sinapsis otak buatan (Address `46`) berbasis model *Leaky Integrate-and-Fire (LIF)* untuk pemrosesan AI daya ultra-rendah dan pengenalan pola lonjakan (Pin `uo_out[6]`).
@@ -23,12 +49,28 @@ Sistem perangkat keras (SoC) mikroelektronika Gold Master berbasis **Quad-Core S
 - **Active Hardware Garbage Collector (HW-GC)**: Modul HW-GC terintegrasi (`3'b100`) untuk reklamasi memori otomatis dan sinyal `gc_object_freed`.
 - **AI Compiler Agent v9.0 Gold Master (`garuda_compiler.py`)**: Penerjemah instruksi bahasa GARUDA ke format Verilog ROM Hex (`instruction_rom[...]`).
 
-## 📁 Struktur Repositori
+## 🛠️ Penggunaan Compiler
 
-- `src/project.v` : Kode Sumber Verilog RTL Utama (`tt_um_garuda`, `garuda_`, `garuda_cpu_core`, `garuda_memory_controller`, `garuda_neuromorphic_core`, `garuda_transformer_engine`, `garuda_pqc_engine`, `garuda_vector_unit`, `garuda_crypto_core`, `garuda_uart_tx`)
-- `garuda_compiler.py` : Toolchain Compiler & Assembler Python v9.0 Gold Master
-- `LICENSE` : Lisensi Resmi Apache 2.0 (Hak Cipta © 2026 Anggit Prasetyo Mituhu)
-- `README.md` : Dokumentasi Resmi Arsitektur Sistem v9.0
+Jalankan compiler Python v9.0 Gold Master:
+
+```bash
+python garuda_compiler.py
+```
+
+Output Verilog ROM (`43'h...`):
+```verilog
+// =========================================================
+// AUTO-GENERATED GARUDA ROM BY AI COMPILER AGENT v9.0 GOLD MASTER
+// Target Architecture: GARUDA SEMESTA Quad-Core Hyperscale ASIC (43-bit Bitstream)
+// =========================================================
+instruction_rom[0] = 43'h10140000000;
+instruction_rom[1] = 43'h200e000000FF;
+instruction_rom[2] = 43'h201000020003;
+instruction_rom[3] = 43'h201212345678;
+instruction_rom[4] = 43'h201f00000047;
+instruction_rom[5] = 43'h40140000000;
+instruction_rom[6] = 43'h00000000000;
+```
 
 ## 📄 Lisensi & Hak Cipta
 
