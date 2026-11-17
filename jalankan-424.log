@@ -1,0 +1,251 @@
+── Persiapan [ok] ──
+Cloning into '.'...
+
+
+── Testing [ok] ──
+=== Installing tools inside container ===
+=== Running tt_tool.py --create-user-config ===
+WARN: tt/tt_tool.py tidak ditemukan, lewati create-user-config
+=== Full Test Suite ===
+Source files: src/project.v 
+Testbench files: 
+=== Cleanup ===
+=== All Tests Passed ===
+
+
+── Simulasi [ok] ──
+=== Installing tools inside container ===
+=== Running simulation ===
+Source files: src/project.v 
+Testbench files: 
+
+
+── Sintesis + Design Chip [ok] ──
+Source files: src/project.v 
+=== Checking config files ===
+Current directory: /home/ecs-user/chip-runner/run-424
+total 24
+drwxr-xr-x 2 ecs-user ecs-user  4096 Nov 17 10:17 .
+drwxr-xr-x 4 ecs-user ecs-user  4096 Nov 17 10:17 ..
+-rw-r--r-- 1 ecs-user ecs-user 15338 Nov 17 10:17 project.v
+src/config.tcl not found or empty, checking alternatives...
+Creating default src/config.tcl (Tiny Tapeout template)...
+Created default src/config.tcl
+Force-disabled linter and KLayout checks in config.tcl
+Created run_harden_openlane1.sh
+=== [1/3] Running OpenLane Harden Flow via Docker ===
+Image: goldenways/design-chip:v1.2
+=========================================
+OpenLane Docker Environment
+=========================================
+Python: Python 3.11.16
+OpenROAD: b16bda7e82721d10566ff7e2b68f1ff0be9f9e38 
+Yosys: Yosys 0.38 (git sha1 543faed9c8c, clang++ 17.0.6 -fPIC -Os)
+Icarus Verilog: Icarus Verilog version 12.0 (stable) ()
+KLayout: KLayout 0.29.1
+librelane: 2.4.13
+=========================================
+=========================================
+Harden Flow using OpenLane 1.1.1 (TCL)
+=========================================
+=== Source files ===
+total 32
+drwxr-xr-x 2 1000 1000  4096 Nov 17 03:17 .
+drwxr-xr-x 6 1000 1000  4096 Nov 17 03:17 ..
+-rw-r--r-- 1 1000 1000  1244 Nov 17 03:17 config.tcl
+-rw-r--r-- 1 1000 1000 15338 Nov 17 03:17 project.v
+-rw-r--r-- 1 1000 1000     3 Nov 17 03:17 user_config.json
+=== OpenLane 1.1.1 directory: /nix/store/xpc7xd67rslanlqh566s6jph53bn830w-openlane1-1.1.1 ===
+=== Using flow.tcl: /nix/store/xpc7xd67rslanlqh566s6jph53bn830w-openlane1-1.1.1/bin/flow.tcl ===
+WARNING: info.yaml not found, trying to extract from Verilog files
+=== Design: garuda_ ===
+No source_files in info.yaml, using all .v files in src/
+=== Verilog files: src/project.v  ===
+user_config.tcl contents:
+set ::env(DESIGN_NAME) "garuda_"
+set ::env(VERILOG_FILES) { /workspace/src/project.v}
+set ::env(VERILOG_FILES_BLACKBOX) {}
+set ::env(DIE_AREA) "0 0 200 200"
+set ::env(CORE_AREA) "5 5 195 195"
+=== Running OpenLane 1.1.1 harden flow ===
+OpenLane v1.1.1 ()
+All rights reserved. (c) 2020-2024 Efabless Corporation and contributors.
+Available under the Apache License, version 2.0. See the LICENSE file for more details.
+[INFO]: Using configuration in 'src/config.tcl'...
+[INFO]: Process Design Kit: sky130
+[INFO]: PDK Root: /root/.volare
+[INFO]: Standard Cell Library: sky130_fd_sc_hd
+[INFO]: Optimization Standard Cell Library: sky130_fd_sc_hd
+[INFO]: Run Directory: /workspace/runs/harden
+[INFO]: Saving runtime environment...
+[INFO]: Preparing LEF files for the nom corner...
+[INFO]: Preparing LEF files for the min corner...
+[INFO]: Preparing LEF files for the max corner...
+[WARNING]: PNR_SDC_FILE is not set. It is recommended to write a custom SDC file for the design. Defaulting to BASE_SDC_FILE
+[WARNING]: SIGNOFF_SDC_FILE is not set. It is recommended to write a custom SDC file for the design. Defaulting to BASE_SDC_FILE
+[STEP 1]
+[INFO]: Running Synthesis (log: runs/harden/logs/synthesis/1-synthesis.log)...
+[STEP 2]
+[INFO]: Running Single-Corner Static Timing Analysis (log: runs/harden/logs/synthesis/2-sta.log)...
+[STEP 3]
+[INFO]: Running Initial Floorplanning (log: runs/harden/logs/floorplan/3-initial_fp.log)...
+[INFO]: Floorplanned with width 189.52 and height 187.68.
+[STEP 4]
+[INFO]: Running IO Placement (log: runs/harden/logs/floorplan/4-io.log)...
+[STEP 5]
+[INFO]: Running Tap/Decap Insertion (log: runs/harden/logs/floorplan/5-tap.log)...
+[INFO]: Power planning with power {VPWR} and ground {VGND}...
+[STEP 6]
+[INFO]: Generating PDN (log: runs/harden/logs/floorplan/6-pdn.log)...
+[STEP 7]
+[INFO]: Running Global Placement (skip_io) (log: runs/harden/logs/placement/6-global_skip_io.log)...
+[STEP 8]
+[INFO]: Running Single-Corner Static Timing Analysis (log: runs/harden/logs/placement/8-gpl_sta.log)...
+[STEP 9]
+[INFO]: Running IO Placement (log: runs/harden/logs/placement/9-io.log)...
+[STEP 10]
+[INFO]: Running Global Placement (log: runs/harden/logs/placement/9-global.log)...
+[STEP 11]
+[INFO]: Running Single-Corner Static Timing Analysis (log: runs/harden/logs/placement/11-gpl_sta.log)...
+[STEP 12]
+[INFO]: Running Placement Resizer Design Optimizations (log: runs/harden/logs/placement/12-resizer.log)...
+[STEP 13]
+[INFO]: Running Detailed Placement (log: runs/harden/logs/placement/13-detailed.log)...
+[STEP 14]
+[INFO]: Running Single-Corner Static Timing Analysis (log: runs/harden/logs/placement/14-dpl_sta.log)...
+[STEP 15]
+[INFO]: Running Clock Tree Synthesis (log: runs/harden/logs/cts/15-cts.log)...
+[STEP 16]
+[INFO]: Running Single-Corner Static Timing Analysis (log: runs/harden/logs/cts/16-cts_sta.log)...
+[STEP 17]
+[INFO]: Running Placement Resizer Timing Optimizations (log: runs/harden/logs/cts/17-resizer.log)...
+[STEP 18]
+[INFO]: Running Global Routing Resizer Design Optimizations (log: runs/harden/logs/routing/18-resizer_design.log)...
+[STEP 19]
+[INFO]: Running Single-Corner Static Timing Analysis (log: runs/harden/logs/routing/19-rsz_design_sta.log)...
+[STEP 20]
+[INFO]: Running Global Routing Resizer Timing Optimizations (log: runs/harden/logs/routing/20-resizer_timing.log)...
+[STEP 21]
+[INFO]: Running Single-Corner Static Timing Analysis (log: runs/harden/logs/routing/21-rsz_timing_sta.log)...
+[STEP 22]
+[INFO]: Running Global Routing (log: runs/harden/logs/routing/22-global.log)...
+[STEP 23]
+[INFO]: Writing Verilog (log: runs/harden/logs/routing/22-global_write_netlist.log)...
+[STEP 24]
+[INFO]: Running Single-Corner Static Timing Analysis (log: runs/harden/logs/routing/24-grt_sta.log)...
+[STEP 25]
+[INFO]: Running Fill Insertion (log: runs/harden/logs/routing/25-fill.log)...
+[STEP 26]
+[INFO]: Running Detailed Routing (log: runs/harden/logs/routing/26-detailed.log)...
+[INFO]: No Magic DRC violations after detailed routing.
+[STEP 27]
+[INFO]: Checking Wire Lengths (log: runs/harden/logs/routing/27-wire_lengths.log)...
+[STEP 28]
+[INFO]: Running SPEF Extraction at the min process corner (log: runs/harden/logs/signoff/28-parasitics_extraction.min.log)...
+[STEP 29]
+[INFO]: Running Multi-Corner Static Timing Analysis at the min process corner (log: runs/harden/logs/signoff/29-rcx_mcsta.min.log)...
+[STEP 30]
+[INFO]: Running SPEF Extraction at the max process corner (log: runs/harden/logs/signoff/30-parasitics_extraction.max.log)...
+[STEP 31]
+[INFO]: Running Multi-Corner Static Timing Analysis at the max process corner (log: runs/harden/logs/signoff/31-rcx_mcsta.max.log)...
+[STEP 32]
+[INFO]: Running SPEF Extraction at the nom process corner (log: runs/harden/logs/signoff/32-parasitics_extraction.nom.log)...
+[STEP 33]
+[INFO]: Running Multi-Corner Static Timing Analysis at the nom process corner (log: runs/harden/logs/signoff/33-rcx_mcsta.nom.log)...
+[WARNING]: VSRC_LOC_FILES was not given a value, which may make the results of IR drop analysis inaccurate. If you are not integrating a top-level chip for manufacture, you may ignore this warning, otherwise, see the documentation for VSRC_LOC_FILES.
+[STEP 34]
+[INFO]: Creating IR Drop Report (log: runs/harden/logs/signoff/34-irdrop.log)...
+[STEP 35]
+[INFO]: Running Magic to generate various views...
+[INFO]: Streaming out GDSII with Magic (log: runs/harden/logs/signoff/35-gdsii.log)...
+[INFO]: Generating MAGLEF views...
+[INFO]: Generating lef with Magic (/workspace/runs/harden/logs/signoff/35-lef.log)...
+[STEP 36]
+[INFO]: Streaming out GDSII with KLayout (log: runs/harden/logs/signoff/36-gdsii-klayout.log)...
+[STEP 37]
+[INFO]: Running Magic Spice Export from LEF (log: runs/harden/logs/signoff/37-spice.log)...
+[STEP 38]
+[INFO]: Writing Powered Verilog (logs: runs/harden/logs/signoff/38-write_powered_def.log, runs/harden/logs/signoff/38-write_powered_verilog.log)...
+[STEP 39]
+[INFO]: Writing Verilog (log: runs/harden/logs/signoff/38-write_powered_verilog.log)...
+[STEP 40]
+[INFO]: Running LVS (log: runs/harden/logs/signoff/40-lvs.lef.log)...
+[STEP 41]
+[INFO]: Running Magic DRC (log: runs/harden/logs/signoff/41-drc.log)...
+[INFO]: Converting Magic DRC database to various tool-readable formats...
+[INFO]: No Magic DRC violations after GDS streaming out.
+[STEP 42]
+[INFO]: Running OpenROAD Antenna Rule Checker (log: runs/harden/logs/signoff/42-arc.log)...
+[INFO]: Saving current set of views in 'runs/harden/results/final'...
+[INFO]: Saving runtime environment...
+[INFO]: Generating final set of reports...
+[INFO]: Created manufacturability report at 'runs/harden/reports/manufacturability.rpt'.
+[INFO]: Created metrics report at 'runs/harden/reports/metrics.csv'.
+[INFO]: There are no max slew, max fanout or max capacitance violations in the design at the Typical corner.
+[INFO]: There are no hold violations in the design at the Typical corner.
+[INFO]: There are no setup violations in the design at the Typical corner.
+[SUCCESS]: Flow complete.
+[INFO]: Note that the following warnings have been generated:
+[WARNING]: PNR_SDC_FILE is not set. It is recommended to write a custom SDC file for the design. Defaulting to BASE_SDC_FILE
+[WARNING]: SIGNOFF_SDC_FILE is not set. It is recommended to write a custom SDC file for the design. Defaulting to BASE_SDC_FILE
+[WARNING]: VSRC_LOC_FILES was not given a value, which may make the results of IR drop analysis inaccurate. If you are not integrating a top-level chip for manufacture, you may ignore this warning, otherwise, see the documentation for VSRC_LOC_FILES.
+=== Harden flow exit code: 0 ===
+=== Harden flow complete ===
+=== Checking for GDS output ===
+runs/harden/results/signoff/garuda_.klayout.gds
+runs/harden/results/signoff/garuda_.magic.gds
+runs/harden/results/signoff/garuda_.gds
+runs/harden/results/final/gds/garuda_.gds
+=== Done ===
+=== Harden Flow OK ===
+Created gds_to_image.py
+=== [2/3] Converting GDS to Images via Docker ===
+GDS file (host): /home/ecs-user/chip-runner/run-424/runs/harden/results/signoff/garuda_.klayout.gds
+GDS file (container): /workspace/runs/harden/results/signoff/garuda_.klayout.gds
+Icarus Verilog: Icarus Verilog version 12.0 (stable) ()
+KLayout: KLayout 0.29.1
+librelane: 2.4.13
+=========================================
+Loading GDS file: /workspace/runs/harden/results/signoff/garuda_.klayout.gds
+Top cell: garuda_
+Total cells: 37
+Die size: 200.00 x 200.00 um
+Area: 40000.00 um^2
+1. Generating overview image...
+   Saved: /workspace/gds_images/01_overview.png
+2. Generating high-resolution overview...
+   Saved: /workspace/gds_images/02_overview_hires.png
+3. Generating colored view...
+   Saved: /workspace/gds_images/03_colored_view.png
+4. Generating zoomed views...
+   center: 04_zoom_center.png
+   bottom_left: 04_zoom_bottom_left.png
+   bottom_right: 04_zoom_bottom_right.png
+   top_left: 04_zoom_top_left.png
+   top_right: 04_zoom_top_right.png
+5. Generating summary report...
+   Saved: /workspace/gds_images/summary.txt
+============================================================
+CONVERSION COMPLETE!
+============================================================
+Output directory: /workspace/gds_images
+Total images generated: 8
+=== GDS Images Generated ===
+total 10252
+drwxr-xr-x 2 ecs-user ecs-user    4096 Nov 17 10:18 .
+drwxr-xr-x 6 ecs-user ecs-user    4096 Nov 17 10:18 ..
+-rw-r--r-- 1 root     root     2136242 Nov 17 10:18 01_overview.png
+-rw-r--r-- 1 root     root     5512730 Nov 17 10:18 02_overview_hires.png
+-rw-r--r-- 1 root     root     2136242 Nov 17 10:18 03_colored_view.png
+-rw-r--r-- 1 root     root      579771 Nov 17 10:18 04_zoom_bottom_left.png
+-rw-r--r-- 1 root     root       28187 Nov 17 10:18 04_zoom_bottom_right.png
+-rw-r--r-- 1 root     root       28194 Nov 17 10:18 04_zoom_center.png
+-rw-r--r-- 1 root     root       28187 Nov 17 10:18 04_zoom_top_left.png
+-rw-r--r-- 1 root     root       28196 Nov 17 10:18 04_zoom_top_right.png
+-rw-r--r-- 1 root     root        1435 Nov 17 10:18 summary.txt
+
+
+── Hasil & berkas [ok] ──
+[5/5] Mengunggah artefak…
+   GDS · LEF · DEF · laporan
+4 artefak disimpan
