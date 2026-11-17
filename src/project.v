@@ -214,9 +214,9 @@ module garuda_noc_router_memory_controller (
     output wire [8*336-1:0] core_rx_packets,
     output reg  [7:0]       core_mpu_faults,
 
-    output reg  [13:0] ddr5_ca,
-    inout  wire [63:0] ddr5_dq,
-    output reg         uart_tx
+    output reg  [111:0] ddr5_ca,
+    inout  wire [511:0] ddr5_dq,
+    output reg          uart_tx
 );
 
     // Emulated massive 3-Level Cache & External Memory bridge
