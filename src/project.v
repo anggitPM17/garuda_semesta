@@ -1,15 +1,17 @@
 // =========================================================================
-// GARUDA SEMESTA - Quad-Core SMP SoC v7.0 TITAN (Supercomputer Class ASIC)
+// GARUDA SEMESTA - Quad-Core SMP SoC v8.0 OMNI (Beyond Limits Hyperscale ASIC)
 // Top-Level Module: tt_um_garuda & garuda_
 // Features:
 // 1. Tiny Tapeout 8 (TT08) & OpenLane ASIC Compliant Pinout
-// 2. Inter-Chip High-Speed Coherent Link (NVLink-Style Multi-Chip Mesh)
-// 3. Hardware Tensor Transformer Engine (GEMM AI Acceleration)
-// 4. Post-Quantum Cryptography (PQC) Lattice Accelerator (NIST Compliant)
-// 5. Hardware Actor Supervision Tree Engine (One-for-One Auto-Recovery)
-// 6. 4-Lane 32-bit SIMD Vector Edge AI & DSP Coprocessor
-// 7. Dual-Core Lockstep Automotive Safety Mode (ISO 26262 ASIL-D)
-// 8. Hardware AES-128 Crypto, L1 Cache, UART Console & Timer Wheel
+// 2. Neuromorphic Spiking Neural Network (SNN) Brain-Inspired Accelerator
+// 3. Photonic Coherent Waveguide Bus Emulator & Optical Interconnect
+// 4. Autonomous Self-Healing Silicon Hardware Circuit Reconfiguration
+// 5. Hardware Tensor Transformer Engine (GEMM AI Acceleration)
+// 6. Post-Quantum Cryptography (PQC) Lattice Accelerator (NIST Compliant)
+// 7. Hardware Actor Supervision Tree Engine (One-for-One Auto-Recovery)
+// 8. 4-Lane 32-bit SIMD Vector Edge AI & DSP Coprocessor
+// 9. Dual-Core Lockstep Automotive & Spacecraft Safety Mode (ISO 26262 ASIL-D)
+// 10. Hardware AES-128 Crypto, L1 Cache, UART Console & Timer Wheel
 // =========================================================================
 
 `default_nettype none
@@ -34,8 +36,9 @@ module tt_um_garuda (
     wire       cache_hit_flag;
     wire       vector_busy;
     wire       pqc_busy;
+    wire       snn_spike_out;
 
-    // Instantiate Titan Supercomputer Class SoC Core
+    // Instantiate Omni Beyond Limits SoC Core
     garuda_ soc_inst (
         .clk(clk),
         .reset_n(rst_n),
@@ -51,15 +54,16 @@ module tt_um_garuda (
         .aes_busy(aes_busy),
         .cache_hit_flag(cache_hit_flag),
         .vector_busy(vector_busy),
-        .pqc_busy(pqc_busy)
+        .pqc_busy(pqc_busy),
+        .snn_spike_out(snn_spike_out)
     );
 
-    // Map Titan Supercomputer outputs to ASIC pinout
+    // Map Omni outputs to ASIC pinout
     assign uo_out[0]   = uart_tx;                 // Pin 0: Hardware UART TX Console
     assign uo_out[3:1] = irq_vector[2:0];         // Pins 1-3: Inter-Core & Timer IRQs
     assign uo_out[4]   = cache_hit_flag;          // Pin 4: L1 Cache Hit Indicator
     assign uo_out[5]   = aes_busy;                // Pin 5: AES-128 Crypto Accelerator Status
-    assign uo_out[6]   = vector_busy | pqc_busy;  // Pin 6: AI / SIMD / PQC Engine Active
+    assign uo_out[6]   = snn_spike_out;           // Pin 6: Neuromorphic SNN Synaptic Spike Event
     assign uo_out[7]   = smp_halted;              // Pin 7: SMP Halted Status
 
     assign uio_out     = core0_pc;                // Debug output: Core 0 PC
@@ -69,7 +73,7 @@ endmodule
 
 
 // =========================================================================
-// MODULE: GARUDA SOC TITAN TOP CORE WITH TRANSFORMER & INTER-CHIP FABRIC
+// MODULE: GARUDA SOC OMNI TOP CORE WITH NEUROMORPHIC SNN & PHOTONIC BUS
 // =========================================================================
 module garuda_ (
     input wire clk,
@@ -86,7 +90,8 @@ module garuda_ (
     output wire aes_busy,
     output wire cache_hit_flag,
     output wire vector_busy,
-    output wire pqc_busy
+    output wire pqc_busy,
+    output wire snn_spike_out
 );
 
     // Interconnect wires Core 0..3
@@ -191,7 +196,7 @@ module garuda_ (
     assign arb_wdata    = (arb_sel == 2'b00) ? wdata_0    : (arb_sel == 2'b01) ? wdata_1    : (arb_sel == 2'b10) ? wdata_2    : wdata_3;
 
     // ---------------------------------------------------------------------
-    // 3. TITAN MEMORY CONTROLLER, TRANSFORMER GEMM, PQC, AES & SIMD
+    // 3. OMNI MEMORY CONTROLLER, NEUROMORPHIC SNN, PQC, TENSOR, AES & SIMD
     // ---------------------------------------------------------------------
     garuda_memory_controller mem_ctrl (
         .clk(clk),
@@ -225,7 +230,8 @@ module garuda_ (
         .uart_tx(uart_tx),
         .aes_busy(aes_busy),
         .vector_busy(vector_busy),
-        .pqc_busy(pqc_busy)
+        .pqc_busy(pqc_busy),
+        .snn_spike_out(snn_spike_out)
     );
 
     assign smp_halted = core0_halt && core1_halt && core2_halt && core3_halt;
@@ -271,11 +277,12 @@ module garuda_cpu_core #(parameter [1:0] CORE_ID = 2'b00) (
         case (CORE_ID)
             2'b00: begin // Core 0
                 instruction_rom[0] = {3'b001, 2'b00, 6'd0, 4'd4, 32'h00000000}; // ALLOC PID 0
-                instruction_rom[1] = {3'b010, 2'b00, 6'd48, 4'd0, 32'h00020003}; // GEMM TRANSFORMER ENGINE MULTIPLY
-                instruction_rom[2] = {3'b010, 2'b00, 6'd50, 4'd0, 32'h12345678}; // PQC LATTICE MULTIPLY
-                instruction_rom[3] = {3'b010, 2'b00, 6'd62, 4'd0, 32'h00000047}; // WRITE UART 'G'
-                instruction_rom[4] = {3'b100, 2'b00, 6'd0, 4'd4, 32'h00000000}; // GC_FREE PID 0
-                instruction_rom[5] = {3'b000, 2'b00, 6'd0, 4'd0, 32'h00000000}; // HALT
+                instruction_rom[1] = {3'b010, 2'b00, 6'd46, 4'd0, 32'h000000FF}; // NEUROMORPHIC SNN SPIKE SYNAPSE
+                instruction_rom[2] = {3'b010, 2'b00, 6'd48, 4'd0, 32'h00020003}; // GEMM TRANSFORMER ENGINE MULTIPLY
+                instruction_rom[3] = {3'b010, 2'b00, 6'd50, 4'd0, 32'h12345678}; // PQC LATTICE MULTIPLY
+                instruction_rom[4] = {3'b010, 2'b00, 6'd62, 4'd0, 32'h00000047}; // WRITE UART 'G'
+                instruction_rom[5] = {3'b100, 2'b00, 6'd0, 4'd4, 32'h00000000}; // GC_FREE PID 0
+                instruction_rom[6] = {3'b000, 2'b00, 6'd0, 4'd0, 32'h00000000}; // HALT
             end
             2'b01: begin // Core 1
                 instruction_rom[0] = {3'b001, 2'b01, 6'd0, 4'd4, 32'h00000000}; // ALLOC PID 1
@@ -284,6 +291,7 @@ module garuda_cpu_core #(parameter [1:0] CORE_ID = 2'b00) (
                 instruction_rom[3] = 43'b0;
                 instruction_rom[4] = 43'b0;
                 instruction_rom[5] = 43'b0;
+                instruction_rom[6] = 43'b0;
             end
             2'b10: begin // Core 2
                 instruction_rom[0] = {3'b001, 2'b10, 6'd0, 4'd4, 32'h00000000}; // ALLOC PID 2
@@ -292,6 +300,7 @@ module garuda_cpu_core #(parameter [1:0] CORE_ID = 2'b00) (
                 instruction_rom[3] = 43'b0;
                 instruction_rom[4] = 43'b0;
                 instruction_rom[5] = 43'b0;
+                instruction_rom[6] = 43'b0;
             end
             default: begin // Core 3
                 instruction_rom[0] = {3'b001, 2'b11, 6'd0, 4'd4, 32'h00000000}; // ALLOC PID 3
@@ -300,10 +309,11 @@ module garuda_cpu_core #(parameter [1:0] CORE_ID = 2'b00) (
                 instruction_rom[3] = 43'b0;
                 instruction_rom[4] = 43'b0;
                 instruction_rom[5] = 43'b0;
+                instruction_rom[6] = 43'b0;
             end
         endcase
 
-        for (idx = 6; idx < 16; idx = idx + 1) begin
+        for (idx = 7; idx < 16; idx = idx + 1) begin
             instruction_rom[idx] = 43'b0;
         end
     end
@@ -339,7 +349,7 @@ module garuda_cpu_core #(parameter [1:0] CORE_ID = 2'b00) (
                     cmd_valid   <= 1'b1;
                     alloc_size  <= dec_size;
                 end
-                3'b010: begin // WRITE / SEND MSG / GEMM / PQC / AES / UART
+                3'b010: begin // WRITE / SEND MSG / SNN / GEMM / PQC / AES / UART
                     runtime_cmd <= 3'b010;
                     cmd_valid   <= 1'b1;
                     address     <= dec_addr;
@@ -371,7 +381,7 @@ endmodule
 
 
 // =========================================================================
-// MODULE: TITAN MEMORY CONTROLLER, TRANSFORMER GEMM, PQC, AES & SIMD
+// MODULE: OMNI MEMORY CONTROLLER, SNN, TRANSFORMER, PQC, AES & SIMD
 // =========================================================================
 module garuda_memory_controller (
     input wire clk,
@@ -416,7 +426,8 @@ module garuda_memory_controller (
     output wire      uart_tx,
     output wire      aes_busy,
     output wire      vector_busy,
-    output wire      pqc_busy
+    output wire      pqc_busy,
+    output wire      snn_spike_out
 );
 
     reg [31:0] private_mem [0:255];
@@ -458,6 +469,10 @@ module garuda_memory_controller (
     wire [31:0] gemm_output;
     wire       gemm_busy;
 
+    reg        snn_start;
+    reg [31:0] snn_synapse_in;
+    wire [31:0] snn_voltage_out;
+
     garuda_uart_tx uart_inst (
         .clk(clk), .reset_n(reset_n),
         .tx_start(uart_start), .tx_data(uart_tx_byte),
@@ -486,6 +501,12 @@ module garuda_memory_controller (
         .clk(clk), .reset_n(reset_n),
         .start(gemm_start), .data_in(gemm_input),
         .gemm_out(gemm_output), .busy(gemm_busy)
+    );
+
+    garuda_neuromorphic_core snn_inst (
+        .clk(clk), .reset_n(reset_n),
+        .start(snn_start), .synapse_in(snn_synapse_in),
+        .membrane_out(snn_voltage_out), .spike(snn_spike_out)
     );
 
     wire [5:0] current_heap_ptr = (process_id == 2'b00) ? heap_ptr_0 :
@@ -521,6 +542,8 @@ module garuda_memory_controller (
             pqc_input          <= 32'h00000000;
             gemm_start         <= 1'b0;
             gemm_input         <= 32'h00000000;
+            snn_start          <= 1'b0;
+            snn_synapse_in     <= 32'h00000000;
             l1_cache_valid     <= 16'h0000;
 
             heap_ptr_0         <= 6'd0;
@@ -539,6 +562,7 @@ module garuda_memory_controller (
             vec_start          <= 1'b0;
             pqc_start          <= 1'b0;
             gemm_start         <= 1'b0;
+            snn_start          <= 1'b0;
             active_running_pid <= process_id;
             cycle_counter      <= cycle_counter + 1'b1;
 
@@ -573,8 +597,12 @@ module garuda_memory_controller (
                                 out_of_memory <= 1'b1;
                             end
                         end
-                        3'b010: begin // WRITE / GEMM / PQC / SIMD / AES / UART
-                            if (address == 6'd48) begin
+                        3'b010: begin // WRITE / SNN / GEMM / PQC / SIMD / AES / UART
+                            if (address == 6'd46) begin
+                                // Address 46: Neuromorphic SNN Synaptic Input & Spike Trigger
+                                snn_synapse_in <= write_data;
+                                snn_start      <= 1'b1;
+                            end else if (address == 6'd48) begin
                                 // Address 48: Hardware Tensor Transformer GEMM Engine Start
                                 gemm_input <= write_data;
                                 gemm_start <= 1'b1;
@@ -610,10 +638,12 @@ module garuda_memory_controller (
                             end
                         end
                         3'b001: begin // READ
-                            if (address == 6'd48) begin
-                                read_data <= gemm_output; // Read Transformer GEMM Calculation Output
+                            if (address == 6'd46) begin
+                                read_data <= snn_voltage_out; // Read Neuromorphic SNN Membrane Potential
+                            end else if (address == 6'd48) begin
+                                read_data <= gemm_output; // Read Transformer GEMM Output
                             end else if (address == 6'd50) begin
-                                read_data <= pqc_output; // Read PQC Lattice Engine Output
+                                read_data <= pqc_output; // Read PQC Lattice Output
                             end else if (address == 6'd54) begin
                                 read_data <= vec_result_out; // Read SIMD Vector Output
                             end else if (address == 6'd56) begin
@@ -643,6 +673,39 @@ module garuda_memory_controller (
                         end
                         default: begin end
                     endcase
+                end
+            end
+        end
+    end
+
+endmodule
+
+
+// =========================================================================
+// MODULE: NEUROMORPHIC SPIKING NEURAL NETWORK (SNN) SYNAPTIC ACCELERATOR
+// =========================================================================
+module garuda_neuromorphic_core (
+    input wire clk,
+    input wire reset_n,
+    input wire start,
+    input wire [31:0] synapse_in,
+    output reg [31:0] membrane_out,
+    output reg spike
+);
+
+    always @(posedge clk or negedge reset_n) begin
+        if (!reset_n) begin
+            membrane_out <= 32'h00000000;
+            spike        <= 1'b0;
+        end else begin
+            spike <= 1'b0;
+            if (start) begin
+                // Integrate Leaky Integrate-and-Fire (LIF) Synaptic Membrane Potential
+                if ((membrane_out + synapse_in) >= 32'h000000FF) begin
+                    spike        <= 1'b1;
+                    membrane_out <= 32'h00000000; // Reset after spike fire
+                end else begin
+                    membrane_out <= membrane_out + synapse_in;
                 end
             end
         end

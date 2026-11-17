@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-GARUDA Compiler & Assembler Toolchain v7.0 TITAN (Supercomputer ASIC Edition)
+GARUDA Compiler & Assembler Toolchain v8.0 OMNI (Beyond Limits Edition)
 Translates GARUDA instructions into 43-bit binary/hex machine instructions
-for the GARUDA SEMESTA Quad-Core Titan Supercomputer ASIC architecture (Verilog ROM output).
+for the GARUDA SEMESTA Quad-Core Omni Beyond Limits ASIC architecture (Verilog ROM output).
 
 Bitstream Format (43-bit):
 [Opcode: 3 bit][PID: 2 bit][Alamat/Target: 6 bit][Size: 4 bit][Data/Payload: 32 bit]
@@ -10,8 +10,8 @@ Bitstream Format (43-bit):
 Opcode Mapping:
   0b000 (0): NOP / HALT
   0b001 (1): ALLOC (Alokasi heap privat untuk proses)
-  0b010 (2): WRITE / SEND MSG / GEMM TRANSFORMER / PQC / SIMD VECTOR / AES / UART / TIMER (Periferal & IPC Write)
-  0b011 (3): READ (Membaca data dari memori / GEMM Output / PQC Output / SIMD Output / AES Output / Cycle counter)
+  0b010 (2): WRITE / SEND MSG / NEUROMORPHIC SNN / GEMM / PQC / SIMD / AES / UART / TIMER (Periferal & IPC Write)
+  0b011 (3): READ (Membaca data dari memori / SNN Potential / GEMM / PQC / SIMD / AES / Cycle counter)
   0b100 (4): GC FREE (Pembersihan memori Garbage Collection Hardware)
 """
 
@@ -33,7 +33,7 @@ class GarudaCompiler:
 
     def compile_instruction(self, opcode, pid, addr_or_target, size, data):
         """
-        Membentuk bitstream 43-bit sesuai spesifikasi decoder CPU Core GARUDA SEMESTA v7.0 Titan.
+        Membentuk bitstream 43-bit sesuai spesifikasi decoder CPU Core GARUDA SEMESTA v8.0 Omni.
         - Opcode       : 3 bit  (bit 42..40)
         - PID          : 2 bit  (bit 39..38, PID 0..3)
         - Addr/Target  : 6 bit  (bit 37..32)
@@ -58,6 +58,14 @@ class GarudaCompiler:
 
     def write(self, pid, address, data):
         return self.compile_instruction('WRITE', pid=pid, addr_or_target=address, size=0, data=data)
+
+    def neuromorphic_spike(self, pid, synapse_weight):
+        # Neuromorphic SNN Synaptic Accelerator Address 46
+        return self.compile_instruction('WRITE', pid=pid, addr_or_target=46, size=0, data=synapse_weight)
+
+    def read_snn_membrane(self, pid):
+        # Read Neuromorphic SNN Membrane Potential Address 46
+        return self.compile_instruction('READ', pid=pid, addr_or_target=46, size=0, data=0)
 
     def gemm_transformer_op(self, pid, matrix_data):
         # Hardware Tensor Transformer Engine Address 48
@@ -117,8 +125,8 @@ class GarudaCompiler:
     def generate_verilog_rom(self, output_file=None):
         lines = [
             "// =========================================================",
-            "// AUTO-GENERATED GARUDA ROM BY AI COMPILER AGENT v7.0 TITAN",
-            "// Target Architecture: GARUDA SEMESTA Quad-Core Titan Supercomputer ASIC (43-bit Bitstream)",
+            "// AUTO-GENERATED GARUDA ROM BY AI COMPILER AGENT v8.0 OMNI",
+            "// Target Architecture: GARUDA SEMESTA Quad-Core Omni Beyond Limits ASIC (43-bit Bitstream)",
             "// ========================================================="
         ]
         for idx, inst in enumerate(self.rom_binary):
@@ -134,8 +142,9 @@ class GarudaCompiler:
 
 if __name__ == "__main__":
     compiler = GarudaCompiler()
-    # Program Demonstrasi v7.0 Titan: Tensor GEMM + PQC Quantum + SIMD Vector AI + AES-128 Crypto + UART + Mailbox IPC + HW-GC
+    # Program Demonstrasi v8.0 Omni: Neuromorphic SNN + Tensor GEMM + PQC Quantum + SIMD Vector AI + AES-128 Crypto + UART + Mailbox IPC + HW-GC
     compiler.alloc(pid=0, size=4)
+    compiler.neuromorphic_spike(pid=0, synapse_weight=0x000000FF)        # Akselerator Neuromorphic Spiking Neural Network (SNN)
     compiler.gemm_transformer_op(pid=0, matrix_data=0x00020003)           # Akselerator Hardware Tensor GEMM Transformer (Matrix Multiply)
     compiler.pqc_lattice_op(pid=0, input_data=0x12345678)               # Akselerator Post-Quantum Cryptography (PQC Kyber/Dilithium)
     compiler.print_uart(pid=0, char='G')                                 # Cetak karakter 'G' via Hardware UART TX
