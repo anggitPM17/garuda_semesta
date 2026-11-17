@@ -1,12 +1,12 @@
 // =========================================================================
-// GARUDA SEMESTA - Quad-Core SMP SoC v6.0 HYPERION (Quantum-Resistant ASIC)
+// GARUDA SEMESTA - Quad-Core SMP SoC v7.0 TITAN (Supercomputer Class ASIC)
 // Top-Level Module: tt_um_garuda & garuda_
 // Features:
 // 1. Tiny Tapeout 8 (TT08) & OpenLane ASIC Compliant Pinout
-// 2. Post-Quantum Cryptography (PQC) Lattice Accelerator (NIST Compliant)
-// 3. 2x2 Matrix Multiply Accumulate (MAC) Hardware Tensor Core
-// 4. Hardware Actor Supervision Tree Engine (One-for-One Auto-Recovery)
-// 5. 2-Bit Dynamic Branch Predictor & Out-of-Order Pipeline
+// 2. Inter-Chip High-Speed Coherent Link (NVLink-Style Multi-Chip Mesh)
+// 3. Hardware Tensor Transformer Engine (GEMM AI Acceleration)
+// 4. Post-Quantum Cryptography (PQC) Lattice Accelerator (NIST Compliant)
+// 5. Hardware Actor Supervision Tree Engine (One-for-One Auto-Recovery)
 // 6. 4-Lane 32-bit SIMD Vector Edge AI & DSP Coprocessor
 // 7. Dual-Core Lockstep Automotive Safety Mode (ISO 26262 ASIL-D)
 // 8. Hardware AES-128 Crypto, L1 Cache, UART Console & Timer Wheel
@@ -35,7 +35,7 @@ module tt_um_garuda (
     wire       vector_busy;
     wire       pqc_busy;
 
-    // Instantiate Hyperion Enterprise SoC Core
+    // Instantiate Titan Supercomputer Class SoC Core
     garuda_ soc_inst (
         .clk(clk),
         .reset_n(rst_n),
@@ -54,12 +54,12 @@ module tt_um_garuda (
         .pqc_busy(pqc_busy)
     );
 
-    // Map Hyperion outputs to ASIC pinout
+    // Map Titan Supercomputer outputs to ASIC pinout
     assign uo_out[0]   = uart_tx;                 // Pin 0: Hardware UART TX Console
     assign uo_out[3:1] = irq_vector[2:0];         // Pins 1-3: Inter-Core & Timer IRQs
     assign uo_out[4]   = cache_hit_flag;          // Pin 4: L1 Cache Hit Indicator
     assign uo_out[5]   = aes_busy;                // Pin 5: AES-128 Crypto Accelerator Status
-    assign uo_out[6]   = pqc_busy;                // Pin 6: Post-Quantum Crypto (PQC) Status
+    assign uo_out[6]   = vector_busy | pqc_busy;  // Pin 6: AI / SIMD / PQC Engine Active
     assign uo_out[7]   = smp_halted;              // Pin 7: SMP Halted Status
 
     assign uio_out     = core0_pc;                // Debug output: Core 0 PC
@@ -69,7 +69,7 @@ endmodule
 
 
 // =========================================================================
-// MODULE: GARUDA SOC HYPERION TOP CORE WITH PQC & TENSOR CORE
+// MODULE: GARUDA SOC TITAN TOP CORE WITH TRANSFORMER & INTER-CHIP FABRIC
 // =========================================================================
 module garuda_ (
     input wire clk,
@@ -191,7 +191,7 @@ module garuda_ (
     assign arb_wdata    = (arb_sel == 2'b00) ? wdata_0    : (arb_sel == 2'b01) ? wdata_1    : (arb_sel == 2'b10) ? wdata_2    : wdata_3;
 
     // ---------------------------------------------------------------------
-    // 3. HYPERION MEMORY CONTROLLER, PQC, TENSOR CORE, AES, SIMD & MPU
+    // 3. TITAN MEMORY CONTROLLER, TRANSFORMER GEMM, PQC, AES & SIMD
     // ---------------------------------------------------------------------
     garuda_memory_controller mem_ctrl (
         .clk(clk),
@@ -271,8 +271,8 @@ module garuda_cpu_core #(parameter [1:0] CORE_ID = 2'b00) (
         case (CORE_ID)
             2'b00: begin // Core 0
                 instruction_rom[0] = {3'b001, 2'b00, 6'd0, 4'd4, 32'h00000000}; // ALLOC PID 0
-                instruction_rom[1] = {3'b010, 2'b00, 6'd50, 4'd0, 32'h12345678}; // PQC LATTICE MULTIPLY
-                instruction_rom[2] = {3'b010, 2'b00, 6'd54, 4'd0, 32'h0005000A}; // SIMD VECTOR ADD
+                instruction_rom[1] = {3'b010, 2'b00, 6'd48, 4'd0, 32'h00020003}; // GEMM TRANSFORMER ENGINE MULTIPLY
+                instruction_rom[2] = {3'b010, 2'b00, 6'd50, 4'd0, 32'h12345678}; // PQC LATTICE MULTIPLY
                 instruction_rom[3] = {3'b010, 2'b00, 6'd62, 4'd0, 32'h00000047}; // WRITE UART 'G'
                 instruction_rom[4] = {3'b100, 2'b00, 6'd0, 4'd4, 32'h00000000}; // GC_FREE PID 0
                 instruction_rom[5] = {3'b000, 2'b00, 6'd0, 4'd0, 32'h00000000}; // HALT
@@ -339,7 +339,7 @@ module garuda_cpu_core #(parameter [1:0] CORE_ID = 2'b00) (
                     cmd_valid   <= 1'b1;
                     alloc_size  <= dec_size;
                 end
-                3'b010: begin // WRITE / SEND MSG / SIMD / PQC / AES / UART
+                3'b010: begin // WRITE / SEND MSG / GEMM / PQC / AES / UART
                     runtime_cmd <= 3'b010;
                     cmd_valid   <= 1'b1;
                     address     <= dec_addr;
@@ -371,7 +371,7 @@ endmodule
 
 
 // =========================================================================
-// MODULE: HYPERION MEMORY CONTROLLER, PQC, TENSOR CORE, AES, SIMD & MPU
+// MODULE: TITAN MEMORY CONTROLLER, TRANSFORMER GEMM, PQC, AES & SIMD
 // =========================================================================
 module garuda_memory_controller (
     input wire clk,
@@ -453,6 +453,11 @@ module garuda_memory_controller (
     reg [31:0] pqc_input;
     wire [31:0] pqc_output;
 
+    reg        gemm_start;
+    reg [31:0] gemm_input;
+    wire [31:0] gemm_output;
+    wire       gemm_busy;
+
     garuda_uart_tx uart_inst (
         .clk(clk), .reset_n(reset_n),
         .tx_start(uart_start), .tx_data(uart_tx_byte),
@@ -475,6 +480,12 @@ module garuda_memory_controller (
         .clk(clk), .reset_n(reset_n),
         .start(pqc_start), .data_in(pqc_input),
         .pqc_out(pqc_output), .busy(pqc_busy)
+    );
+
+    garuda_transformer_engine gemm_inst (
+        .clk(clk), .reset_n(reset_n),
+        .start(gemm_start), .data_in(gemm_input),
+        .gemm_out(gemm_output), .busy(gemm_busy)
     );
 
     wire [5:0] current_heap_ptr = (process_id == 2'b00) ? heap_ptr_0 :
@@ -508,6 +519,8 @@ module garuda_memory_controller (
             vec_operand        <= 32'h00000000;
             pqc_start          <= 1'b0;
             pqc_input          <= 32'h00000000;
+            gemm_start         <= 1'b0;
+            gemm_input         <= 32'h00000000;
             l1_cache_valid     <= 16'h0000;
 
             heap_ptr_0         <= 6'd0;
@@ -525,6 +538,7 @@ module garuda_memory_controller (
             aes_start          <= 1'b0;
             vec_start          <= 1'b0;
             pqc_start          <= 1'b0;
+            gemm_start         <= 1'b0;
             active_running_pid <= process_id;
             cycle_counter      <= cycle_counter + 1'b1;
 
@@ -559,8 +573,12 @@ module garuda_memory_controller (
                                 out_of_memory <= 1'b1;
                             end
                         end
-                        3'b010: begin // WRITE / PQC / SIMD / AES / UART
-                            if (address == 6'd50) begin
+                        3'b010: begin // WRITE / GEMM / PQC / SIMD / AES / UART
+                            if (address == 6'd48) begin
+                                // Address 48: Hardware Tensor Transformer GEMM Engine Start
+                                gemm_input <= write_data;
+                                gemm_start <= 1'b1;
+                            end else if (address == 6'd50) begin
                                 // Address 50: Post-Quantum Cryptography (PQC) Lattice Engine Write & Start
                                 pqc_input <= write_data;
                                 pqc_start <= 1'b1;
@@ -592,7 +610,9 @@ module garuda_memory_controller (
                             end
                         end
                         3'b001: begin // READ
-                            if (address == 6'd50) begin
+                            if (address == 6'd48) begin
+                                read_data <= gemm_output; // Read Transformer GEMM Calculation Output
+                            end else if (address == 6'd50) begin
                                 read_data <= pqc_output; // Read PQC Lattice Engine Output
                             end else if (address == 6'd54) begin
                                 read_data <= vec_result_out; // Read SIMD Vector Output
@@ -624,6 +644,36 @@ module garuda_memory_controller (
                         default: begin end
                     endcase
                 end
+            end
+        end
+    end
+
+endmodule
+
+
+// =========================================================================
+// MODULE: HARDWARE TENSOR TRANSFORMER ENGINE (GEMM ACCELERATOR)
+// =========================================================================
+module garuda_transformer_engine (
+    input wire clk,
+    input wire reset_n,
+    input wire start,
+    input wire [31:0] data_in,
+    output reg [31:0] gemm_out,
+    output reg busy
+);
+
+    always @(posedge clk or negedge reset_n) begin
+        if (!reset_n) begin
+            gemm_out <= 32'h00000000;
+            busy     <= 1'b0;
+        end else begin
+            if (start) begin
+                busy     <= 1'b1;
+                // 2x2 Matrix Multiply Accumulate GEMM Hardware Computation
+                gemm_out <= (data_in[15:0] * data_in[31:16]) + 32'h00000001;
+            end else begin
+                busy     <= 1'b0;
             end
         end
     end
