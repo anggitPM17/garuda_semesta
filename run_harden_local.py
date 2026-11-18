@@ -41,7 +41,7 @@ set ::env(SYNTH_ELABORATE_ONLY) 0
     print(f"[OK] Configuration written to {CONFIG_TCL}")
 
 def run_docker_harden():
-    """Runs OpenLane Harden flow inside Docker container."""
+    """Runs OpenLane Harden flow inside Docker container with real-time UTF-8 output streaming."""
     docker_cmd = [
         "docker", "run", "--rm",
         "-v", f"{PROJECT_DIR}:/workspace",
@@ -50,18 +50,29 @@ def run_docker_harden():
         "cd /workspace && openlane /workspace/src/config.tcl"
     ]
     print(f"[RUNNING] Executing OpenLane Harden Flow inside Docker container...")
-    print(f"Command: {' '.join(docker_cmd)}")
+    print(f"Command: {' '.join(docker_cmd)}\n")
 
     start_time = time.time()
-    res = subprocess.run(docker_cmd, capture_output=True, text=True)
-    elapsed = time.time() - start_time
+    process = subprocess.Popen(
+        docker_cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        encoding='utf-8',
+        errors='replace',
+        bufsize=1
+    )
 
-    print(f"[DONE] Execution finished in {elapsed:.1f} seconds.")
-    print("=== DOCKER OUTPUT STDOUT ===")
-    print(res.stdout)
-    if res.stderr:
-        print("=== DOCKER OUTPUT STDERR ===")
-        print(res.stderr)
+    while True:
+        line = process.stdout.readline()
+        if not line and process.poll() is not None:
+            break
+        if line:
+            print(line, end='', flush=True)
+
+    process.wait()
+    elapsed = time.time() - start_time
+    print(f"\n[DONE] Execution finished in {elapsed:.1f} seconds with exit code {process.returncode}.")
 
 if __name__ == "__main__":
     print("=== GARUDA LOCAL OPENLANE HARDEN AUTOMATOR v1.0 ===")
