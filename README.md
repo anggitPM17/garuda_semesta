@@ -1,6 +1,6 @@
-# GARUDA SEMESTA - 32-Core SMP SoC v12.0 (TITAN-TITANIUM LGA-6096 / BGA-6144 Edition)
+# GARUDA SEMESTA - 32-Core SMP SoC v12.0 (TITAN-TITANIUM Enterprise SDK Edition)
 
-Sistem perangkat keras (SoC) mikroelektronika tingkat puncak (*ultimate hyperscale*) berbasis **32-Core Ultra-SMP** dengan **3D Mesh Torus Network-on-Chip (NoC)**, **Neuromorphic Spiking Neural Network (SNN) 32-Channel Array**, **Hardware Tensor Transformer Engine (GEMM AI Acceleration)**, **Quad-Engine Post-Quantum Cryptography (PQC NIST Kyber/Dilithium)**, **Spacecraft & Automotive Triple Modular Redundancy (TMR) ASIL-D / DO-254**, **Hardware AES-256-GCM Cryptographic Accelerator**, **Hexadeca-Channel DDR5 & HBM3e Memory Controller PHY (1024-bit Wide Bus)**, **NVLink-5 Equivalent & Quad PCIe Gen 6.0 Link (1.8 TB/s)**, **UCIe Photonic Interconnect**, **Socket BGA-6144 Pin**, dan **GARUDA Compiler Toolchain v12.0 TITAN-TITANIUM** (64-bit Titanium Bitstream ISA).
+Sistem perangkat keras (SoC) & ekosistem perangkat lunak (*Software SDK & PyTorch Backend*) mikroelektronika tingkat puncak (*ultimate hyperscale*) berbasis **32-Core Ultra-SMP** dengan **3D Mesh Torus Network-on-Chip (NoC)**, **Neuromorphic Spiking Neural Network (SNN) 32-Channel Array**, **Hardware Tensor Transformer Engine (GEMM AI Acceleration)**, **Quad-Engine Post-Quantum Cryptography (PQC NIST Kyber/Dilithium)**, **Spacecraft & Automotive Triple Modular Redundancy (TMR) ASIL-D / DO-254**, **Hardware AES-256-GCM Cryptographic Accelerator**, **Hexadeca-Channel DDR5 & HBM3e Memory Controller PHY (1024-bit Wide Bus)**, **NVLink-5 Equivalent & Quad PCIe Gen 6.0 Link (1.8 TB/s)**, **UCIe Photonic Interconnect**, **Socket BGA-6144 Pin**, **GARUDA PyTorch AI Delegate**, **GARUDA Hardware Emulator**, **GARUDA Microkernel OS**, dan **GARUDA C/C++ SDK & Compiler Toolchain v12.0 TITAN-TITANIUM** (64-bit Titanium Bitstream ISA).
 
 **Pembuat & Arsitek Sistem**: **Anggit Prasetyo Mituhu**
 
@@ -20,6 +20,18 @@ Berikut adalah artefak tata letak fisik keping silikon (*Physical GDSII Silicon 
 
 ---
 
+## 🧰 Ekosistem Perangkat Lunak Enterprise (Complete Software SDK)
+
+- **GARUDA PyTorch Backend (`garuda_torch_backend.py`)**: Delegasi akselerasi PyTorch/ONNX (`torch.device('garuda:0')`) untuk offloading inferensi LLM/GPT-4 langsung ke Tensor GEMM & SNN Array.
+- **GARUDA Hardware Emulator (`garuda_emulator.py`)**: Simulator *cycle-accurate* 3.5 GHz untuk menstimulasi 32 Core SMP, perutean NoC 3D Torus, dan deteksi lonjakan sinapsis SNN.
+- **GARUDA Microkernel OS (`firmware/garuda_os.c`)**: Sistem Operasi Microkernel terdistribusi untuk manajemen proses Aktor, isolasi MPU, dan *Zero-Copy IPC Mailbox*.
+- **GARUDA C/C++ Header SDK (`include/garuda.h`)**: Pustaka API C standar industri untuk akses penuh seluruh akselerator hardware.
+- **GARUDA C Transpiler (`garuda_c_transpiler.py`)**: Kompilator otomatis penerjemah skrip C/C++ biasa (`main.c`) menjadi bitstream ROM 64-bit.
+- **GARUDA High-Level Compiler (`garudac.py`)**: Kompilator bahasa GARUDA 32-Core.
+- **GARUDA Bitstream Generator (`garuda_compiler.py`)**: Generator biner instruksi 64-bit Titanium ISA.
+
+---
+
 ## 🚀 Fitur TITAN-TITANIUM v12.0 (Hyperscale Level Parallel to Nvidia B200 / AMD SP5)
 
 - **32-Core Ultra-SMP Cluster & 3D Mesh Torus NoC**: 32 Core CPU paralel independen (PID 0..31) yang terinterkoneksi via *3D Mesh Torus Network-on-Chip* ultra-rendah latensi.
@@ -29,35 +41,6 @@ Berikut adalah artefak tata letak fisik keping silikon (*Physical GDSII Silicon 
 - **32-Channel Neuromorphic SNN Array**: Array sinapsis otak buatan output (`snn_spike_array_out`) berbasis *Leaky Integrate-and-Fire (LIF)*.
 - **Hardware Tensor Transformer Engine (GEMM)**: Akselerator perkalian matriks FP8/INT8 terdedikasi untuk inferensi Deep Learning, LLM, dan model Transformer.
 - **Quad-Engine Post-Quantum Cryptography (PQC)**: Enkripsi Tahan Komputer Kuantum berbasis kisi (NIST Kyber/Dilithium).
-
-## 📁 Struktur Repositori Enterprise
-
-- `src/project.v` : Kode Sumber Verilog RTL Utama (Modul `garuda_titanium_top`, `garuda_cpu_core64`, `garuda_titanium_noc_memory_controller`)
-- `garuda_compiler.py` : Toolchain Compiler Python v12.0 TITAN-TITANIUM (Generator Bitstream 64-bit 32-Core)
-- `garudac.py` : High-Level Script Compiler v12.0 (Parser Bahasa GARUDA 32-Core)
-- `docs/GARUDA_SEMESTA_SoC_v12_Titanium_Datasheet.md` : Technical Datasheet v12.0
-- `LICENSE` : Lisensi Resmi Apache 2.0 (Hak Cipta © 2026 Anggit Prasetyo Mituhu)
-
-## 🛠️ Output Toolchain Compiler 64-Bit (32-Core)
-
-Output Verilog ROM (`64'h...`) dari instruksi GARUDA 32-Core:
-```verilog
-// =========================================================
-// AUTO-GENERATED GARUDA ROM BY AI COMPILER AGENT v12.0 TITAN-TITANIUM
-// Target Architecture: GARUDA SEMESTA 32-Core LGA-6096 3D Torus ASIC (64-bit Bitstream)
-// =========================================================
-instruction_rom[0] = 64'h1000000400000000;
-instruction_rom[1] = 64'h1F80001000000000;
-instruction_rom[2] = 64'h20023000FFFFFFFF;
-instruction_rom[3] = 64'h2002400000020003;
-instruction_rom[4] = 64'h2F82800012345678;
-instruction_rom[5] = 64'h2003100000000047;
-instruction_rom[6] = 64'h2F83100000000041;
-instruction_rom[7] = 64'h2003F800DEADBEEF;
-instruction_rom[8] = 64'h4000000400000000;
-instruction_rom[9] = 64'h0000000000000000;
-instruction_rom[10] = 64'h0F80000000000000;
-```
 
 ## 📄 Lisensi & Hak Cipta
 
