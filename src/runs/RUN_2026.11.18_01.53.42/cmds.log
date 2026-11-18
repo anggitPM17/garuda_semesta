@@ -1,0 +1,30 @@
+Wed Nov 18 01:53:47 UTC 2026 - Executing "{openroad -exit -no_init -python /nix/store/xpc7xd67rslanlqh566s6jph53bn830w-openlane1-1.1.1/bin/scripts/odbpy/lefutil.py get_metal_layers -o /workspace/src/runs/RUN_2026.11.18_01.53.42/tmp/layers.list /root/.volare/sky130/libs.ref/sky130_fd_sc_hd/techlef/sky130_fd_sc_hd__nom.tlef}"
+
+Wed Nov 18 01:53:47 UTC 2026 - Executing "{/nix/store/xpc7xd67rslanlqh566s6jph53bn830w-openlane1-1.1.1/bin/scripts/mergeLef.py -o /workspace/src/runs/RUN_2026.11.18_01.53.42/tmp/merged.nom.lef -i /root/.volare/sky130/libs.ref/sky130_fd_sc_hd/techlef/sky130_fd_sc_hd__nom.tlef {/root/.volare/sky130/libs.ref/sky130_fd_sc_hd/lef/sky130_fd_sc_hd.lef /root/.volare/sky130/libs.ref/sky130_fd_sc_hd/lef/sky130_ef_sc_hd.lef} |& tee /dev/null}"
+
+Wed Nov 18 01:53:48 UTC 2026 - Executing "{/nix/store/xpc7xd67rslanlqh566s6jph53bn830w-openlane1-1.1.1/bin/scripts/mergeLef.py -o /workspace/src/runs/RUN_2026.11.18_01.53.42/tmp/merged.min.lef -i /root/.volare/sky130/libs.ref/sky130_fd_sc_hd/techlef/sky130_fd_sc_hd__min.tlef {/root/.volare/sky130/libs.ref/sky130_fd_sc_hd/lef/sky130_fd_sc_hd.lef /root/.volare/sky130/libs.ref/sky130_fd_sc_hd/lef/sky130_ef_sc_hd.lef} |& tee /dev/null}"
+
+Wed Nov 18 01:53:50 UTC 2026 - Executing "{/nix/store/xpc7xd67rslanlqh566s6jph53bn830w-openlane1-1.1.1/bin/scripts/mergeLef.py -o /workspace/src/runs/RUN_2026.11.18_01.53.42/tmp/merged.max.lef -i /root/.volare/sky130/libs.ref/sky130_fd_sc_hd/techlef/sky130_fd_sc_hd__max.tlef {/root/.volare/sky130/libs.ref/sky130_fd_sc_hd/lef/sky130_fd_sc_hd.lef /root/.volare/sky130/libs.ref/sky130_fd_sc_hd/lef/sky130_ef_sc_hd.lef} |& tee /dev/null}"
+
+Wed Nov 18 01:53:52 UTC 2026 - Executing "{python3 /nix/store/xpc7xd67rslanlqh566s6jph53bn830w-openlane1-1.1.1/bin/scripts/mergeLib.py --output /workspace/src/runs/RUN_2026.11.18_01.53.42/tmp/synthesis/merged.lib --name sky130_merged /root/.volare/sky130/libs.ref/sky130_fd_sc_hd/lib/sky130_fd_sc_hd__tt_025C_1v80.lib}"
+
+Wed Nov 18 01:53:53 UTC 2026 - Executing "{python3 /nix/store/xpc7xd67rslanlqh566s6jph53bn830w-openlane1-1.1.1/bin/scripts/libtrim.py --cell-file /workspace/src/runs/RUN_2026.11.18_01.53.42/tmp/synthesis/trimmed.lib.exclude.list --output /workspace/src/runs/RUN_2026.11.18_01.53.42/tmp/synthesis/trimmed.lib /workspace/src/runs/RUN_2026.11.18_01.53.42/tmp/synthesis/merged.lib}"
+
+Wed Nov 18 01:53:54 UTC 2026 - Executing "{python3 /nix/store/xpc7xd67rslanlqh566s6jph53bn830w-openlane1-1.1.1/bin/scripts/libtrim.py --cell-file /workspace/src/runs/RUN_2026.11.18_01.53.42/tmp/cts/cts.lib.exclude.list --output /workspace/src/runs/RUN_2026.11.18_01.53.42/tmp/cts/cts.lib /root/.volare/sky130/libs.ref/sky130_fd_sc_hd/lib/sky130_fd_sc_hd__tt_025C_1v80.lib}"
+
+Wed Nov 18 01:53:56 UTC 2026 - Executing "{python3 /nix/store/xpc7xd67rslanlqh566s6jph53bn830w-openlane1-1.1.1/bin/scripts/libtrim.py --cell-file /workspace/src/runs/RUN_2026.11.18_01.53.42/tmp/cts/cts-fastest.lib.exclude.list --output /workspace/src/runs/RUN_2026.11.18_01.53.42/tmp/cts/cts-fastest.lib /root/.volare/sky130/libs.ref/sky130_fd_sc_hd/lib/sky130_fd_sc_hd__ff_n40C_1v95.lib}"
+
+Wed Nov 18 01:54:11 UTC 2026 - Executing "{python3 /nix/store/xpc7xd67rslanlqh566s6jph53bn830w-openlane1-1.1.1/bin/scripts/libtrim.py --cell-file /workspace/src/runs/RUN_2026.11.18_01.53.42/tmp/cts/cts-slowest.lib.exclude.list --output /workspace/src/runs/RUN_2026.11.18_01.53.42/tmp/cts/cts-slowest.lib /root/.volare/sky130/libs.ref/sky130_fd_sc_hd/lib/sky130_fd_sc_hd__ss_100C_1v60.lib}"
+
+Wed Nov 18 01:54:13 UTC 2026 - Executing "{python3 /nix/store/xpc7xd67rslanlqh566s6jph53bn830w-openlane1-1.1.1/bin/scripts/new_tracks.py -i /root/.volare/sky130/libs.tech/openlane/sky130_fd_sc_hd/tracks.info -o /workspace/src/runs/RUN_2026.11.18_01.53.42/tmp/routing/config.tracks}"
+
+Wed Nov 18 01:54:13 UTC 2026 - Executing "{echo {OpenLane } > /workspace/src/runs/RUN_2026.11.18_01.53.42/OPENLANE_COMMIT}"
+
+Wed Nov 18 01:54:13 UTC 2026 - Executing "{yosys -c /nix/store/xpc7xd67rslanlqh566s6jph53bn830w-openlane1-1.1.1/bin/scripts/yosys/blackbox.tcl}"
+
+Wed Nov 18 01:54:13 UTC 2026 - Executing "{verilator -Wall --lint-only --Wno-DECLFILENAME --top-module garuda_excalibur_top /workspace/src/runs/RUN_2026.11.18_01.53.42/tmp/synthesis/blackbox/sky130_fd_sc_hd__blackbox.v /workspace/src/project.v -Wno-fatal --relative-includes |& tee /workspace/src/runs/RUN_2026.11.18_01.53.42/logs/synthesis/linter.log /dev/null}"
+
+Wed Nov 18 01:54:14 UTC 2026 - Executing "{python3 /nix/store/xpc7xd67rslanlqh566s6jph53bn830w-openlane1-1.1.1/bin/scripts/write_runtime.py --conclude --seconds --time-in 1794966854 {flow failed}}"
+
+Wed Nov 18 01:54:14 UTC 2026 - Executing "{python3 /nix/store/xpc7xd67rslanlqh566s6jph53bn830w-openlane1-1.1.1/bin/scripts/generate_reports.py -d /workspace/src --design_name garuda_excalibur_top --tag RUN_2026.11.18_01.53.42 --output_file /workspace/src/runs/RUN_2026.11.18_01.53.42/reports/metrics.csv --man_report /workspace/src/runs/RUN_2026.11.18_01.53.42/reports/manufacturability.rpt --run_path /workspace/src/runs/RUN_2026.11.18_01.53.42}"
+
