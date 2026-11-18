@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """
-GARUDA High-Level Language Compiler (`garudac`) v9.0
+GARUDA High-Level Language Compiler (`garudac`) v11.0 OMNI-SUPREME
 Copyright (c) 2026 Anggit Prasetyo Mituhu. All rights reserved.
 Licensed under the Apache License, Version 2.0
 
 Parses readable high-level GARUDA actor scripts (.gar) and compiles them
-directly into 43-bit synthesizable Verilog ROM bitstream instructions.
+directly into 64-bit synthesizable Verilog ROM bitstream instructions for 16-Core SMP.
 """
 
 import sys
@@ -18,23 +18,11 @@ class GarudaHighLevelCompiler:
 
     def compile_script(self, script_text):
         """
-        Parses high-level GARUDA language script statements.
-        Supported Syntax:
-          - alloc <pid> <size>
-          - write <pid> <address> <data_hex_or_int>
-          - print_uart <pid> <char_or_ascii>
-          - send_mailbox <src_pid> <target_pid> <payload_hex_or_int>
-          - snn_spike <pid> <weight_int>
-          - gemm <pid> <matrix_data_hex>
-          - pqc_encrypt <pid> <input_data_hex>
-          - aes_encrypt <pid> <key_data_hex>
-          - gc_free <pid> <size>
-          - set_timer <pid> <ticks>
-          - halt <pid>
+        Parses high-level GARUDA language script statements for 16 Cores (PID 0..15).
         """
         lines = script_text.strip().split('\n')
         for line_num, line in enumerate(lines, 1):
-            line = line.split('//')[0].split('#')[0].strip() # Remove comments
+            line = line.split('//')[0].split('#')[0].strip()
             if not line:
                 continue
 
@@ -67,7 +55,7 @@ class GarudaHighLevelCompiler:
                 elif cmd == 'snn_spike':
                     pid = int(tokens[1])
                     weight = int(tokens[2], 0)
-                    self.compiler.neuromorphic_spike(pid, weight)
+                    self.compiler.neuromorphic_spike_array(pid, weight)
 
                 elif cmd == 'gemm':
                     pid = int(tokens[1])
@@ -89,11 +77,6 @@ class GarudaHighLevelCompiler:
                     size = int(tokens[2])
                     self.compiler.gc_free(pid, size)
 
-                elif cmd == 'set_timer':
-                    pid = int(tokens[1])
-                    ticks = int(tokens[2])
-                    self.compiler.set_timer(pid, ticks)
-
                 elif cmd == 'halt':
                     pid = int(tokens[1]) if len(tokens) > 1 else 0
                     self.compiler.halt(pid)
@@ -108,26 +91,24 @@ class GarudaHighLevelCompiler:
 
 if __name__ == "__main__":
     sample_garuda_script = """
-    # High-Level GARUDA Actor Script Example
+    # High-Level GARUDA 16-Core Actor Script Example
     # Created by Anggit Prasetyo Mituhu
 
     alloc 0 4
-    snn_spike 0 255
+    alloc 15 8
+    snn_spike 0 0x0000FFFF
     gemm 0 0x00020003
-    pqc_encrypt 0 0x12345678
+    pqc_encrypt 15 0x12345678
     print_uart 0 'G'
-    print_uart 0 'A'
-    print_uart 0 'R'
-    print_uart 0 'U'
-    print_uart 0 'D'
-    print_uart 0 'A'
-    send_mailbox 0 1 0xCAFEBABE
+    print_uart 15 'A'
+    send_mailbox 0 15 0xDEADBEEF
     gc_free 0 4
     halt 0
+    halt 15
     """
 
     hl_compiler = GarudaHighLevelCompiler()
-    print("=== GARUDA HIGH-LEVEL COMPILER (`garudac`) v9.0 ===")
-    print("Compiling GARUDA High-Level Script to 43-bit Verilog ROM...\n")
+    print("=== GARUDA HIGH-LEVEL COMPILER (`garudac`) v11.0 OMNI-SUPREME ===")
+    print("Compiling 16-Core GARUDA Script to 64-bit Verilog ROM...\n")
     verilog_rom_output = hl_compiler.compile_script(sample_garuda_script)
     print(verilog_rom_output)

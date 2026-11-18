@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """
-GARUDA Compiler & Assembler Toolchain v10.0 EXCALIBUR (Enterprise BGA-2000+)
+GARUDA Compiler & Assembler Toolchain v11.0 OMNI-SUPREME (16-Core Hyperscale Edition)
 Copyright (c) 2026 Anggit Prasetyo Mituhu. All rights reserved.
 Licensed under the Apache License, Version 2.0
 
-Translates GARUDA high-level instructions into 64-bit EXCALIBUR ISA
-for the Octa-Core SMP Hyperscale Network-on-Chip (NoC) Architecture.
+Translates GARUDA high-level instructions into 64-bit OMNI-SUPREME ISA
+for the 16-Core Ultra-SMP Hyperscale 3D Torus Network-on-Chip (NoC) Architecture.
 
-64-Bit Enterprise ISA Format:
+64-Bit Supreme ISA Format:
 [Opcode: 4 bit][PID: 4 bit][Target/Addr: 12 bit][Size: 12 bit][Data/Payload: 32 bit]
 """
 
@@ -29,7 +29,7 @@ class GarudaCompiler:
 
     def compile_instruction(self, opcode, pid, addr_or_target, size, data):
         """
-        Membentuk bitstream 64-bit sesuai spesifikasi Excalibur NoC CPU Core.
+        Membentuk bitstream 64-bit Supreme sesuai spesifikasi 16-Core NoC CPU Core v11.0.
         - Opcode       : 4 bit  (bit 63..60)
         - PID          : 4 bit  (bit 59..56, PID 0..15)
         - Addr/Target  : 12 bit (bit 55..44)
@@ -55,8 +55,8 @@ class GarudaCompiler:
     def write(self, pid, address, data):
         return self.compile_instruction('WRITE', pid=pid, addr_or_target=address, size=0, data=data)
 
-    def neuromorphic_spike(self, pid, synapse_weight):
-        return self.compile_instruction('WRITE', pid=pid, addr_or_target=0x046, size=0, data=synapse_weight)
+    def neuromorphic_spike_array(self, pid, synapse_mask):
+        return self.compile_instruction('WRITE', pid=pid, addr_or_target=0x046, size=0, data=synapse_mask)
 
     def gemm_transformer_op(self, pid, matrix_data):
         return self.compile_instruction('WRITE', pid=pid, addr_or_target=0x048, size=0, data=matrix_data)
@@ -74,6 +74,9 @@ class GarudaCompiler:
         ascii_code = ord(char) if isinstance(char, str) else char
         return self.compile_instruction('WRITE', pid=pid, addr_or_target=0x062, size=0, data=ascii_code)
 
+    def send_mailbox(self, src_pid, target_pid, payload):
+        return self.compile_instruction('SEND_MSG', pid=src_pid, addr_or_target=0x060 + (target_pid & 0xF), size=0, data=payload)
+
     def gc_free(self, pid, size):
         return self.compile_instruction('GC_FREE', pid=pid, addr_or_target=0, size=size, data=0)
 
@@ -83,8 +86,8 @@ class GarudaCompiler:
     def generate_verilog_rom(self, output_file=None):
         lines = [
             "// =========================================================",
-            "// AUTO-GENERATED GARUDA ROM BY AI COMPILER AGENT v10.0 EXCALIBUR",
-            "// Target Architecture: GARUDA SEMESTA Octa-Core BGA-2000 NoC ASIC (64-bit Bitstream)",
+            "// AUTO-GENERATED GARUDA ROM BY AI COMPILER AGENT v11.0 OMNI-SUPREME",
+            "// Target Architecture: GARUDA SEMESTA 16-Core BGA-2500 3D Torus ASIC (64-bit Bitstream)",
             "// ========================================================="
         ]
         for idx, inst in enumerate(self.rom_binary):
@@ -101,9 +104,11 @@ class GarudaCompiler:
 if __name__ == "__main__":
     compiler = GarudaCompiler()
     compiler.alloc(pid=0, size=4)
+    compiler.neuromorphic_spike_array(pid=0, synapse_mask=0x0000FFFF)
     compiler.gemm_transformer_op(pid=0, matrix_data=0x00020003)
     compiler.pqc_lattice_op(pid=0, input_data=0x12345678)
     compiler.print_uart(pid=0, char='G')
+    compiler.send_mailbox(src_pid=0, target_pid=15, payload=0xDEADBEEF)
     compiler.gc_free(pid=0, size=4)
     compiler.halt(pid=0)
 
