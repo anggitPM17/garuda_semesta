@@ -6,6 +6,20 @@ Sistem perangkat keras (SoC) mikroelektronika tingkat puncak (*ultimate hypersca
 
 ---
 
+## 🔬 Bukti Tata Letak Fisik Silikon Chip (ASIC Layout Renders)
+
+Berikut adalah artefak tata letak fisik keping silikon (*Physical GDSII Silicon Die Renders*) buatan **Anggit Prasetyo Mituhu** yang telah berhasil melewati tahapan sintesis, penempatan sel (*placement*), perutean kawat (*routing*), DRC, dan LVS di OpenLane EDA Flow:
+
+| Overview Tata Letak Chip | Tampilan Berwarna SEL & Routing |
+| :---: | :---: |
+| ![Silicon Die Overview](docs/images/01_overview.png) | ![Colored Cell View](docs/images/03_colored_view.png) |
+
+| Render Resolusi Tinggi (High-Res Die Layout) | Detail Zoom Sel & Gerbang Transistor |
+| :---: | :---: |
+| ![High-Res Silicon Die](docs/images/02_overview_hires.png) | ![Zoom Center Transistors](docs/images/04_zoom_center.png) |
+
+---
+
 ## 🚀 Fitur OMNI-SUPREME v11.0 (Ultimate Hyperscale)
 
 - **16-Core Ultra-SMP Cluster & 3D Torus NoC**: 16 Core CPU paralel independen (PID 0..15) yang saling terhubung melalui jalinan *3D Torus Network-on-Chip* ultra-rendah latensi.
