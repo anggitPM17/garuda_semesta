@@ -1,0 +1,110 @@
+%Warning-WIDTHEXPAND: /workspace/src/project.v:214:37: Operator ASSIGNDLY expects 336 bits on the Assign RHS, but Assign RHS's REPLICATE generates 335 bits.
+                                                     : ... note: In instance 'garuda_titanium_top.CPU_CLUSTER_32[31].cpu_core'
+  214 |                 4'h1: noc_tx_packet <= {16'h0001, 52'd0, dec_size, 224'd0, dec_data};
+      |                                     ^~
+                      ... For warning description see https://verilator.org/warn/WIDTHEXPAND?v=5.018
+                      ... Use "/* verilator lint_off WIDTHEXPAND */" and lint_on around source to disable this message.
+%Warning-WIDTHEXPAND: /workspace/src/project.v:216:37: Operator ASSIGNDLY expects 336 bits on the Assign RHS, but Assign RHS's REPLICATE generates 335 bits.
+                                                     : ... note: In instance 'garuda_titanium_top.CPU_CLUSTER_32[31].cpu_core'
+  216 |                 4'h4: noc_tx_packet <= {16'h0004, 52'd0, dec_size, 224'd0, dec_data};
+      |                                     ^~
+%Warning-UNUSEDSIGNAL: /workspace/src/project.v:32:25: Signal is not used: 'clk_mem'
+                                                     : ... note: In instance 'garuda_titanium_top'
+   32 |     input  wire         clk_mem,         
+      |                         ^~~~~~~
+%Warning-UNUSEDSIGNAL: /workspace/src/project.v:34:25: Signal is not used: 'jtag_tck'
+                                                     : ... note: In instance 'garuda_titanium_top'
+   34 |     input  wire         jtag_tck, jtag_tms, jtag_tdi,
+      |                         ^~~~~~~~
+%Warning-UNUSEDSIGNAL: /workspace/src/project.v:34:35: Signal is not used: 'jtag_tms'
+                                                     : ... note: In instance 'garuda_titanium_top'
+   34 |     input  wire         jtag_tck, jtag_tms, jtag_tdi,
+      |                                   ^~~~~~~~
+%Warning-UNUSEDSIGNAL: /workspace/src/project.v:34:45: Signal is not used: 'jtag_tdi'
+                                                     : ... note: In instance 'garuda_titanium_top'
+   34 |     input  wire         jtag_tck, jtag_tms, jtag_tdi,
+      |                                             ^~~~~~~~
+%Warning-UNDRIVEN: /workspace/src/project.v:35:25: Signal is not driven: 'jtag_tdo'
+                                                 : ... note: In instance 'garuda_titanium_top'
+   35 |     output wire         jtag_tdo,
+      |                         ^~~~~~~~
+%Warning-UNUSEDSIGNAL: /workspace/src/project.v:36:25: Signal is not used: 'pll_ref_clks'
+                                                     : ... note: In instance 'garuda_titanium_top'
+   36 |     input  wire [25:0]  pll_ref_clks,
+      |                         ^~~~~~~~~~~~
+%Warning-UNDRIVEN: /workspace/src/project.v:43:25: Signal is not driven: 'ddr5_cs_n'
+                                                 : ... note: In instance 'garuda_titanium_top'
+   43 |     output wire [15:0]  ddr5_cs_n,       
+      |                         ^~~~~~~~~
+%Warning-UNDRIVEN: /workspace/src/project.v:44:25: Signal is not driven: 'ddr5_ck_p'
+                                                 : ... note: In instance 'garuda_titanium_top'
+   44 |     output wire [31:0]  ddr5_ck_p,       
+      |                         ^~~~~~~~~
+%Warning-UNDRIVEN: /workspace/src/project.v:45:25: Signal is not driven: 'ddr5_ck_n'
+                                                 : ... note: In instance 'garuda_titanium_top'
+   45 |     output wire [31:0]  ddr5_ck_n,
+      |                         ^~~~~~~~~
+%Warning-UNUSEDSIGNAL: /workspace/src/project.v:53:25: Signal is not used: 'pcie_refclk_p'
+                                                     : ... note: In instance 'garuda_titanium_top'
+   53 |     input  wire [7:0]   pcie_refclk_p,
+      |                         ^~~~~~~~~~~~~
+%Warning-UNUSEDSIGNAL: /workspace/src/project.v:54:25: Signal is not used: 'pcie_refclk_n'
+                                                     : ... note: In instance 'garuda_titanium_top'
+   54 |     input  wire [7:0]   pcie_refclk_n,
+      |                         ^~~~~~~~~~~~~
+%Warning-UNDRIVEN: /workspace/src/project.v:55:25: Signal is not driven: 'pcie_tx_p'
+                                                 : ... note: In instance 'garuda_titanium_top'
+   55 |     output wire [127:0] pcie_tx_p,       
+      |                         ^~~~~~~~~
+%Warning-UNDRIVEN: /workspace/src/project.v:56:25: Signal is not driven: 'pcie_tx_n'
+                                                 : ... note: In instance 'garuda_titanium_top'
+   56 |     output wire [127:0] pcie_tx_n,       
+      |                         ^~~~~~~~~
+%Warning-UNUSEDSIGNAL: /workspace/src/project.v:57:25: Signal is not used: 'pcie_rx_p'
+                                                     : ... note: In instance 'garuda_titanium_top'
+   57 |     input  wire [127:0] pcie_rx_p,       
+      |                         ^~~~~~~~~
+%Warning-UNUSEDSIGNAL: /workspace/src/project.v:58:25: Signal is not used: 'pcie_rx_n'
+                                                     : ... note: In instance 'garuda_titanium_top'
+   58 |     input  wire [127:0] pcie_rx_n,       
+      |                         ^~~~~~~~~
+%Warning-UNUSEDSIGNAL: /workspace/src/project.v:69:25: Signal is not used: 'uart_rx'
+                                                     : ... note: In instance 'garuda_titanium_top'
+   69 |     input  wire         uart_rx,
+      |                         ^~~~~~~
+%Warning-UNDRIVEN: /workspace/src/project.v:72:25: Signal is not driven: 'diagnostic_leds'
+                                                 : ... note: In instance 'garuda_titanium_top'
+   72 |     output wire [15:0]  diagnostic_leds,
+      |                         ^~~~~~~~~~~~~~~
+%Warning-UNUSEDSIGNAL: /workspace/src/project.v:95:17: Bits of signal are not used: 'core_halt'[31:16]
+                                                     : ... note: In instance 'garuda_titanium_top'
+   95 |     wire [31:0] core_halt;
+      |                 ^~~~~~~~~
+%Warning-UNUSEDSIGNAL: /workspace/src/project.v:166:25: Signal is not used: 'noc_rx_packet'
+                                                      : ... note: In instance 'garuda_titanium_top.CPU_CLUSTER_32[31].cpu_core'
+  166 |     input  wire [335:0] noc_rx_packet,
+      |                         ^~~~~~~~~~~~~
+%Warning-UNUSEDSIGNAL: /workspace/src/project.v:177:16: Signal is not used: 'dec_pid'
+                                                      : ... note: In instance 'garuda_titanium_top.CPU_CLUSTER_32[31].cpu_core'
+  177 |     reg [4:0]  dec_pid;
+      |                ^~~~~~~
+%Warning-UNUSEDSIGNAL: /workspace/src/project.v:235:30: Bits of signal are not used: 'core_tx_packets'[10751:336]
+                                                      : ... note: In instance 'garuda_titanium_top.noc_mem_ctrl'
+  235 |     input  wire [32*336-1:0] core_tx_packets,
+      |                              ^~~~~~~~~~~~~~~
+%Warning-UNDRIVEN: /workspace/src/project.v:236:30: Signal is not driven: 'core_rx_packets'
+                                                  : ... note: In instance 'garuda_titanium_top.noc_mem_ctrl'
+  236 |     output wire [32*336-1:0] core_rx_packets,
+      |                              ^~~~~~~~~~~~~~~
+%Warning-UNDRIVEN: /workspace/src/project.v:239:26: Signal is not driven: 'ddr5_ca'
+                                                  : ... note: In instance 'garuda_titanium_top.noc_mem_ctrl'
+  239 |     output reg  [223:0]  ddr5_ca,
+      |                          ^~~~~~~
+%Warning-UNUSEDSIGNAL: /workspace/src/project.v:245:16: Signal is not driven, nor used: 'ddr_proxy_mem'
+                                                      : ... note: In instance 'garuda_titanium_top.noc_mem_ctrl'
+  245 |     reg [31:0] ddr_proxy_mem [0:16384];
+      |                ^~~~~~~~~~~~~
+%Warning-UNUSEDSIGNAL: /workspace/src/project.v:248:18: Bits of signal are not used: 'core0_tx'[255:32]
+                                                      : ... note: In instance 'garuda_titanium_top.noc_mem_ctrl'
+  248 |     wire [335:0] core0_tx = core_tx_packets[335:0];
+      |                  ^~~~~~~~
