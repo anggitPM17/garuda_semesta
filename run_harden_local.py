@@ -41,15 +41,13 @@ set ::env(SYNTH_ELABORATE_ONLY) 0
     print(f"[OK] Configuration written to {CONFIG_TCL}")
 
 def run_docker_harden():
-    """Runs OpenLane Harden flow inside Docker container using pre-installed Sky130 PDK."""
+    """Runs OpenLane Harden flow inside Docker container using flow.tcl."""
     docker_cmd = [
         "docker", "run", "--rm",
-        "-e", "PDK_ROOT=/root/.volare",
-        "-e", "PDK=sky130A",
         "-v", f"{PROJECT_DIR}:/workspace",
         "goldenways/design-chip:v1.2",
         "bash", "-c",
-        "cd /workspace && openlane /workspace/src/config.tcl"
+        "flow.tcl -design /workspace/src"
     ]
     print(f"[RUNNING] Executing OpenLane Harden Flow inside Docker container...")
     print(f"Command: {' '.join(docker_cmd)}\n")
