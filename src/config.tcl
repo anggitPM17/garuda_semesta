@@ -6,11 +6,15 @@ set ::env(VERILOG_FILES) { /workspace/src/project.v }
 set ::env(CLOCK_PORT) "clk_sys"
 set ::env(CLOCK_PERIOD) "2.0"
 set ::env(FP_SIZING) "absolute"
-set ::env(DIE_AREA) "0 0 20000 20000"
-set ::env(CORE_AREA) "50 50 19950 19950"
-set ::env(PL_TARGET_DENSITY) "0.65"
+set ::env(DIE_AREA) "0 0 2000 2000"
+set ::env(CORE_AREA) "10 10 1990 1990"
+set ::env(PL_TARGET_DENSITY) "0.55"
 set ::env(VDD_NETS) { VDD_CORE VDD_MEM VDD_IO }
 set ::env(GND_NETS) { VSS_GND }
-set ::env(RUN_KLAYOUT) 0
-set ::env(RUN_CROWBAR) 0
-set ::env(SYNTH_ELABORATE_ONLY) 0
+set ::env(RUN_KLAYOUT) 1
+set ::env(MAGIC_GENERATE_GDS) 1
+set ::env(MAGIC_GENERATE_LEF) 1
+set ::env(MAGIC_GENERATE_MAG) 1
+set ::env(RUN_MAGIC) 1
+set ::env(RUN_MAGIC_DRC) 1
+set ::env(RUN_LVS) 1
