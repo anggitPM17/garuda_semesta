@@ -41,13 +41,13 @@ set ::env(SYNTH_ELABORATE_ONLY) 0
     print(f"[OK] Configuration written to {CONFIG_TCL}")
 
 def run_docker_harden():
-    """Runs OpenLane Harden flow inside Docker container using nix store flow.tcl."""
+    """Runs OpenLane Harden flow inside Docker container using nix store flow.tcl executable wrapper."""
     docker_cmd = [
         "docker", "run", "--rm",
         "-v", f"{PROJECT_DIR}:/workspace",
         "goldenways/design-chip:v1.2",
         "bash", "-c",
-        "flow_path=$(find /nix/store/ -name flow.tcl 2>/dev/null | head -n 1) && echo \"[INFO] Found flow.tcl at: $flow_path\" && tclsh $flow_path -design /workspace/src"
+        "flow_path=$(find /nix/store/ -name flow.tcl 2>/dev/null | grep bin/flow.tcl | head -n 1) && echo \"[INFO] Executing wrapper: $flow_path\" && $flow_path -design /workspace/src"
     ]
     print(f"[RUNNING] Executing OpenLane Harden Flow inside Docker container...")
     print(f"Command: {' '.join(docker_cmd)}\n")
