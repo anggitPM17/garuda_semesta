@@ -9,6 +9,10 @@ __pycache__/
 *.def.tmp
 src/runs/*/tmp/floorplan/*
 
+# Temporary Download Utility Scripts
+download_klayout.py
+find_klayout_url.py
+
 # C/C++ build artifacts
 *.o
 *.obj
