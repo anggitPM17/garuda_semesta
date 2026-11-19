@@ -5,6 +5,7 @@ __pycache__/
 
 # Private Local Oscilloscope & Waveform Tools (Anggit Prasetyo Mituhu Local Private Assets)
 *.vcd
+*_audit_report.md
 tb_garuda_ultimate.v
 run_waveform_simulation.py
 simulate_chip_individual.py
