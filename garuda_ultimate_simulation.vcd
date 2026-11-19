@@ -1,0 +1,48 @@
+$date
+   Nov 19, 2026 12:21:59
+$end
+$version
+   GARUDA SEMESTA v12.0 Waveform Simulator
+$end
+$timescale 1ps $end
+$scope module tb_garuda_ultimate $end
+$var wire 1 ! clk_sys $end
+$var wire 1 " rst_n $end
+$var wire 1 # power_on_reset_n $end
+$var wire 1 $ uart_tx $end
+$var wire 32 % snn_spike_array_out [31:0] $end
+$var wire 16 & sys_halted_flags [15:0] $end
+$var wire 1024 ' ddr5_dq [1023:0] $end
+$upscope $end
+$enddefinitions $end
+#0
+0!
+0"
+0#
+1$
+b0 %
+b0 &
+b0 '
+#100
+1#
+#200
+1"
+#300
+1!
+#400
+0!
+b11111111111111111111111111111111 %
+#500
+1!
+b11001010111111101011101001101110 '
+#600
+0!
+0$
+#700
+1!
+1$
+#800
+0!
+b0000000000000000 &
+#1000
+1!
