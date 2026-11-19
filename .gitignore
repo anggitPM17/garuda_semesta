@@ -1,12 +1,14 @@
-# Python bytecode & cache
+# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
 
-# Temporary build logs
-*.tmp
-*.log.tmp
+# Temporary EDA Floorplan & Route Databases (>100MB)
+*.odb
+*.def
 
-# OS specific files
-.DS_Store
-Thumbs.db
+# C/C++ build artifacts
+*.o
+*.obj
+*.exe
+!klayout_setup.exe
