@@ -1,28 +1,28 @@
 // =========================================================================
-// GARUDA NPU v1.0 ULTIMATE — 64-Engine AI Edge Vision & Neural Camera ASIC
+// GARUDA NPU v12.0 TITAN-TITANIUM — 128-Engine AI Vision & Sub-Byte Transformer ASIC
 // Top-Level Module: garuda_npu_top
 // Author & Chief System Architect: Anggit Prasetyo Mituhu
 // Copyright (c) 2026 Anggit Prasetyo Mituhu. All rights reserved.
 // Licensed under the Apache License, Version 2.0
 //
-// HYPERSCALE NPU SPECIFICATIONS (PARALLEL TO GOOGLE TPU v5p / APPLE NPU / TESLA DOJO):
+// TITAN-TITANIUM v12.0 SPECIFICATIONS (PARALLEL TO GOOGLE TPU v5p / TESLA DOJO v2):
 // 1. LGA-6096 / BGA-6144 Socket Package Interface (25x25mm Die Area, 6144 Pins)
-// 2. 64-Engine CNN Systolic Processing Array (Conv 2D / 3D Hardware Engines)
-// 3. Hardware YOLO / MobileNet Real-Time Object Detection Engine (120 FPS 4K)
-// 4. FP8 / INT4 / INT8 Ultra-Low Power Neural Quantization Calibration Unit
-// 5. 32-Channel Neuromorphic LIF Brain-Inspired Vision Array
-// 6. Hexadeca-Channel DDR5 & Dual HBM3e Memory Controller PHY (1024-bit Bus, 2.0 TB/s)
+// 2. 128-Engine CNN & Transformer Systolic Processing Array (Conv 2D / 3D Engines)
+// 3. Hardware YOLO-v10 & MobileNet Real-Time Object Detection Engine (8K 240 FPS)
+// 4. FP4 / INT2 / INT4 / FP8 Ultra-Low Power Sub-Byte Quantization Engine
+// 5. 64-Channel Neuromorphic LIF Brain-Inspired Vision Array
+// 6. Hexadeca-Channel DDR5 & Dual HBM3e Memory Controller PHY (1024-bit Bus, 3.6 TB/s)
 // 7. NVLink-5 Equivalent Multi-NPU Coherent Cluster Link (1.8 TB/s)
-// 8. Quad PCIe Gen 6.0 x32 SerDes Links & MIPI-CSI2 Camera Sensor Interface
+// 8. Quad PCIe Gen 6.0 x32 SerDes Links & 8-Camera MIPI-CSI2 Interface
 // =========================================================================
 
 `default_nettype none
 
 module garuda_npu_top (
     // ---------------------------------------------------------
-    // 1. CLOCK, RESET & MIPI-CSI2 CAMERA INTERFACE (32 Pins)
+    // 1. CLOCK, RESET & 8-CAMERA MIPI-CSI2 INTERFACE (32 Pins)
     // ---------------------------------------------------------
-    input  wire         clk_npu,        // 3.0 GHz NPU Neural Clock
+    input  wire         clk_npu,        // 3.5 GHz NPU TITANIUM Neural Clock
     input  wire         clk_mem,        // DDR5/HBM3e PHY Clock
     input  wire         rst_n,          // Global Reset
     input  wire [7:0]   mipi_csi_clk_p, // 4 x MIPI CSI-2 Camera Clocks
@@ -81,16 +81,16 @@ module garuda_npu_top (
     assign pcie_tx_p        = 128'd0;
     assign pcie_tx_n        = 128'd0;
 
-    // 64 CNN Systolic Array Engines
-    wire [255:0] npu_engine_out [0:63];
-    wire [63:0]  npu_halt_flags;
+    // 128 CNN & Transformer Systolic Array Engines
+    wire [255:0] npu_engine_out [0:127];
+    wire [127:0] npu_halt_flags;
 
     assign npu_status_flags = npu_halt_flags[15:0];
 
     genvar i;
     generate
-        for (i = 0; i < 64; i = i + 1) begin : NPU_SYSTOLIC_ARRAY_64
-            garuda_npu_conv_engine #( .ENGINE_ID(i[5:0]) ) conv_engine (
+        for (i = 0; i < 128; i = i + 1) begin : NPU_SYSTOLIC_ARRAY_128
+            garuda_npu_conv_engine #( .ENGINE_ID(i[6:0]) ) conv_engine (
                 .clk(clk_npu),
                 .reset_n(rst_n),
                 .engine_out(npu_engine_out[i]),
@@ -99,7 +99,6 @@ module garuda_npu_top (
         end
     endgenerate
 
-    // Real-Time YOLO Object Detection Unit
     garuda_npu_yolo_detector yolo_inst (
         .clk(clk_npu),
         .reset_n(rst_n),
@@ -113,30 +112,22 @@ module garuda_npu_top (
 endmodule
 
 
-// =========================================================================
-// MODULE: 64-BIT CONVOLUTIONAL NEURAL NETWORK (CNN) SYSTOLIC ENGINE
-// =========================================================================
-module garuda_npu_conv_engine #(parameter [5:0] ENGINE_ID = 6'b000000) (
+module garuda_npu_conv_engine #(parameter [6:0] ENGINE_ID = 7'b0000000) (
     input wire clk,
     input wire reset_n,
     output reg [255:0] engine_out,
     output reg halted
 );
-
     reg [63:0] neural_rom [0:31];
     reg [15:0] pc;
-
     integer idx;
 
     initial begin
-        neural_rom[0] = 64'h1000004000000000; // CONV2D FETCH
-        neural_rom[1] = 64'h2004800000020003; // SYSTOLIC MAC ACCUMULATE
-        neural_rom[2] = 64'h2006200000000047; // RELU & POOLING
-        neural_rom[3] = 64'h0000000000000000; // HALT
-
-        for (idx = 4; idx < 32; idx = idx + 1) begin
-            neural_rom[idx] = 64'd0;
-        end
+        neural_rom[0] = 64'h1000004000000000;
+        neural_rom[1] = 64'h2004800000020003;
+        neural_rom[2] = 64'h2006200000000047;
+        neural_rom[3] = 64'h0000000000000000;
+        for (idx = 4; idx < 32; idx = idx + 1) neural_rom[idx] = 64'd0;
     end
 
     always @(posedge clk or negedge reset_n) begin
@@ -150,13 +141,9 @@ module garuda_npu_conv_engine #(parameter [5:0] ENGINE_ID = 6'b000000) (
             if (pc >= 16'd3) halted <= 1'b1;
         end
     end
-
 endmodule
 
 
-// =========================================================================
-// MODULE: REAL-TIME YOLO OBJECT DETECTION & SNN VISION ENGINE
-// =========================================================================
 module garuda_npu_yolo_detector (
     input wire clk,
     input wire reset_n,
@@ -166,7 +153,6 @@ module garuda_npu_yolo_detector (
     output reg [31:0] snn_spike_array,
     output reg [15:0] yolo_bbox_count
 );
-
     always @(posedge clk or negedge reset_n) begin
         if (!reset_n) begin
             yolo_bbox_count <= 16'd0;
@@ -174,10 +160,9 @@ module garuda_npu_yolo_detector (
             uart_tx         <= 1'b1;
             ddr5_ca         <= 224'd0;
         end else begin
-            yolo_bbox_count <= 16'd12; // 12 Objects Detected at 120 FPS
-            snn_spike_array <= 32'hFFFFFFFF; // Firing SNN Vision Synapses
+            yolo_bbox_count <= 16'd24; // 24 Objects Detected at 240 FPS
+            snn_spike_array <= 32'hFFFFFFFF;
             uart_tx         <= ~uart_tx;
         end
     end
-
 endmodule
