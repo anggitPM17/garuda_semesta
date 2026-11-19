@@ -9,6 +9,10 @@ tb_garuda_ultimate.v
 run_waveform_simulation.py
 garuda_ultimate_simulation.vcd
 garuda_5chip_master_simulation.vcd
+download_gtkwave.py
+fix_gtkwave_loaders.py
+gtkwave.zip
+gtkwave_app/
 
 # Temporary EDA Floorplan & Route Databases (>100MB)
 *.odb
