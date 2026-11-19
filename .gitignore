@@ -8,6 +8,7 @@ __pycache__/
 tb_garuda_ultimate.v
 run_waveform_simulation.py
 garuda_ultimate_simulation.vcd
+garuda_5chip_master_simulation.vcd
 
 # Temporary EDA Floorplan & Route Databases (>100MB)
 *.odb
