@@ -7,6 +7,12 @@ __pycache__/
 *.vcd
 tb_garuda_ultimate.v
 run_waveform_simulation.py
+simulate_chip_individual.py
+cpu_simulation.vcd
+gpu_simulation.vcd
+npu_simulation.vcd
+secure_simulation.vcd
+mcu_simulation.vcd
 garuda_ultimate_simulation.vcd
 garuda_5chip_master_simulation.vcd
 download_gtkwave.py
