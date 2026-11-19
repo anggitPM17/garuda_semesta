@@ -6,6 +6,8 @@ __pycache__/
 # Temporary EDA Floorplan & Route Databases (>100MB)
 *.odb
 *.def
+*.def.tmp
+src/runs/*/tmp/floorplan/*
 
 # C/C++ build artifacts
 *.o
