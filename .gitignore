@@ -3,6 +3,12 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# Private Local Oscilloscope & Waveform Tools (Anggit Prasetyo Mituhu Local Private Assets)
+*.vcd
+tb_garuda_ultimate.v
+run_waveform_simulation.py
+garuda_ultimate_simulation.vcd
+
 # Temporary EDA Floorplan & Route Databases (>100MB)
 *.odb
 *.def
