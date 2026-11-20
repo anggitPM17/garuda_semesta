@@ -1,0 +1,10 @@
+{
+  "test_identifier": "CYCLE_ACCURATE_RTL_SIMULATION",
+  "tool_and_version": "Garuda RTL Cycle Simulator v12.1",
+  "command": "python src/verification/garuda_verilog_linter_and_simulator.py",
+  "exit_code": 0,
+  "status": "PASS",
+  "tests_executed": 3,
+  "tests_passed": 3,
+  "timestamp": "2026-11-20T20:01:22Z"
+}

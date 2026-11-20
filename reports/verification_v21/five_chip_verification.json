@@ -1,0 +1,15 @@
+{
+  "test_identifier": "FIVE_CHIP_HARDWARE_VERIFICATION",
+  "tool_and_version": "Garuda Multi-Chip Runner v12.1",
+  "command": "python tests/run_all_unit_and_integration_tests.py",
+  "exit_code": 0,
+  "status": "PASS",
+  "chips": {
+    "CPU": "PASS",
+    "GPU": "PASS",
+    "NPU": "PASS",
+    "SECURE": "PASS",
+    "MCU": "PASS"
+  },
+  "timestamp": "2026-11-20T20:01:22Z"
+}

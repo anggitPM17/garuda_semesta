@@ -1,0 +1,22 @@
+{
+  "test_identifier": "COMPILER_TO_RTL_VERTICAL_SLICE",
+  "source_files": [
+    "garuda_compiler.py",
+    "src/cpu/garuda_cpu_pipeline_top.v",
+    "src/memory/garuda_memory_subsystem_top.v"
+  ],
+  "tool_and_version": "Python 3.14 / Verilog RTL Simulator",
+  "command": "python src/integration/garuda_compiler_vertical_slice.py",
+  "exit_code": 0,
+  "status": "PASS",
+  "assertion_count": 2,
+  "sram_target_address": "0x80000100",
+  "sram_expected_value": 500,
+  "sram_actual_value": 500,
+  "vcd_waveform_path": "D:\\richat\\garuda_semesta_repo\\garuda_vertical_slice.vcd",
+  "duration_seconds": 0.005,
+  "evidence_artifact_paths": [
+    "D:\\richat\\garuda_semesta_repo\\garuda_program.hex",
+    "D:\\richat\\garuda_semesta_repo\\garuda_vertical_slice.vcd"
+  ]
+}

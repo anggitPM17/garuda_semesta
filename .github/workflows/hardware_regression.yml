@@ -1,0 +1,40 @@
+name: GARUDA SEMESTA — Hardware & Compiler Regression CI/CD V2.1
+
+on:
+  push:
+    branches: [ main, engineering/hardening-v2 ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  verify_hardware_and_compiler:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Detect Available Tools
+        run: |
+          python src/verification/garuda_tool_detector.py
+
+      - name: Run Master Unit & Integration Test Suite
+        run: |
+          python tests/run_all_unit_and_integration_tests.py
+
+      - name: Run Live Compiler-to-Silicon Vertical Slice Test
+        run: |
+          python src/integration/garuda_compiler_vertical_slice.py
+
+      - name: Run RTL Verilog Linter & Simulator
+        run: |
+          python src/verification/garuda_verilog_linter_and_simulator.py
+
+      - name: Generate V2.1 Machine-Readable JSON Reports
+        run: |
+          python src/verification/generate_v21_reports.py

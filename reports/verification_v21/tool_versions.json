@@ -1,0 +1,32 @@
+{
+  "python": {
+    "available": true,
+    "version": "Python 3.14.3",
+    "status": "AVAILABLE"
+  },
+  "docker": {
+    "available": true,
+    "version": "Docker version 29.9.3, build 5457199",
+    "status": "AVAILABLE"
+  },
+  "gtkwave": {
+    "available": true,
+    "version": "GTKWave Analyzer v3.4.0 (w)1999-2022 BSI",
+    "status": "AVAILABLE"
+  },
+  "iverilog": {
+    "available": false,
+    "version": "[WinError 2] The system cannot find the file specified",
+    "status": "BLOCKED: TOOL NOT AVAILABLE"
+  },
+  "verilator": {
+    "available": false,
+    "version": "[WinError 2] The system cannot find the file specified",
+    "status": "BLOCKED: TOOL NOT AVAILABLE"
+  },
+  "yosys": {
+    "available": false,
+    "version": "[WinError 2] The system cannot find the file specified",
+    "status": "BLOCKED: TOOL NOT AVAILABLE"
+  }
+}
