@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =========================================================================
-# GARUDA SEMESTA — EDA DOCKER CONTAINER ENTRYPOINT SCRIPT v12.3.2-R6.4
+# GARUDA SEMESTA — EDA DOCKER CONTAINER ENTRYPOINT SCRIPT v12.4.0
 # Author & Chief System Architect: Anggit Prasetyo Mituhu
 # Copyright (c) 2026 Anggit Prasetyo Mituhu. All rights reserved.
 # Licensed under the Apache License, Version 2.0
@@ -9,7 +9,7 @@
 set -e
 
 echo "========================================================================="
-echo "GARUDA SEMESTA — EDA DOCKER WORKSTATION CONTAINER v12.3.2-R6.4"
+echo "GARUDA SEMESTA — EDA DOCKER WORKSTATION CONTAINER v12.4.0"
 echo "Architect & Author: Anggit Prasetyo Mituhu"
 echo "========================================================================="
 echo ""

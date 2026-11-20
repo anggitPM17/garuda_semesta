@@ -1,5 +1,5 @@
 // =========================================================================
-// GARUDA SEMESTA — UNIFIED MEMORY SUBSYSTEM TOP-LEVEL (v12.3.2-R6.4)
+// GARUDA SEMESTA — UNIFIED MEMORY SUBSYSTEM TOP-LEVEL (v12.4.0)
 // Author & Chief System Architect: Anggit Prasetyo Mituhu
 // Copyright (c) 2026 Anggit Prasetyo Mituhu. All rights reserved.
 // Licensed under the Apache License, Version 2.0
@@ -59,22 +59,24 @@ module garuda_memory_subsystem_top #(
     // Internal Wires for Interconnect
     wire [ADDR_WIDTH-1:0] icache_mem_addr;
     wire                  icache_mem_valid;
-    wire [63:0]           icache_mem_data;
-    wire                  icache_mem_resp_valid;
 
     wire [ADDR_WIDTH-1:0] dcache_mem_addr;
     wire [DATA_WIDTH-1:0] dcache_mem_write_data;
     wire                  dcache_mem_write_en;
     wire                  dcache_mem_valid;
-    wire [DATA_WIDTH-1:0] dcache_mem_read_data;
     wire                  dcache_mem_resp_valid;
+
+    // Unified L2 Request Arbitrated Multiplexer
+    wire [ADDR_WIDTH-1:0] l2_req_addr = dcache_mem_valid ? dcache_mem_addr : icache_mem_addr;
+    wire [DATA_WIDTH-1:0] l2_req_write_data = dcache_mem_write_data;
+    wire                  l2_req_write_en   = dcache_mem_valid ? dcache_mem_write_en : 1'b0;
+    wire                  l2_req_valid      = dcache_mem_valid | icache_mem_valid;
 
     wire [ADDR_WIDTH-1:0] l2_mem_addr;
     wire [DATA_WIDTH-1:0] l2_mem_write_data;
     wire                  l2_mem_write_en;
     wire                  l2_mem_req_valid;
     wire [DATA_WIDTH-1:0] l2_mem_read_data;
-    wire                  l2_mem_resp_valid;
 
     // 1. Instantiate L1 4KB Instruction Cache (Full 64-bit Data Bus & Explicit Handshake)
     garuda_l1_icache #(
@@ -95,10 +97,10 @@ module garuda_memory_subsystem_top #(
         .invalidate(invalidate_all_caches),
         .mem_req_addr(icache_mem_addr),
         .mem_req_valid(icache_mem_valid),
-        .mem_req_ready(1'b1), // Explicitly connected mem_req_ready
+        .mem_req_ready(1'b1),
         .mem_resp_data({32'd0, l2_mem_read_data}),
-        .mem_resp_valid(icache_mem_resp_valid),
-        .mem_resp_error(1'b0) // Explicitly connected mem_resp_error
+        .mem_resp_valid(icache_mem_valid),
+        .mem_resp_error(1'b0)
     );
 
     // 2. Instantiate L1 4KB Data Cache
@@ -139,10 +141,10 @@ module garuda_memory_subsystem_top #(
     ) u_l2_cache (
         .clk(clk),
         .rst_n(rst_n),
-        .l1_req_addr(dcache_mem_addr),
-        .l1_req_write_data(dcache_mem_write_data),
-        .l1_req_write_en(dcache_mem_write_en),
-        .l1_req_valid(dcache_mem_valid),
+        .l1_req_addr(l2_req_addr),
+        .l1_req_write_data(l2_req_write_data),
+        .l1_req_write_en(l2_req_write_en),
+        .l1_req_valid(l2_req_valid),
         .l1_resp_read_data(l2_mem_read_data),
         .l1_resp_hit(),
         .l1_resp_valid(dcache_mem_resp_valid),

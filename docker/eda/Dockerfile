@@ -1,5 +1,5 @@
 # =========================================================================
-# GARUDA SEMESTA — OFFICIAL EDA WORKSTATION DOCKERFILE v12.3.2-R6.4
+# GARUDA SEMESTA — OFFICIAL EDA WORKSTATION DOCKERFILE v12.4.0
 # Author & Chief System Architect: Anggit Prasetyo Mituhu
 # Copyright (c) 2026 Anggit Prasetyo Mituhu. All rights reserved.
 # Licensed under the Apache License, Version 2.0
@@ -7,8 +7,8 @@
 # Reproducible Hardware EDA Toolchain Environment:
 # - Ubuntu 22.04 LTS Base
 # - Python 3.10+, pip, setuptools
-# - Icarus Verilog (iverilog & vvp runtime)
-# - GTKWave VCD Signal Analyzer
+# - Icarus Verilog (iverilog & vvp runtime v11.0)
+# - GTKWave VCD Signal Analyzer (v3.4.0)
 # - Make, Git, GCC/Clang Build Essentials
 # =========================================================================
 
