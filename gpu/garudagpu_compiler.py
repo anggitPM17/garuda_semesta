@@ -5,15 +5,27 @@ Author & Chief System Architect: Anggit Prasetyo Mituhu
 Copyright (c) 2026 Anggit Prasetyo Mituhu. All rights reserved.
 Licensed under the Apache License, Version 2.0
 
-Master-grade HLSL / GLSL / SPIR-V Shader Lexer, AST Uniform & Attribute Parser,
-and 64-bit Shader Codegen for GARUDA GPU v12.0 (128-Core SM Cluster).
+Massively Expanded HLSL / GLSL / SPIR-V Shader Lexer, AST Uniform & Attribute Parser,
+Texture Sampler Address Allocator, and 64-bit Shader Codegen for GARUDA GPU v12.0 (128-Core SM Cluster).
 """
 
 import sys
 import re
 import logging
 
-logging.basicConfig(level=logging.INFO, format="[GARUDA GPU COMPILER] %(levelname)s: %(message)s")
+logging.basicConfig(level=logging.INFO, format="[GARUDA GPU COMPILER MASTER] %(levelname)s: %(message)s")
+
+class GarudaTextureSamplerAllocator:
+    """Allocates 2D/3D Texture Sampler Binding Slots for GARUDA GPU TMUs."""
+    def __init__(self, max_samplers=32):
+        self.max_samplers = max_samplers
+        self.bindings = {}
+
+    def bind_texture_sampler(self, sampler_name, slot_id):
+        self.bindings[sampler_name] = slot_id
+        logging.info(f"Texture Sampler: Bound '{sampler_name}' to TMU Slot #{slot_id}")
+        return slot_id
+
 
 class GarudaShaderAstParser:
     """Parses HLSL/GLSL Shader AST Uniforms, Attributes, and Ray-Tracing Kernels."""
@@ -21,13 +33,18 @@ class GarudaShaderAstParser:
         self.shader_code = shader_code
         self.uniforms = []
         self.attributes = []
+        self.sampler_alloc = GarudaTextureSamplerAllocator()
 
     def parse_structure(self):
-        logging.info("Shader Parser: Analyzing HLSL/GLSL AST Uniforms and Ray-Tracing Entry Points...")
+        logging.info("Shader Parser: Analyzing HLSL/GLSL AST Uniforms, Textures, and Ray-Tracing Entry Points...")
         self.uniforms = re.findall(r'uniform\s+\w+\s+(\w+);', self.shader_code)
         self.attributes = re.findall(r'in\s+\w+\s+(\w+);', self.shader_code)
-        logging.info(f"Shader Parser: Found {len(self.uniforms)} uniforms and {len(self.attributes)} input attributes.")
-        return {"uniforms": self.uniforms, "attributes": self.attributes}
+        samplers = re.findall(r'uniform\s+sampler2D\s+(\w+);', self.shader_code)
+        for idx, s in enumerate(samplers):
+            self.sampler_alloc.bind_texture_sampler(s, idx)
+
+        logging.info(f"Shader Parser: Found {len(self.uniforms)} uniforms, {len(samplers)} samplers, and {len(self.attributes)} input attributes.")
+        return {"uniforms": self.uniforms, "attributes": self.attributes, "samplers": samplers}
 
 
 class GarudaGpuCompiler:
@@ -63,6 +80,7 @@ class GarudaGpuCompiler:
 
         for sm in range(128):
             self.compile_gpu_instruction('TRACE_RAY', sm_id=sm, payload=0x00020003)
+            self.compile_gpu_instruction('SAMPLE_TEX', sm_id=sm, payload=0x00000001)
             self.compile_gpu_instruction('DLSS_FRAME_GEN', sm_id=sm, payload=0x00A000B0)
             self.compile_gpu_instruction('RASTER_PIXEL', sm_id=sm, payload=0x00000047)
             self.compile_gpu_instruction('HALT', sm_id=sm, payload=0)
@@ -87,6 +105,7 @@ if __name__ == "__main__":
     compiler = GarudaGpuCompiler()
     shader_sample = """
     uniform mat4 u_ModelViewProjection;
+    uniform sampler2D u_MainTexture;
     in vec3 a_Position;
     in vec2 a_TexCoord;
     void main() {
@@ -94,5 +113,5 @@ if __name__ == "__main__":
     }
     """
     compiler.compile_shader_source(shader_sample)
-    print("\n=== GARUDA GPU SHADER COMPILER RESULT ===")
+    print("\n=== GARUDA GPU SHADER COMPILER MASTER RESULT ===")
     print(compiler.generate_verilog_gpu_rom())
