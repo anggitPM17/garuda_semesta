@@ -1,0 +1,27 @@
+{
+  "project": "GARUDA SEMESTA",
+  "milestone": "GARUDA TITAN V12 \u2014 REAL CHIP INTEGRATION RECOVERY",
+  "timestamp_utc": "2026-11-20T16:12:32Z",
+  "host_environment": "linux",
+  "tool_versions": {
+    "python": "3.10.12",
+    "iverilog": "/usr/bin/iverilog",
+    "vvp": "/usr/bin/vvp",
+    "verilator": "BLOCKED",
+    "yosys": "BLOCKED"
+  },
+  "overall_status": "PASS",
+  "exit_code": 0,
+  "details": {
+    "compiler_pipeline": "PASS",
+    "hex_sha256": "0e8b376fa399d5edc6da7e8be947b2abe794168a79d1f9b903c55f88286843ff",
+    "instructions_compiled": 5,
+    "verilator_lint_status": "NOT_RUN",
+    "yosys_synthesis_status": "NOT_RUN",
+    "negative_test_status": "PASS",
+    "sram_target_address": "0x80000100",
+    "sram_expected_value": 500,
+    "simulation_output": "WARNING: /workspace/src/cpu/garuda_cpu_pipeline_top.v:58: $readmemh(program.hex): Not enough words in the file for the requested range [0:127].\nVCD info: dumpfile rtl_waveform.vcd opened for output.\n=========================================================================\nGARUDA SEMESTA \u2014 VERTICAL SLICE VERILOG RTL TESTBENCH v12.4.6\nArchitect & Author: Anggit Prasetyo Mituhu\n=========================================================================\n\n[STAGE 1] Reset Released. 5-Stage CPU Fetching Compiled Instructions...\n[SRAM CONTROLLER LOG] READ addr=0x80000000, word_idx=    0, data=         0\n[SRAM CONTROLLER LOG] READ addr=0x80000000, word_idx=    0, data=         0\n[SRAM CONTROLLER LOG] READ addr=0x80000000, word_idx=    0, data=         0\n[SRAM CONTROLLER LOG] READ addr=0x80000000, word_idx=    0, data=         0\n[SRAM CONTROLLER LOG] READ addr=0x80000008, word_idx=    2, data=         0\n[SRAM CONTROLLER LOG] READ addr=0x80000008, word_idx=    2, data=         0\n[SRAM CONTROLLER LOG] READ addr=0x80000010, word_idx=    4, data=         0\n[SRAM CONTROLLER LOG] READ addr=0x80000010, word_idx=    4, data=         0\n[SRAM CONTROLLER LOG] READ addr=0x80000018, word_idx=    6, data=         0\n[SRAM CONTROLLER LOG] READ addr=0x80000018, word_idx=    6, data=         0\n[SRAM CONTROLLER LOG] READ addr=0x80000020, word_idx=    8, data=         0\n[SRAM CONTROLLER LOG] READ addr=0x80000020, word_idx=    8, data=         0\n[SRAM CONTROLLER LOG] READ addr=0x80000020, word_idx=    8, data=         0\n[SRAM CONTROLLER LOG] READ addr=0x80000020, word_idx=    8, data=         0\n[SRAM CONTROLLER LOG] WRITE addr=0x80000100, word_idx=   64, data=       500\n[SRAM CONTROLLER LOG] WRITE addr=0x80000100, word_idx=   64, data=       500\n[SRAM CONTROLLER LOG] WRITE addr=0x80000100, word_idx=   64, data=       500\n[SRAM CONTROLLER LOG] WRITE addr=0x80000100, word_idx=   64, data=       500\n[STAGE 2] Clock Cycles Executed: CPU HALTED at PC = 0x80000040\n[SRAM CONTROLLER LOG] READ addr=0x80000040, word_idx=   16, data=         0\n[SRAM CONTROLLER LOG] READ addr=0x80000040, word_idx=   16, data=         0\n[SRAM CONTROLLER LOG] READ addr=0x80000040, word_idx=   16, data=         0\n[STAGE 3] Performing Independent DMA Readback from SRAM 0x80000100...\n[SRAM CONTROLLER LOG] READ addr=0x80000040, word_idx=   16, data=         0\n[SRAM CONTROLLER LOG] READ addr=0x80000100, word_idx=   64, data=       500\n[SRAM CONTROLLER LOG] READ addr=0x80000100, word_idx=   64, data=       500\n[STAGE 4] Strict Assertion: Asserting SRAM[0x80000100] == 500...\nPASS: REAL RTL SRAM READBACK VERIFIED (SRAM[0x80000100] == 500)\n",
+    "duration_seconds": 2.545
+  }
+}
