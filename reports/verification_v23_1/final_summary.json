@@ -1,0 +1,19 @@
+{
+  "project": "GARUDA SEMESTA",
+  "branch": "engineering/hardening-v2.3.1",
+  "commit": "e10adbf",
+  "timestamp": "2026-11-20T20:19:19Z",
+  "overall_status": "VERIFIED_HARDENED_V231",
+  "compiler_to_sram_status": "PASS",
+  "sram_target_address": "0x80000100",
+  "sram_readback_value": 500,
+  "sram_readback_assertion": "PASS",
+  "vcd_waveform": "reports/verification_v23_1/compiler_to_sram/rtl_waveform.vcd",
+  "unit_tests_executed": 12,
+  "unit_tests_passed": 12,
+  "blocked_tools": [
+    "iverilog",
+    "verilator",
+    "yosys"
+  ]
+}
