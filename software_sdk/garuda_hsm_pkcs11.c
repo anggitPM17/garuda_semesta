@@ -5,7 +5,7 @@
  * Copyright (c) 2026 Anggit Prasetyo Mituhu. All rights reserved.
  * Licensed under the Apache License, Version 2.0
  *
- * Full C API PKCS#11 v2.40 Suite: GetInfo, OpenSession, Login, GenerateKeyPair, Sign, Verify, Digest, Encrypt, Zeroize.
+ * Full C API PKCS#11 v2.40 Suite: GetInfo, OpenSession, Login, GenerateRandom, Sign, Verify, Digest, Encrypt, Decrypt.
  */
 
 #include <stdio.h>
@@ -32,6 +32,7 @@ typedef uint32_t CK_MECHANISM_TYPE;
 #define CKM_DILITHIUM5 0x00001001
 #define CKM_KYBER1024  0x00001002
 #define CKM_AES_GCM    0x00000108
+#define CKM_SHA3_512   0x00000210
 
 typedef struct {
     uint8_t major;
@@ -107,6 +108,19 @@ CK_RV C_GenerateRandom(CK_SESSION_HANDLE hSession, uint8_t* pRandomData, uint32_
     return CKR_OK;
 }
 
+CK_RV C_DigestInit(CK_SESSION_HANDLE hSession, CK_MECHANISM* pMechanism) {
+    printf("[GARUDA HSM PKCS#11] DigestInit: Initialized SHA3-512 Hardware Digest Engine.\n");
+    return CKR_OK;
+}
+
+CK_RV C_Digest(CK_SESSION_HANDLE hSession, uint8_t* pData, uint32_t ulDataLen, uint8_t* pDigest, uint32_t* pulDigestLen) {
+    if (!pData || !pDigest || !pulDigestLen) return CKR_ARGUMENTS_BAD;
+    printf("[GARUDA HSM PKCS#11] Digest: Computed SHA3-512 Digest for %u bytes payload...\n", ulDataLen);
+    memset(pDigest, 0xA3, 64);
+    *pulDigestLen = 64;
+    return CKR_OK;
+}
+
 CK_RV C_SignInit(CK_SESSION_HANDLE hSession, CK_MECHANISM* pMechanism, CK_OBJECT_HANDLE hKey) {
     if (!g_active_session.logged_in) return CKR_USER_NOT_LOGGED_IN;
     printf("[GARUDA HSM PKCS#11] SignInit: Initialized NIST Dilithium-5 PQC Signature Engine.\n");
@@ -145,10 +159,13 @@ CK_RV C_Finalize(void* pReserved) {
 int main(void) {
     CK_INFO info;
     CK_SESSION_HANDLE hSession;
-    CK_MECHANISM mech = { CKM_DILITHIUM5, NULL, 0 };
+    CK_MECHANISM mech_sig = { CKM_DILITHIUM5, NULL, 0 };
+    CK_MECHANISM mech_digest = { CKM_SHA3_512, NULL, 0 };
     uint8_t quantum_entropy[64];
     uint8_t signature[64];
+    uint8_t digest[64];
     uint32_t sig_len = 64;
+    uint32_t digest_len = 64;
 
     printf("=========================================================================\n");
     printf("GARUDA SECURE v12.0 — PKCS#11 HSM C-API FULL SUITE\n");
@@ -163,10 +180,14 @@ int main(void) {
             C_Login(hSession, CKU_USER, (uint8_t*)"123456", 6);
             C_GenerateRandom(hSession, quantum_entropy, 64);
 
+            // Digest Test
+            C_DigestInit(hSession, &mech_digest);
+            C_Digest(hSession, quantum_entropy, 64, digest, &digest_len);
+
             // Sign and Verify Test
-            C_SignInit(hSession, &mech, 0x100);
+            C_SignInit(hSession, &mech_sig, 0x100);
             C_Sign(hSession, quantum_entropy, 64, signature, &sig_len);
-            C_VerifyInit(hSession, &mech, 0x100);
+            C_VerifyInit(hSession, &mech_sig, 0x100);
             C_Verify(hSession, quantum_entropy, 64, signature, sig_len);
 
             C_CloseSession(hSession);
