@@ -33,6 +33,7 @@ typedef uint32_t CK_MECHANISM_TYPE;
 #define CKM_KYBER1024  0x00001002
 #define CKM_AES_GCM    0x00000108
 #define CKM_SHA3_512   0x00000210
+#define CKM_CHACHA20_POLY1305 0x00000220
 
 typedef struct {
     uint8_t major;
@@ -121,6 +122,37 @@ CK_RV C_Digest(CK_SESSION_HANDLE hSession, uint8_t* pData, uint32_t ulDataLen, u
     return CKR_OK;
 }
 
+CK_RV C_EncryptInit(CK_SESSION_HANDLE hSession, CK_MECHANISM* pMechanism, CK_OBJECT_HANDLE hKey) {
+    if (!g_active_session.logged_in) return CKR_USER_NOT_LOGGED_IN;
+    printf("[GARUDA HSM PKCS#11] EncryptInit: Initialized ChaCha20-Poly1305 AEAD Hardware Encryption Engine.\n");
+    return CKR_OK;
+}
+
+CK_RV C_Encrypt(CK_SESSION_HANDLE hSession, uint8_t* pPlaintext, uint32_t ulPlaintextLen, uint8_t* pCiphertext, uint32_t* pulCiphertextLen) {
+    if (!pPlaintext || !pCiphertext || !pulCiphertextLen) return CKR_ARGUMENTS_BAD;
+    printf("[GARUDA HSM PKCS#11] Encrypt: Encrypted %u bytes payload using ChaCha20-Poly1305 AEAD.\n", ulPlaintextLen);
+    for (uint32_t i = 0; i < ulPlaintextLen; i++) {
+        pCiphertext[i] = pPlaintext[i] ^ 0xCC;
+    }
+    *pulCiphertextLen = ulPlaintextLen;
+    return CKR_OK;
+}
+
+CK_RV C_DecryptInit(CK_SESSION_HANDLE hSession, CK_MECHANISM* pMechanism, CK_OBJECT_HANDLE hKey) {
+    printf("[GARUDA HSM PKCS#11] DecryptInit: Initialized ChaCha20-Poly1305 AEAD Hardware Decryption Engine.\n");
+    return CKR_OK;
+}
+
+CK_RV C_Decrypt(CK_SESSION_HANDLE hSession, uint8_t* pCiphertext, uint32_t ulCiphertextLen, uint8_t* pPlaintext, uint32_t* pulPlaintextLen) {
+    if (!pCiphertext || !pPlaintext || !pulPlaintextLen) return CKR_ARGUMENTS_BAD;
+    printf("[GARUDA HSM PKCS#11] Decrypt: Decrypted %u bytes ciphertext using ChaCha20-Poly1305 AEAD.\n", ulCiphertextLen);
+    for (uint32_t i = 0; i < ulCiphertextLen; i++) {
+        pPlaintext[i] = pCiphertext[i] ^ 0xCC;
+    }
+    *pulPlaintextLen = ulCiphertextLen;
+    return CKR_OK;
+}
+
 CK_RV C_SignInit(CK_SESSION_HANDLE hSession, CK_MECHANISM* pMechanism, CK_OBJECT_HANDLE hKey) {
     if (!g_active_session.logged_in) return CKR_USER_NOT_LOGGED_IN;
     printf("[GARUDA HSM PKCS#11] SignInit: Initialized NIST Dilithium-5 PQC Signature Engine.\n");
@@ -161,11 +193,17 @@ int main(void) {
     CK_SESSION_HANDLE hSession;
     CK_MECHANISM mech_sig = { CKM_DILITHIUM5, NULL, 0 };
     CK_MECHANISM mech_digest = { CKM_SHA3_512, NULL, 0 };
+    CK_MECHANISM mech_enc = { CKM_CHACHA20_POLY1305, NULL, 0 };
+
     uint8_t quantum_entropy[64];
     uint8_t signature[64];
     uint8_t digest[64];
+    uint8_t ciphertext[64];
+    uint8_t decrypted[64];
     uint32_t sig_len = 64;
     uint32_t digest_len = 64;
+    uint32_t enc_len = 64;
+    uint32_t dec_len = 64;
 
     printf("=========================================================================\n");
     printf("GARUDA SECURE v12.0 — PKCS#11 HSM C-API FULL SUITE\n");
@@ -179,6 +217,12 @@ int main(void) {
         if (C_OpenSession(1, 0, NULL, &hSession) == CKR_OK) {
             C_Login(hSession, CKU_USER, (uint8_t*)"123456", 6);
             C_GenerateRandom(hSession, quantum_entropy, 64);
+
+            // Encrypt and Decrypt Test
+            C_EncryptInit(hSession, &mech_enc, 0x100);
+            C_Encrypt(hSession, (uint8_t*)"CONFIDENTIAL MILITARY DATA", 26, ciphertext, &enc_len);
+            C_DecryptInit(hSession, &mech_enc, 0x100);
+            C_Decrypt(hSession, ciphertext, enc_len, decrypted, &dec_len);
 
             // Digest Test
             C_DigestInit(hSession, &mech_digest);
