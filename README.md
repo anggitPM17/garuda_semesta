@@ -1,6 +1,6 @@
 # GARUDA SEMESTA — 5-Chip Semiconductor Enterprise Monorepo (v12.0 TITAN-TITANIUM Edition)
 
-**Portofolio 5 Raksasa Chip Semikonduktor v12.0 TITAN-TITANIUM GRADE (CPU, GPU, NPU, SECURE, MCU) & 19 Perangkat Lunak Orisinal Enterprise SDK Lengkap**
+**Portofolio 5 Raksasa Chip Semikonduktor v12.0 TITAN-TITANIUM GRADE (CPU, GPU, NPU, SECURE, MCU) & 19 Perangkat Lunak Murni Orisinal GARUDA Enterprise SDK**
 
 **Pendiri, Hak Cipta, & Arsitek Utama Sistem**: **Anggit Prasetyo Mituhu**  
 **Lisensi Perangkat Lunak & Perangkat Keras**: Apache License 2.0 (Copyright © 2026 **Anggit Prasetyo Mituhu**)
@@ -21,27 +21,27 @@ Seluruh 5 chip dirancang berbasis soket standar **LGA-6096 / BGA-6144 Socket Pac
 
 ---
 
-## 🧰 Ekosistem 19 Perangkat Lunak Orisinal Enterprise SDK ([`software_sdk/`](software_sdk/))
+## 🧰 Ekosistem 19 Perangkat Lunak Murni Orisinal GARUDA Enterprise SDK ([`software_sdk/`](software_sdk/))
 
-1. **GARUDA GPGPU Parallel Compute Engine Driver (`software_sdk/garuda_compute_driver.py`)**: Driver komputasi paralel GPGPU orisinal (`garudaMalloc`, `garudaFree`, `GarudaComputeGraph`, `garuda::wmma_sync` 512 Tensor Cores).
+1. **GARUDA GPGPU Parallel Compute Engine Driver (`software_sdk/garuda_compute_driver.py`)**: Driver komputasi paralel GPGPU Murni Orisinal (`garudaMalloc`, `garudaFree`, `GarudaComputeGraph`, `garuda::wmma_sync` 512 Tensor Cores).
 2. **GARUDA Vision AI Framework (`software_sdk/garuda_vision_ai.py`)**: Pipeline Computer Vision YOLO-v10 8K 240FPS & 3D Spatial Occupancy Network untuk GARUDA NPU.
 3. **GARUDA Quantum Crypto & PQC Engine (`software_sdk/garuda_crypto_pqc.py`)**: Pengelola Kriptografi NIST PQC Kyber/Dilithium, Constant-Time Shield, & TRNG 128 Gbps.
 4. **GARUDA RTOS Microkernel C API (`software_sdk/garuda_rtos_kernel.c`)**: Microkernel RTOS deterministik untuk GARUDA MCU RISC-V IoT.
-5. **GARUDA DLSS Super Sampling Engine (`software_sdk/garuda_dlss_engine.py`)**: Generator frame AI 8K & Ray Reconstruction Denoiser gabungan GPU & NPU.
-6. **GARUDA Multi-Node Cluster Orchestrator (`software_sdk/garuda_cluster_manager.py`)**: Pengelola kluster multi-node RoCE v2 RDMA & Self-Healing Ring-AllReduce 1.8 TB/s.
-7. **GARUDA Hardware Telemetry Profiler (`software_sdk/garuda_profiler.py`)**: Pemantau Roofline Model FLOPS/Byte, suhu, voltase, clock 3.5 GHz, dan DVFS Controller.
-8. **GARUDA HSM PKCS#11 C API (`software_sdk/garuda_hsm_pkcs11.c`)**: Standar C API perbankan & hardware wallet kripto.
-9. **GARUDA WebAssembly Cross-Compiler (`software_sdk/garuda_wasm_compiler.py`)**: Kompilator biner WebAssembly 128-bit SIMD Vector Encoder untuk browser.
-10. **GARUDA Automated Testbench Suite (`software_sdk/garuda_autoverify_testbench.py`)**: Skrip penguji otomatis 10 software SDK orisinal.
-11. **GARUDA PyTorch AI Delegate (`software_sdk/garuda_torch_backend.py`)**: Delegasi akselerasi PyTorch/ONNX (`torch.device('garuda:0')`).
-12. **GARUDA ONNX Runtime Provider (`software_sdk/garuda_onnx_provider.py`)**: Eksekutor model AI HuggingFace & TensorFlow.
-13. **GARUDA LLVM Target Backend (`software_sdk/garuda_llvm_driver.py`)**: Driver kompilator `garuda-unknown-elf` untuk Clang & Rust.
-14. **GARUDA Clang C++ Plugin (`software_sdk/garuda_clang_driver.cpp`)**: Plugin kompilator C++ murni terintegrasi.
-15. **GARUDA NCCL Multi-Chip Comm (`software_sdk/garuda_nccl.py`)**: Pustaka komunikasi *Ring-AllReduce 1.8 TB/s* antar-chip.
-16. **GARUDA TensorRT Optimizer (`software_sdk/garuda_tensorrt.py`)**: Mesin pengoptimasi grafis AI & kuantisasi FP16/FP8/INT4.
-17. **GARUDA Master CLI (`software_sdk/garuda_cli.py`)**: Perkakas perintah tunggal `garuda-cli`.
-18. **GARUDA Web System Dashboard (`software_sdk/garuda_dashboard.py`)**: Dasbor monitor web interaktif (`http://localhost:8080`).
-19. **GARUDA OpenSBI Bootloader & OS ([`firmware/`](firmware/))**: Firmware *booting* Linux Kernel & OS Aktor.
+5. **GARUDA Neural Super-Resolution Engine (`software_sdk/garuda_neural_upscaler.py`)**: Generator frame AI 8K Murni Orisinal & Ray Reconstruction Denoiser.
+6. **GARUDA Parallel Multi-Chip Comm Library (`software_sdk/garuda_parallel_comm.py`)**: Pustaka komunikasi paralel Murni Orisinal *Ring-AllReduce 1.8 TB/s* (`garudaAllReduce`, `garudaAllGather`).
+7. **GARUDA Neural Inference Optimizer Engine (`software_sdk/garuda_ai_optimizer.py`)**: Mesin pengoptimasi grafis AI Murni Orisinal & kuantisasi FP16/FP8/INT4 (`garudaOptimizeGraph`).
+8. **GARUDA Hardware Telemetry Profiler (`software_sdk/garuda_profiler.py`)**: Pemantau Roofline Model FLOPS/Byte, suhu, voltase, clock 3.5 GHz, dan DVFS Controller.
+9. **GARUDA HSM PKCS#11 C API (`software_sdk/garuda_hsm_pkcs11.c`)**: Standar C API perbankan & hardware wallet kripto.
+10. **GARUDA WebAssembly Cross-Compiler (`software_sdk/garuda_wasm_compiler.py`)**: Kompilator biner WebAssembly 128-bit SIMD Vector Encoder untuk browser.
+11. **GARUDA Automated Testbench Suite (`software_sdk/garuda_autoverify_testbench.py`)**: Skrip penguji otomatis 10 software SDK orisinal.
+12. **GARUDA PyTorch AI Delegate (`software_sdk/garuda_torch_backend.py`)**: Delegasi akselerasi PyTorch/ONNX (`torch.device('garuda:0')`).
+13. **GARUDA ONNX Runtime Provider (`software_sdk/garuda_onnx_provider.py`)**: Eksekutor model AI HuggingFace & TensorFlow.
+14. **GARUDA LLVM Target Backend (`software_sdk/garuda_llvm_driver.py`)**: Driver kompilator `garuda-unknown-elf` untuk Clang & Rust.
+15. **GARUDA Clang C++ Plugin (`software_sdk/garuda_clang_driver.cpp`)**: Plugin kompilator C++ murni terintegrasi.
+16. **GARUDA Master CLI (`software_sdk/garuda_cli.py`)**: Perkakas perintah tunggal `garuda-cli`.
+17. **GARUDA Web System Dashboard (`software_sdk/garuda_dashboard.py`)**: Dasbor monitor web interaktif (`http://localhost:8080`).
+18. **GARUDA Hardware Emulator Engine (`software_sdk/garuda_emulator.py`)**: Simulator presisi hardware 3.5 GHz.
+19. **GARUDA Bootloader & OS ([`firmware/`](firmware/))**: Firmware Bootloader (`garuda_bootloader.c`) & Microkernel OS (`garuda_os.c`).
 
 ---
 
