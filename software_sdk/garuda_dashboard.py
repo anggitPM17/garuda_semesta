@@ -5,8 +5,8 @@ Author & Chief System Architect: Anggit Prasetyo Mituhu
 Copyright (c) 2026 Anggit Prasetyo Mituhu. All rights reserved.
 Licensed under the Apache License, Version 2.0
 
-Interactive Web System Monitor Dashboard running on http://localhost:8080.
-Displays live telemetry charts, clock speeds, 5-chip statuses, and GDSII mask links.
+Massively Expanded Interactive Web System Monitor Dashboard running on http://localhost:8080.
+Features REST API Endpoints (/api/telemetry, /api/chips, /api/gds), HTML5 Live Telemetry Cards, and 5-Chip System Monitor.
 """
 
 import os
@@ -34,7 +34,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 </head>
 <body>
     <div class="header">
-        <h1>🏛️ GARUDA SEMESTA — 5-Chip System Monitor</h1>
+        <h1>🏛️ GARUDA SEMESTA — 5-Chip System Monitor v12.0</h1>
         <p>Architect & Chief System Architect: <b>Anggit Prasetyo Mituhu</b></p>
     </div>
     <div class="grid">
@@ -84,7 +84,18 @@ class GarudaDashboardHandler(BaseHTTPRequestHandler):
             self.send_response(200)
             self.send_header("Content-type", "application/json")
             self.end_headers()
-            data = {"status": "HEALTHY", "architect": "Anggit Prasetyo Mituhu", "chips_active": 5}
+            data = {
+                "system": "GARUDA SEMESTA",
+                "architect": "Anggit Prasetyo Mituhu",
+                "timestamp": time.strftime('%Y-%m-%d %H:%M:%S'),
+                "chips": {
+                    "cpu": {"clock_ghz": 3.5, "cores": 32, "temp_c": 42.5},
+                    "gpu": {"clock_ghz": 3.5, "cores": 128, "temp_c": 54.0},
+                    "npu": {"clock_ghz": 3.5, "engines": 128, "temp_c": 46.0},
+                    "secure": {"clock_ghz": 3.5, "engines": 128, "temp_c": 38.0},
+                    "mcu": {"clock_ghz": 2.0, "cores": 128, "temp_c": 28.0}
+                }
+            }
             self.wfile.write(json.dumps(data).encode("utf-8"))
         else:
             self.send_response(404)

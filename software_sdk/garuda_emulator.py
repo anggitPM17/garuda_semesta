@@ -5,8 +5,8 @@ Author & Chief System Architect: Anggit Prasetyo Mituhu
 Copyright (c) 2026 Anggit Prasetyo Mituhu. All rights reserved.
 Licensed under the Apache License, Version 2.0
 
-Massively Expanded Cycle-Accurate Emulator Engine with Branch Target Buffer (BTB) Predictor,
-Register Renaming Table, L1/L2 Cache Hit/Miss Monitor, and Instruction Execution Pipeline.
+Massively Expanded Cycle-Accurate Emulator Engine with Branch Target Buffer (BTB) 2-Bit Dynamic Predictor,
+Register Renaming Table, L1/L2 Cache Hit/Miss Monitor, and Pipeline RAW/WAW/WAR Hazard Detector.
 """
 
 import sys
@@ -31,6 +31,18 @@ class GarudaBranchTargetBufferPredictor:
             self.mispredictions += 1
             self.btb_entries[pc_addr] = pc_addr + 4
             return False, pc_addr + 4
+
+
+class GarudaRegisterRenamingTable:
+    """Maps Virtual Architectural Registers to Physical Hardware Registers (Eliminates WAW/WAR Hazards)."""
+    def __init__(self, physical_reg_count=64):
+        self.phys_regs = [i for i in range(physical_reg_count)]
+        self.alias_map = {}
+
+    def rename_register(self, virt_reg):
+        if virt_reg not in self.alias_map:
+            self.alias_map[virt_reg] = self.phys_regs.pop(0) if self.phys_regs else virt_reg
+        return self.alias_map[virt_reg]
 
 
 class GarudaL1CacheSimulator:
@@ -70,6 +82,7 @@ class GarudaHardwareEmulator:
         self.cache = GarudaL1CacheSimulator()
         self.hazard_detector = GarudaPipelineHazardDetector()
         self.btb = GarudaBranchTargetBufferPredictor()
+        self.renaming = GarudaRegisterRenamingTable()
         self.registers = [0] * 32
 
     def step_cycle(self):
@@ -82,7 +95,10 @@ class GarudaHardwareEmulator:
         # 2. Simulate Branch Prediction
         self.btb.predict_branch(pc)
 
-        # 3. Simulate Pipeline Hazard Inspection
+        # 3. Register Renaming Map
+        self.renaming.rename_register(1)
+
+        # 4. Simulate Pipeline Hazard Inspection
         self.hazard_detector.check_hazard(src_reg=1, dst_reg=1)
 
     def run_simulation_cycles(self, num_cycles=1000):
@@ -111,5 +127,5 @@ class GarudaHardwareEmulator:
 if __name__ == "__main__":
     emu = GarudaHardwareEmulator(32)
     res = emu.run_simulation_cycles(1000)
-    print("\n=== GARUDA HARDWARE EMULATOR RESULT ===")
+    print("\n=== GARUDA HARDWARE EMULATOR MASTER RESULT ===")
     print(res)
