@@ -114,4 +114,4 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="GARUDA System Web Dashboard")
     parser.add_argument("--port", type=int, default=8080, help="Web dashboard port")
     args = parser.parse_args()
-    print(f"GARUDA Web Dashboard Ready on port {args.port}")
+    run_dashboard_server(args.port)
