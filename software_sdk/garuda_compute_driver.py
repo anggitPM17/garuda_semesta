@@ -5,7 +5,7 @@ Author & Chief System Architect: Anggit Prasetyo Mituhu
 Copyright (c) 2026 Anggit Prasetyo Mituhu. All rights reserved.
 Licensed under the Apache License, Version 2.0
 
-Massively Expanded 1000x Scope Production-Grade GPGPU Parallel Compute Driver with Unified Virtual Memory (UVM),
+Production-Grade GPGPU Parallel Compute Driver with Unified Virtual Memory (UVM),
 Multi-GPU Peer-to-Peer Direct VRAM Copy (`garuda_p2p_direct_copy`), Event Barrier Synchronization,
 512 Tensor Core WMMA Matrix Multiplication Engine, Opcode Instruction Tables, and Warp Scheduler for GARUDA GPU v12.0.
 """

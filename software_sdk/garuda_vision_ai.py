@@ -5,9 +5,9 @@ Author & Chief System Architect: Anggit Prasetyo Mituhu
 Copyright (c) 2026 Anggit Prasetyo Mituhu. All rights reserved.
 Licensed under the Apache License, Version 2.0
 
-Massively Expanded 1000x Production-Grade Bird's Eye View (BEV) 3D Feature Transformer,
-Stereo Camera Depth Estimator, 3D Spatial Occupancy Network, Multi-Camera Optical Flow Tracker,
-Feature Pyramid Network (FPN), Kalman Filter Object Tracker, and Zero-Copy DMA Manager for GARUDA NPU v12.0.
+Production-Grade Bird's Eye View (BEV) 3D Feature Transformer, Stereo Camera Depth Estimator,
+3D Spatial Occupancy Network, Multi-Camera Optical Flow Tracker, Feature Pyramid Network (FPN),
+Kalman Filter Object Tracker, and Zero-Copy DMA Manager for GARUDA NPU v12.0.
 """
 
 import sys
@@ -79,7 +79,7 @@ class GarudaFeaturePyramidNetwork:
 
 
 class Garuda3DSpatialOccupancyNetwork:
-    """3D Spatial Occupancy Vector Network (Tesla Autonomous FSD Style)."""
+    """3D Spatial Occupancy Vector Network (Autonomous Driving Vision Style)."""
     def __init__(self, grid_size=(100, 100, 20)):
         self.grid_size = grid_size
         self.total_voxels = grid_size[0] * grid_size[1] * grid_size[2]
