@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-11-20T20:00:41Z",
-  "os_platform": "win32",
-  "python_executable": "C:\\Python314\\python.exe",
-  "workspace_root": "D:\\richat\\garuda_semesta_repo",
+  "timestamp": "2026-11-20T14:14:42Z",
+  "os_platform": "linux",
+  "python_executable": "/usr/bin/python3",
+  "workspace_root": "/workspace",
   "environment_status": "READY"
 }

@@ -1,32 +1,32 @@
 {
   "python": {
     "available": true,
-    "version": "Python 3.14.3",
+    "version": "Python 3.10.12",
     "status": "AVAILABLE"
   },
   "docker": {
-    "available": true,
-    "version": "Docker version 29.9.3, build 5457199",
-    "status": "AVAILABLE"
+    "available": false,
+    "version": "[Errno 2] No such file or directory: 'docker'",
+    "status": "BLOCKED: TOOL NOT AVAILABLE"
   },
   "gtkwave": {
-    "available": true,
-    "version": "GTKWave Analyzer v3.4.0 (w)1999-2022 BSI",
-    "status": "AVAILABLE"
+    "available": false,
+    "version": "Exit Code 1",
+    "status": "BLOCKED: TOOL NOT AVAILABLE"
   },
   "iverilog": {
     "available": false,
-    "version": "[WinError 2] The system cannot find the file specified",
+    "version": "Exit Code 1",
     "status": "BLOCKED: TOOL NOT AVAILABLE"
   },
   "verilator": {
     "available": false,
-    "version": "[WinError 2] The system cannot find the file specified",
+    "version": "[Errno 2] No such file or directory: 'verilator'",
     "status": "BLOCKED: TOOL NOT AVAILABLE"
   },
   "yosys": {
     "available": false,
-    "version": "[WinError 2] The system cannot find the file specified",
+    "version": "[Errno 2] No such file or directory: 'yosys'",
     "status": "BLOCKED: TOOL NOT AVAILABLE"
   }
 }

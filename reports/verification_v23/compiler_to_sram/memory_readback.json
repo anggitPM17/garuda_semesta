@@ -12,5 +12,5 @@
   "sram_target_address": "0x80000100",
   "sram_expected_value": 500,
   "sram_actual_value": 500,
-  "duration_seconds": 0.018
+  "duration_seconds": 0.016
 }

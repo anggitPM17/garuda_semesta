@@ -1,5 +1,5 @@
 // =========================================================================
-// GARUDA SEMESTA — MODULAR 5-STAGE PIPELINE CPU TOP-LEVEL (v12.3.2-R6.4)
+// GARUDA SEMESTA — MODULAR 5-STAGE PIPELINE CPU TOP-LEVEL (v12.4.3 V2.4.3)
 // Author & Chief System Architect: Anggit Prasetyo Mituhu
 // Copyright (c) 2026 Anggit Prasetyo Mituhu. All rights reserved.
 // Licensed under the Apache License, Version 2.0
@@ -8,6 +8,7 @@
 // - IF (Instruction Fetch), ID (Instruction Decode), EX (Execute), MEM (Memory), WB (Writeback)
 // - Integrated PC, Instruction Decoder, 32x64-bit RegFile, 64-bit ALU
 // - Full 64-bit Instruction Fetch Interface with $readmemh Loading Support
+// - Eliminates Hardcoded Instruction ROM Fallback in Acceptance Execution
 // =========================================================================
 
 `timescale 1ns / 1ps
@@ -42,20 +43,19 @@ module garuda_cpu_pipeline_top #(
     output wire                  illegal_instruction
 );
 
-    // Internal ROM for simulation $readmemh loading
+    // Internal ROM for $readmemh loading of compiled HEX bitstream
     reg [63:0] instruction_rom [0:31];
     integer idx;
 
     initial begin
-        // Hardcoded Compiled Program Fallback if garuda_program.hex is not loaded
-        instruction_rom[0] = 64'h1000004000000096; // r1 = 150
-        instruction_rom[1] = 64'h100000800000015E; // r2 = 350
-        instruction_rom[2] = 64'h108800C000000000; // r3 = r1 + r2 (500)
-        instruction_rom[3] = 64'h400C000080000100; // mem[0x80000100] = r3 (500)
-        instruction_rom[4] = 64'hF000000000000000; // HALT
-        for (idx = 5; idx < 32; idx = idx + 1) begin
+        // Initialize instruction ROM array to zero
+        for (idx = 0; idx < 32; idx = idx + 1) begin
             instruction_rom[idx] = 64'h0;
         end
+        // Load compiler-generated HEX file via $readmemh
+        $readmemh("garuda_program.hex", instruction_rom);
+        $readmemh("program.hex", instruction_rom);
+        $readmemh("source.hex", instruction_rom);
     end
 
     // Pipeline Registers
@@ -198,7 +198,7 @@ module garuda_cpu_pipeline_top #(
     garuda_alu u_alu (
         .alu_op(id_ex_alu_op),
         .operand_a(id_ex_rs1_val),
-        .operand_b(id_ex_rs2_val != 64'd0 ? id_ex_rs2_val : {32'd0, id_ex_imm}),
+        .operand_b(id_ex_imm != 32'd0 ? {32'd0, id_ex_imm} : id_ex_rs2_val),
         .result(alu_result),
         .zero_flag(alu_zero),
         .sign_flag(alu_sign)
