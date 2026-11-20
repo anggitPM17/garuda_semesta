@@ -1,13 +1,12 @@
 // =========================================================================
-// GARUDA SEMESTA — L1 4KB DATA CACHE MODULE (v12.0 TITAN-TITANIUM)
+// GARUDA SEMESTA — L1 4KB DATA CACHE MODULE (v12.4.6)
 // Author & Chief System Architect: Anggit Prasetyo Mituhu
 // Copyright (c) 2026 Anggit Prasetyo Mituhu. All rights reserved.
 // Licensed under the Apache License, Version 2.0
 //
 // Synthesizable 4 KB L1 Data Cache:
 // - 32-bit Address, 32-bit Data Bus, 4-bit Byte Enable
-// - Direct-Mapped / Write-Back with Dirty Bit Retention
-// - Tag Compare, Cache Read/Write, Hit/Miss FSM, Eviction & Refill
+// - Direct-Mapped / Write-Through to guarantee SRAM consistency
 // =========================================================================
 
 `timescale 1ns / 1ps
@@ -37,10 +36,11 @@ module garuda_l1_dcache #(
     input  wire                  invalidate,
 
     // Memory Controller / L2 Interconnect
-    output reg  [ADDR_WIDTH-1:0] mem_addr,
-    output reg  [DATA_WIDTH-1:0] mem_write_data,
+    output wire [ADDR_WIDTH-1:0] mem_addr,
+    output wire [DATA_WIDTH-1:0] mem_write_data,
     output reg                   mem_write_en,
     output reg                   mem_req_valid,
+    input  wire                  mem_backpressure,
     input  wire [DATA_WIDTH-1:0] mem_read_data,
     input  wire                  mem_resp_valid
 );
@@ -51,19 +51,17 @@ module garuda_l1_dcache #(
     localparam TAG_BITS     = ADDR_WIDTH - INDEX_BITS - OFFSET_BITS; // 20 bits
 
     // FSM States
-    localparam ST_IDLE       = 3'b000;
-    localparam ST_COMPARE    = 3'b001;
-    localparam ST_EVICT      = 3'b010;
-    localparam ST_REFILL     = 3'b011;
-    localparam ST_WRITEBACK  = 3'b100;
-    localparam ST_RESP       = 3'b101;
+    localparam ST_IDLE         = 3'b000;
+    localparam ST_COMPARE      = 3'b001;
+    localparam ST_REFILL       = 3'b011;
+    localparam ST_WRITE_THRU   = 3'b100;
+    localparam ST_RESP         = 3'b101;
 
     reg [2:0] state, next_state;
 
     // Cache Arrays
     reg [TAG_BITS-1:0]  tag_array   [0:NUM_LINES-1];
     reg                 valid_array [0:NUM_LINES-1];
-    reg                 dirty_array [0:NUM_LINES-1];
     reg [DATA_WIDTH-1:0] data_array  [0:NUM_LINES-1][0:(LINE_SIZE_BYTES/4)-1];
 
     wire [TAG_BITS-1:0]   req_tag     = req_addr[ADDR_WIDTH-1 : INDEX_BITS+OFFSET_BITS];
@@ -71,7 +69,10 @@ module garuda_l1_dcache #(
     wire [2:0]            word_offset = req_addr[OFFSET_BITS-1 : 2];
 
     wire hit = valid_array[req_index] && (tag_array[req_index] == req_tag);
-    wire is_dirty = valid_array[req_index] && dirty_array[req_index];
+
+    // Combinational memory address and data assignment
+    assign mem_addr       = (req_write_en) ? req_addr : {req_addr[ADDR_WIDTH-1:OFFSET_BITS], {OFFSET_BITS{1'b0}}};
+    assign mem_write_data = req_write_data;
 
     integer i, j;
 
@@ -84,12 +85,9 @@ module garuda_l1_dcache #(
             resp_read_data <= {DATA_WIDTH{1'b0}};
             mem_req_valid <= 1'b0;
             mem_write_en <= 1'b0;
-            mem_addr <= {ADDR_WIDTH{1'b0}};
-            mem_write_data <= {DATA_WIDTH{1'b0}};
 
             for (i = 0; i < NUM_LINES; i = i + 1) begin
                 valid_array[i] <= 1'b0;
-                dirty_array[i] <= 1'b0;
                 tag_array[i] <= {TAG_BITS{1'b0}};
                 for (j = 0; j < (LINE_SIZE_BYTES/4); j = j + 1) begin
                     data_array[i][j] <= {DATA_WIDTH{1'b0}};
@@ -99,7 +97,6 @@ module garuda_l1_dcache #(
             if (flush || invalidate) begin
                 for (i = 0; i < NUM_LINES; i = i + 1) begin
                     valid_array[i] <= 1'b0;
-                    dirty_array[i] <= 1'b0;
                 end
             end
 
@@ -113,40 +110,29 @@ module garuda_l1_dcache #(
                 end
 
                 ST_COMPARE: begin
-                    if (hit) begin
+                    if (hit && !req_write_en) begin
                         resp_hit <= 1'b1;
                         resp_valid <= 1'b1;
+                        resp_read_data <= data_array[req_index][word_offset];
                         stall <= 1'b0;
-
-                        if (req_write_en) begin
-                            dirty_array[req_index] <= 1'b1;
+                    end else begin
+                        resp_hit <= hit;
+                        stall <= 1'b1;
+                        mem_req_valid <= 1'b1;
+                        mem_write_en <= req_write_en;
+                        if (req_write_en && hit) begin
                             if (req_byte_enable[0]) data_array[req_index][word_offset][7:0]   <= req_write_data[7:0];
                             if (req_byte_enable[1]) data_array[req_index][word_offset][15:8]  <= req_write_data[15:8];
                             if (req_byte_enable[2]) data_array[req_index][word_offset][23:16] <= req_write_data[23:16];
                             if (req_byte_enable[3]) data_array[req_index][word_offset][31:24] <= req_write_data[31:24];
-                        end else begin
-                            resp_read_data <= data_array[req_index][word_offset];
-                        end
-                    end else begin
-                        resp_hit <= 1'b0;
-                        stall <= 1'b1;
-                        if (is_dirty) begin
-                            mem_req_valid <= 1'b1;
-                            mem_write_en <= 1'b1;
-                            mem_addr <= {tag_array[req_index], req_index, {OFFSET_BITS{1'b0}}};
-                            mem_write_data <= data_array[req_index][word_offset];
-                        end else begin
-                            mem_req_valid <= 1'b1;
-                            mem_write_en <= 1'b0;
-                            mem_addr <= {req_addr[ADDR_WIDTH-1:OFFSET_BITS], {OFFSET_BITS{1'b0}}};
                         end
                     end
                 end
 
-                ST_EVICT: begin
+                ST_WRITE_THRU: begin
                     if (mem_resp_valid) begin
+                        mem_req_valid <= 1'b0;
                         mem_write_en <= 1'b0;
-                        mem_addr <= {req_addr[ADDR_WIDTH-1:OFFSET_BITS], {OFFSET_BITS{1'b0}}};
                     end
                 end
 
@@ -154,13 +140,7 @@ module garuda_l1_dcache #(
                     if (mem_resp_valid) begin
                         tag_array[req_index] <= req_tag;
                         valid_array[req_index] <= 1'b1;
-                        dirty_array[req_index] <= req_write_en;
-
-                        if (req_write_en) begin
-                            data_array[req_index][word_offset] <= req_write_data;
-                        end else begin
-                            data_array[req_index][word_offset] <= mem_read_data;
-                        end
+                        data_array[req_index][word_offset] <= mem_read_data;
                         mem_req_valid <= 1'b0;
                     end
                 end
@@ -168,7 +148,7 @@ module garuda_l1_dcache #(
                 ST_RESP: begin
                     resp_hit <= 1'b1;
                     resp_valid <= 1'b1;
-                    resp_read_data <= data_array[req_index][word_offset];
+                    resp_read_data <= (req_write_en) ? req_write_data : data_array[req_index][word_offset];
                     stall <= 1'b0;
                 end
             endcase
@@ -180,11 +160,11 @@ module garuda_l1_dcache #(
         case (state)
             ST_IDLE: if (req_valid) next_state = ST_COMPARE;
             ST_COMPARE: begin
-                if (hit) next_state = ST_IDLE;
-                else if (is_dirty) next_state = ST_EVICT;
+                if (hit && !req_write_en) next_state = ST_IDLE;
+                else if (req_write_en) next_state = ST_WRITE_THRU;
                 else next_state = ST_REFILL;
             end
-            ST_EVICT: if (mem_resp_valid) next_state = ST_REFILL;
+            ST_WRITE_THRU: if (mem_resp_valid) next_state = ST_RESP;
             ST_REFILL: if (mem_resp_valid) next_state = ST_RESP;
             ST_RESP: next_state = ST_IDLE;
             default: next_state = ST_IDLE;

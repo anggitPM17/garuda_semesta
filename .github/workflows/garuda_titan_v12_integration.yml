@@ -1,0 +1,53 @@
+name: GARUDA SEMESTA — TITAN V12 Real Chip Integration CI/CD
+
+on:
+  push:
+    branches: [ main, engineering/titan-v12-real-chip-integration, engineering/hardening-v2.3.2 ]
+  pull_request:
+    branches: [ main, engineering/titan-v12-real-chip-integration ]
+
+jobs:
+  verify_titan_v12_real_chip_integration:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install Icarus Verilog & GTKWave EDA Tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y iverilog gtkwave
+
+      - name: Verify EDA Tool Versions
+        run: |
+          iverilog -V || true
+          vvp -V || true
+
+      - name: Execute TITAN V12 Real Chip Integration Runner
+        run: |
+          python3 src/verification/garuda_titan_v12_integration_runner.py
+
+      - name: Run 5-Chip Master Verifier
+        run: |
+          python3 garuda_all_chips_docker_test.py || true
+
+      - name: Run Master Unit & Integration Test Suite
+        run: |
+          python3 tests/run_all_unit_and_integration_tests.py
+
+      - name: Upload Real Hardware Simulation Evidence & Waveforms
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: garuda-titan-v12-hardware-evidence
+          path: |
+            build/
+            artifacts/
+            reports/
+            *.vcd

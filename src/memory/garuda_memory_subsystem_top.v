@@ -1,14 +1,14 @@
 // =========================================================================
-// GARUDA SEMESTA — UNIFIED MEMORY SUBSYSTEM TOP-LEVEL (v12.4.0)
+// GARUDA SEMESTA — UNIFIED MEMORY SUBSYSTEM TOP-LEVEL (v12.4.6)
 // Author & Chief System Architect: Anggit Prasetyo Mituhu
 // Copyright (c) 2026 Anggit Prasetyo Mituhu. All rights reserved.
 // Licensed under the Apache License, Version 2.0
 //
 // Synthesizable Top-Level Memory Subsystem:
 // - L1 Instruction Cache (4KB, 64-bit Instruction Words)
+// - 64-to-32 Bit Bus Adapter for I-Cache Refill
 // - L1 Data Cache (4KB, 32-bit Data Bus) & L2 Unified Cache (32KB 4-Way)
-// - Low-Latency 16KB Scratchpad SRAM
-// - Multi-Master Memory Arbiter (CPU & GPU Masters)
+// - Multi-Master Memory Arbiter (L2 & GPU Masters)
 // - Main Memory Controller with 64KB SRAM Backend (Base: 0x80000000)
 // =========================================================================
 
@@ -56,29 +56,45 @@ module garuda_memory_subsystem_top #(
     output wire                  subsystem_parity_error
 );
 
-    // Internal Wires for Interconnect
+    // ---------------------------------------------------------
+    // Internal Wires
+    // ---------------------------------------------------------
+
+    // I-Cache to Adapter (64-bit)
     wire [ADDR_WIDTH-1:0] icache_mem_addr;
     wire                  icache_mem_valid;
+    wire                  icache_mem_ready;
+    wire [63:0]           icache_mem_data;
+    wire                  icache_mem_resp_valid;
+    wire                  icache_mem_resp_error;
 
+    // Adapter to L2 (32-bit)
+    wire [ADDR_WIDTH-1:0] adapter_l2_req_addr;
+    wire                  adapter_l2_req_valid;
+    wire                  adapter_l2_req_ready = 1'b1;
+    wire [31:0]           adapter_l2_resp_data;
+    wire                  adapter_l2_resp_valid;
+    wire                  adapter_l2_resp_error;
+
+    // D-Cache to L2 (32-bit)
     wire [ADDR_WIDTH-1:0] dcache_mem_addr;
     wire [DATA_WIDTH-1:0] dcache_mem_write_data;
     wire                  dcache_mem_write_en;
     wire                  dcache_mem_valid;
+    wire [DATA_WIDTH-1:0] dcache_mem_read_data;
     wire                  dcache_mem_resp_valid;
 
-    // Unified L2 Request Arbitrated Multiplexer
-    wire [ADDR_WIDTH-1:0] l2_req_addr = dcache_mem_valid ? dcache_mem_addr : icache_mem_addr;
-    wire [DATA_WIDTH-1:0] l2_req_write_data = dcache_mem_write_data;
-    wire                  l2_req_write_en   = dcache_mem_valid ? dcache_mem_write_en : 1'b0;
-    wire                  l2_req_valid      = dcache_mem_valid | icache_mem_valid;
-
+    // L2 to Arbiter (32-bit)
     wire [ADDR_WIDTH-1:0] l2_mem_addr;
     wire [DATA_WIDTH-1:0] l2_mem_write_data;
     wire                  l2_mem_write_en;
     wire                  l2_mem_req_valid;
     wire [DATA_WIDTH-1:0] l2_mem_read_data;
+    wire                  l2_mem_resp_valid;
 
-    // 1. Instantiate L1 4KB Instruction Cache (Full 64-bit Data Bus & Explicit Handshake)
+    // ---------------------------------------------------------
+    // 1. L1 Instruction Cache (64-bit)
+    // ---------------------------------------------------------
     garuda_l1_icache #(
         .CACHE_SIZE_BYTES(4096),
         .LINE_SIZE_BYTES(32),
@@ -97,13 +113,35 @@ module garuda_memory_subsystem_top #(
         .invalidate(invalidate_all_caches),
         .mem_req_addr(icache_mem_addr),
         .mem_req_valid(icache_mem_valid),
-        .mem_req_ready(1'b1),
-        .mem_resp_data({32'd0, l2_mem_read_data}),
-        .mem_resp_valid(icache_mem_valid),
-        .mem_resp_error(1'b0)
+        .mem_req_ready(icache_mem_ready),
+        .mem_resp_data(icache_mem_data),
+        .mem_resp_valid(icache_mem_resp_valid),
+        .mem_resp_error(icache_mem_resp_error)
     );
 
-    // 2. Instantiate L1 4KB Data Cache
+    // ---------------------------------------------------------
+    // 1b. 64-to-32 Bus Adapter for I-Cache Refill
+    // ---------------------------------------------------------
+    garuda_bus_adapter_64to32 u_icache_adapter (
+        .clk(clk),
+        .rst_n(rst_n),
+        .m_req_addr(icache_mem_addr),
+        .m_req_valid(icache_mem_valid),
+        .m_req_ready(icache_mem_ready),
+        .m_resp_data(icache_mem_data),
+        .m_resp_valid(icache_mem_resp_valid),
+        .m_resp_error(icache_mem_resp_error),
+        .s_req_addr(adapter_l2_req_addr),
+        .s_req_valid(adapter_l2_req_valid),
+        .s_req_ready(adapter_l2_req_ready),
+        .s_resp_data(adapter_l2_resp_data),
+        .s_resp_valid(adapter_l2_resp_valid),
+        .s_resp_error(adapter_l2_resp_error)
+    );
+
+    // ---------------------------------------------------------
+    // 2. L1 Data Cache (32-bit)
+    // ---------------------------------------------------------
     garuda_l1_dcache #(
         .CACHE_SIZE_BYTES(4096),
         .LINE_SIZE_BYTES(32),
@@ -127,11 +165,29 @@ module garuda_memory_subsystem_top #(
         .mem_write_data(dcache_mem_write_data),
         .mem_write_en(dcache_mem_write_en),
         .mem_req_valid(dcache_mem_valid),
-        .mem_read_data(l2_mem_read_data),
+        .mem_read_data(dcache_mem_read_data),
         .mem_resp_valid(dcache_mem_resp_valid)
     );
 
-    // 3. Instantiate L2 32KB Cache
+    // ---------------------------------------------------------
+    // 3. Unified L2 Request Arbitrated Multiplexer (I-Cache vs D-Cache)
+    // ---------------------------------------------------------
+    wire [ADDR_WIDTH-1:0] l2_req_addr = dcache_mem_valid ? dcache_mem_addr : adapter_l2_req_addr;
+    wire [DATA_WIDTH-1:0] l2_req_write_data = dcache_mem_write_data;
+    wire                  l2_req_write_en   = dcache_mem_valid ? dcache_mem_write_en : 1'b0;
+    wire                  l2_req_valid      = dcache_mem_valid | adapter_l2_req_valid;
+
+    // Response Routing
+    wire [31:0] l1_resp_read_data;
+    wire        l1_resp_valid;
+
+    assign dcache_mem_resp_valid = l1_resp_valid & dcache_mem_valid;
+    assign dcache_mem_read_data  = l1_resp_read_data;
+
+    assign adapter_l2_resp_valid = l1_resp_valid & adapter_l2_req_valid & ~dcache_mem_valid;
+    assign adapter_l2_resp_data  = l1_resp_read_data;
+    assign adapter_l2_resp_error = 1'b0;
+
     garuda_l2_cache #(
         .CACHE_SIZE_BYTES(32768),
         .WAYS(4),
@@ -145,20 +201,22 @@ module garuda_memory_subsystem_top #(
         .l1_req_write_data(l2_req_write_data),
         .l1_req_write_en(l2_req_write_en),
         .l1_req_valid(l2_req_valid),
-        .l1_resp_read_data(l2_mem_read_data),
+        .l1_resp_read_data(l1_resp_read_data),
         .l1_resp_hit(),
-        .l1_resp_valid(dcache_mem_resp_valid),
+        .l1_resp_valid(l1_resp_valid),
         .l1_backpressure(),
         .parity_error_detected(subsystem_parity_error),
         .mem_addr(l2_mem_addr),
         .mem_write_data(l2_mem_write_data),
         .mem_write_en(l2_mem_write_en),
         .mem_req_valid(l2_mem_req_valid),
-        .mem_read_data(gpu_dma_read_val),
-        .mem_resp_valid(gpu_dma_resp_valid)
+        .mem_read_data(l2_mem_read_data), // Connected to Arbiter Master 0 Read Data
+        .mem_resp_valid(l2_mem_resp_valid) // Connected to Arbiter Master 0 Response Valid
     );
 
-    // 4. Instantiate Multi-Master Arbiter (L2 / CPU & GPU Masters)
+    // ---------------------------------------------------------
+    // 4. Multi-Master Arbiter (L2 / CPU & GPU Masters)
+    // ---------------------------------------------------------
     wire [ADDR_WIDTH-1:0] arb_target_addr;
     wire [DATA_WIDTH-1:0] arb_target_write_data;
     wire [3:0]            arb_target_byte_en;
@@ -173,14 +231,17 @@ module garuda_memory_subsystem_top #(
     ) u_arbiter (
         .clk(clk),
         .rst_n(rst_n),
+        // Master 0: L2 Cache
         .m0_addr(l2_mem_addr),
         .m0_write_data(l2_mem_write_data),
         .m0_byte_enable(4'hF),
         .m0_write_en(l2_mem_write_en),
         .m0_req_valid(l2_mem_req_valid),
-        .m0_read_data(),
+        .m0_read_data(l2_mem_read_data),
         .m0_grant(),
-        .m0_resp_valid(),
+        .m0_resp_valid(l2_mem_resp_valid),
+
+        // Master 1: GPU / DMA
         .m1_addr(gpu_dma_addr),
         .m1_write_data(gpu_dma_write_val),
         .m1_byte_enable(gpu_dma_byte_en),
@@ -189,6 +250,8 @@ module garuda_memory_subsystem_top #(
         .m1_read_data(gpu_dma_read_val),
         .m1_grant(gpu_dma_grant),
         .m1_resp_valid(gpu_dma_resp_valid),
+
+        // Output to Memory Controller
         .target_addr(arb_target_addr),
         .target_write_data(arb_target_write_data),
         .target_byte_enable(arb_target_byte_en),
@@ -198,7 +261,9 @@ module garuda_memory_subsystem_top #(
         .target_resp_valid(arb_target_resp_valid)
     );
 
-    // 5. Instantiate Main Memory Controller (64KB SRAM Backend)
+    // ---------------------------------------------------------
+    // 5. Main Memory Controller (64KB SRAM Backend)
+    // ---------------------------------------------------------
     garuda_memory_controller #(
         .MEM_SIZE_BYTES(65536),
         .ADDR_WIDTH(32),

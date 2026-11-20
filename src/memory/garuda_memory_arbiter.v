@@ -1,12 +1,12 @@
 // =========================================================================
-// GARUDA SEMESTA — MULTI-MASTER MEMORY ARBITER MODULE (v12.0)
+// GARUDA SEMESTA — MULTI-MASTER MEMORY ARBITER MODULE (v12.4.6)
 // Author & Chief System Architect: Anggit Prasetyo Mituhu
 // Copyright (c) 2026 Anggit Prasetyo Mituhu. All rights reserved.
 // Licensed under the Apache License, Version 2.0
 //
 // Synthesizable Multi-Master Memory Arbiter:
-// - Supports 2 Masters: Master #0 (CPU Core), Master #1 (GPU/DMA Core)
-// - Fair Round-Robin / Fixed-Priority Arbitration Logic
+// - Supports 2 Masters: Master #0 (CPU/L2 Core), Master #1 (GPU/DMA Core)
+// - True Round-Robin Arbitration to Prevent DMA Starvation
 // - Request Acceptance, Grant Signal, Lock Protection, and Backpressure
 // =========================================================================
 
@@ -19,7 +19,7 @@ module garuda_memory_arbiter #(
     input  wire                  clk,
     input  wire                  rst_n,
 
-    // Master 0 Interface (CPU)
+    // Master 0 Interface (CPU / L2)
     input  wire [ADDR_WIDTH-1:0] m0_addr,
     input  wire [DATA_WIDTH-1:0] m0_write_data,
     input  wire [3:0]            m0_byte_enable,
@@ -50,11 +50,13 @@ module garuda_memory_arbiter #(
 );
 
     reg active_master; // 0 for Master 0, 1 for Master 1
+    reg priority_toggle; // Round-robin pointer (0: m0 preferred, 1: m1 preferred)
     reg busy;
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             active_master <= 1'b0;
+            priority_toggle <= 1'b0;
             busy <= 1'b0;
             m0_grant <= 1'b0;
             m1_grant <= 1'b0;
@@ -72,31 +74,56 @@ module garuda_memory_arbiter #(
             m1_resp_valid <= 1'b0;
 
             if (!busy) begin
-                if (m0_req_valid) begin
-                    active_master <= 1'b0;
-                    busy <= 1'b1;
-                    m0_grant <= 1'b1;
-                    m1_grant <= 1'b0;
-                    target_req_valid <= 1'b1;
-                    target_addr <= m0_addr;
-                    target_write_data <= m0_write_data;
-                    target_byte_enable <= m0_byte_enable;
-                    target_write_en <= m0_write_en;
-                end else if (m1_req_valid) begin
-                    active_master <= 1'b1;
-                    busy <= 1'b1;
-                    m0_grant <= 1'b0;
-                    m1_grant <= 1'b1;
-                    target_req_valid <= 1'b1;
-                    target_addr <= m1_addr;
-                    target_write_data <= m1_write_data;
-                    target_byte_enable <= m1_byte_enable;
-                    target_write_en <= m1_write_en;
+                if (priority_toggle == 1'b0) begin
+                    if (m0_req_valid) begin
+                        active_master <= 1'b0;
+                        busy <= 1'b1;
+                        m0_grant <= 1'b1;
+                        m1_grant <= 1'b0;
+                        target_req_valid <= 1'b1;
+                        target_addr <= m0_addr;
+                        target_write_data <= m0_write_data;
+                        target_byte_enable <= m0_byte_enable;
+                        target_write_en <= m0_write_en;
+                    end else if (m1_req_valid) begin
+                        active_master <= 1'b1;
+                        busy <= 1'b1;
+                        m0_grant <= 1'b0;
+                        m1_grant <= 1'b1;
+                        target_req_valid <= 1'b1;
+                        target_addr <= m1_addr;
+                        target_write_data <= m1_write_data;
+                        target_byte_enable <= m1_byte_enable;
+                        target_write_en <= m1_write_en;
+                    end
+                end else begin
+                    if (m1_req_valid) begin
+                        active_master <= 1'b1;
+                        busy <= 1'b1;
+                        m0_grant <= 1'b0;
+                        m1_grant <= 1'b1;
+                        target_req_valid <= 1'b1;
+                        target_addr <= m1_addr;
+                        target_write_data <= m1_write_data;
+                        target_byte_enable <= m1_byte_enable;
+                        target_write_en <= m1_write_en;
+                    end else if (m0_req_valid) begin
+                        active_master <= 1'b0;
+                        busy <= 1'b1;
+                        m0_grant <= 1'b1;
+                        m1_grant <= 1'b0;
+                        target_req_valid <= 1'b1;
+                        target_addr <= m0_addr;
+                        target_write_data <= m0_write_data;
+                        target_byte_enable <= m0_byte_enable;
+                        target_write_en <= m0_write_en;
+                    end
                 end
             end else begin
                 if (target_resp_valid) begin
                     busy <= 1'b0;
                     target_req_valid <= 1'b0;
+                    priority_toggle <= ~active_master; // Toggle priority to next master
                     if (active_master == 1'b0) begin
                         m0_grant <= 1'b0;
                         m0_read_data <= target_read_data;

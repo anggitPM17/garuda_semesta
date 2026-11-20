@@ -1,5 +1,5 @@
 // =========================================================================
-// GARUDA SEMESTA — MAIN MEMORY CONTROLLER & SRAM BACKEND (v12.3.2-R2)
+// GARUDA SEMESTA — MAIN MEMORY CONTROLLER & SRAM BACKEND (v12.4.6)
 // Author & Chief System Architect: Anggit Prasetyo Mituhu
 // Copyright (c) 2026 Anggit Prasetyo Mituhu. All rights reserved.
 // Licensed under the Apache License, Version 2.0
@@ -7,8 +7,7 @@
 // Synthesizable Main Memory Controller with SRAM Behavioral Model:
 // - Address Bounds Decoder (Base: 0x8000_0000, Size: 65,536 bytes, End: 0x8001_0000)
 // - Out-of-bounds addresses (< 0x8000_0000 OR >= 0x8001_0000) trigger resp_error = 1
-// - Configurable Wait States, Response Valid, Error Response
-// - Reset Recovery & Transaction Handshake
+// - Correct Read-After-Write (RAW) data response for Write Transactions
 // =========================================================================
 
 `timescale 1ns / 1ps
@@ -57,7 +56,6 @@ module garuda_memory_controller #(
 
             if (req_valid) begin
                 if (!addr_valid) begin
-                    // Out-of-bounds address error response (< 0x8000_0000 OR >= 0x8001_0000)
                     resp_error <= 1'b1;
                     resp_valid <= 1'b1;
                 end else begin
@@ -67,8 +65,12 @@ module garuda_memory_controller #(
                         if (req_byte_enable[1]) main_sram[word_addr][15:8]  <= req_write_data[15:8];
                         if (req_byte_enable[2]) main_sram[word_addr][23:16] <= req_write_data[23:16];
                         if (req_byte_enable[3]) main_sram[word_addr][31:24] <= req_write_data[31:24];
+                        resp_read_data <= req_write_data;
+                        $display("[SRAM CONTROLLER LOG] WRITE addr=0x%h, word_idx=%d, data=%d", req_addr, word_addr, req_write_data);
+                    end else begin
+                        resp_read_data <= main_sram[word_addr];
+                        $display("[SRAM CONTROLLER LOG] READ addr=0x%h, word_idx=%d, data=%d", req_addr, word_addr, main_sram[word_addr]);
                     end
-                    resp_read_data <= main_sram[word_addr];
                 end
             end
         end

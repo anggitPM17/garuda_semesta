@@ -1,5 +1,5 @@
 # =========================================================================
-# GARUDA SEMESTA — OFFICIAL EDA WORKSTATION DOCKERFILE v12.4.0
+# GARUDA SEMESTA — OFFICIAL EDA WORKSTATION DOCKERFILE v12.0-TITAN-V12
 # Author & Chief System Architect: Anggit Prasetyo Mituhu
 # Copyright (c) 2026 Anggit Prasetyo Mituhu. All rights reserved.
 # Licensed under the Apache License, Version 2.0
@@ -8,6 +8,8 @@
 # - Ubuntu 22.04 LTS Base
 # - Python 3.10+, pip, setuptools
 # - Icarus Verilog (iverilog & vvp runtime v11.0)
+# - Verilator (Linting & C++ Simulation)
+# - Yosys (Logic Synthesis & Structural Checks)
 # - GTKWave VCD Signal Analyzer (v3.4.0)
 # - Make, Git, GCC/Clang Build Essentials
 # =========================================================================
@@ -24,6 +26,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3-pip \
     python3-dev \
     iverilog \
+    verilator \
+    yosys \
     gtkwave \
     make \
     git \
@@ -40,4 +44,4 @@ COPY docker/eda/entrypoint.sh /usr/local/bin/garuda-eda-entrypoint
 RUN chmod +x /usr/local/bin/garuda-eda-entrypoint
 
 ENTRYPOINT ["/usr/local/bin/garuda-eda-entrypoint"]
-CMD ["python3", "src/verification/garuda_real_rtl_runner.py"]
+CMD ["python3", "src/verification/garuda_titan_v12_integration_runner.py"]

@@ -9,6 +9,7 @@
 // - Integrated PC, Instruction Decoder, 32x64-bit RegFile, 64-bit ALU
 // - Full 64-bit Instruction Fetch Interface with $readmemh Loading Support
 // - Explicit ALU Operand Selection (alu_src_imm) & Opcode Propagation
+// - Ungated D-Cache Request Validation to ensure MEM stage stores execute
 // =========================================================================
 
 `timescale 1ns / 1ps
@@ -166,6 +167,15 @@ module garuda_cpu_pipeline_top #(
         .rd_write_en(mem_wb_reg_write)
     );
 
+    // Forwarding logic for RS1 and RS2 at ID stage
+    wire [DATA_WIDTH-1:0] fwd_rs1_val = (id_ex_reg_write  && id_ex_rd  == dec_rs1 && dec_rs1 != 0) ? alu_result :
+                                        (ex_mem_reg_write && ex_mem_rd == dec_rs1 && dec_rs1 != 0) ? ex_mem_alu_res :
+                                        (mem_wb_reg_write && mem_wb_rd == dec_rs1 && dec_rs1 != 0) ? mem_wb_final_val : rf_rs1_val;
+
+    wire [DATA_WIDTH-1:0] fwd_rs2_val = (id_ex_reg_write  && id_ex_rd  == dec_rs2 && dec_rs2 != 0) ? alu_result :
+                                        (ex_mem_reg_write && ex_mem_rd == dec_rs2 && dec_rs2 != 0) ? ex_mem_alu_res :
+                                        (mem_wb_reg_write && mem_wb_rd == dec_rs2 && dec_rs2 != 0) ? mem_wb_final_val : rf_rs2_val;
+
     // Decode to Execute Pipeline Register
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
@@ -194,11 +204,8 @@ module garuda_cpu_pipeline_top #(
             id_ex_rs1       <= dec_rs1;
             id_ex_rs2       <= dec_rs2;
             id_ex_rd        <= dec_rd;
-            // Simple Forwarding (EX to ID and MEM to ID)
-            id_ex_rs1_val   <= (ex_mem_reg_write && ex_mem_rd == dec_rs1 && dec_rs1 != 0) ? ex_mem_alu_res :
-                               (mem_wb_reg_write && mem_wb_rd == dec_rs1 && dec_rs1 != 0) ? mem_wb_final_val : rf_rs1_val;
-            id_ex_rs2_val   <= (ex_mem_reg_write && ex_mem_rd == dec_rs2 && dec_rs2 != 0) ? ex_mem_alu_res :
-                               (mem_wb_reg_write && mem_wb_rd == dec_rs2 && dec_rs2 != 0) ? mem_wb_final_val : rf_rs2_val;
+            id_ex_rs1_val   <= fwd_rs1_val;
+            id_ex_rs2_val   <= fwd_rs2_val;
             id_ex_imm       <= dec_imm;
             id_ex_illegal_inst <= dec_illegal;
         end
@@ -245,7 +252,7 @@ module garuda_cpu_pipeline_top #(
     assign dcache_write_val = ex_mem_write_val;
     assign dcache_byte_en   = 4'hF;
     assign dcache_write_en  = ex_mem_mem_write;
-    assign dcache_req_valid = (ex_mem_mem_read || ex_mem_mem_write) && !stall_pipeline;
+    assign dcache_req_valid = (ex_mem_mem_read || ex_mem_mem_write);
 
     // Memory to Writeback Pipeline Register
     always @(posedge clk or negedge rst_n) begin

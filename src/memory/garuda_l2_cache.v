@@ -1,14 +1,12 @@
 // =========================================================================
-// GARUDA SEMESTA — L2 32KB CACHE SUBSYSTEM (v12.0 TITAN-TITANIUM)
+// GARUDA SEMESTA — L2 32KB CACHE SUBSYSTEM (v12.4.6)
 // Author & Chief System Architect: Anggit Prasetyo Mituhu
 // Copyright (c) 2026 Anggit Prasetyo Mituhu. All rights reserved.
 // Licensed under the Apache License, Version 2.0
 //
 // Synthesizable 32 KB 4-Way Set Associative L2 Cache:
 // - 32-bit Address, 32-bit Data Bus
-// - 4-Way Parallel Tag Comparison
-// - Round-Robin / LRU Way Replacement Policy
-// - Parity Bit Error Detection & Memory Backpressure Signal
+// - Direct Combinational Output Assignment for Zero-Lag Write-Through
 // =========================================================================
 
 `timescale 1ns / 1ps
@@ -37,8 +35,8 @@ module garuda_l2_cache #(
     output reg                   parity_error_detected,
 
     // Memory Controller / SRAM Interconnect
-    output reg  [ADDR_WIDTH-1:0] mem_addr,
-    output reg  [DATA_WIDTH-1:0] mem_write_data,
+    output wire [ADDR_WIDTH-1:0] mem_addr,
+    output wire [DATA_WIDTH-1:0] mem_write_data,
     output reg                   mem_write_en,
     output reg                   mem_req_valid,
     input  wire [DATA_WIDTH-1:0] mem_read_data,
@@ -76,6 +74,10 @@ module garuda_l2_cache #(
     wire any_hit = way0_hit || way1_hit || way2_hit || way3_hit;
     wire [1:0] hit_way = way0_hit ? 2'b00 : (way1_hit ? 2'b01 : (way2_hit ? 2'b10 : 2'b11));
 
+    // Zero-lag combinational assignments
+    assign mem_addr       = l1_req_addr;
+    assign mem_write_data = l1_req_write_data;
+
     integer w, s, j;
 
     always @(posedge clk or negedge rst_n) begin
@@ -88,7 +90,6 @@ module garuda_l2_cache #(
             parity_error_detected <= 1'b0;
             mem_req_valid <= 1'b0;
             mem_write_en <= 1'b0;
-            mem_addr <= {ADDR_WIDTH{1'b0}};
 
             for (s = 0; s < SETS; s = s + 1) begin
                 lru_way[s] <= 2'b00;
@@ -120,7 +121,6 @@ module garuda_l2_cache #(
                             data_array[hit_way][req_set][word_offset] <= l1_req_write_data;
                         end else begin
                             l1_resp_read_data <= data_array[hit_way][req_set][word_offset];
-                            // Simple Parity Check
                             parity_error_detected <= ^data_array[hit_way][req_set][word_offset];
                         end
                     end else begin
@@ -128,8 +128,6 @@ module garuda_l2_cache #(
                         l1_backpressure <= 1'b1;
                         mem_req_valid <= 1'b1;
                         mem_write_en <= l1_req_write_en;
-                        mem_addr <= l1_req_addr;
-                        mem_write_data <= l1_req_write_data;
                     end
                 end
 

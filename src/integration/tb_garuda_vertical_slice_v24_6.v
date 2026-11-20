@@ -36,8 +36,9 @@ module tb_garuda_vertical_slice_v24_6;
     wire        illegal_instruction;
     wire        parity_error_detected;
 
-    // Timeout counter
+    // Timeout counter & captured readback register
     integer cycle_counter = 0;
+    reg [31:0] captured_readback_val = 0;
 
     // 100 MHz Simulation Clock (10ns Period: always #5 clk = ~clk)
     always #5 clk = ~clk;
@@ -62,6 +63,13 @@ module tb_garuda_vertical_slice_v24_6;
         .illegal_instruction(illegal_instruction),
         .parity_error_detected(parity_error_detected)
     );
+
+    // Synchronously capture readback data whenever DMA response is valid
+    always @(posedge clk) begin
+        if (ext_dma_resp_valid) begin
+            captured_readback_val <= ext_dma_read_val[31:0];
+        end
+    end
 
     // Timeout protection watchdog
     always @(posedge clk) begin
@@ -120,11 +128,14 @@ module tb_garuda_vertical_slice_v24_6;
 
         $display("[STAGE 4] Strict Assertion: Asserting SRAM[0x80000100] == 500...");
 
+        // Delta delay to allow non-blocking registered assignment to complete
+        #1;
+
         // STRICT SRAM READBACK ASSERTION (NO PC FALLBACK)
-        if (ext_dma_read_val[31:0] === 32'd500) begin
+        if (captured_readback_val === 32'd500) begin
             $display("PASS: REAL RTL SRAM READBACK VERIFIED (SRAM[0x80000100] == 500)");
         end else begin
-            $display("FAIL: SRAM READBACK MISMATCH (Got %d, Expected 500)", ext_dma_read_val[31:0]);
+            $display("FAIL: SRAM READBACK MISMATCH (Got %d, Expected 500)", captured_readback_val);
             $fatal(1, "Expected 500 in SRAM[0x80000100]");
         end
 
