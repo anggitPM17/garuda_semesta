@@ -1,5 +1,5 @@
 // =========================================================================
-// GARUDA SEMESTA — UNIFIED MEMORY SUBSYSTEM TOP-LEVEL (v12.3.2-R2)
+// GARUDA SEMESTA — UNIFIED MEMORY SUBSYSTEM TOP-LEVEL (v12.3.2-R6.4)
 // Author & Chief System Architect: Anggit Prasetyo Mituhu
 // Copyright (c) 2026 Anggit Prasetyo Mituhu. All rights reserved.
 // Licensed under the Apache License, Version 2.0
@@ -76,7 +76,7 @@ module garuda_memory_subsystem_top #(
     wire [DATA_WIDTH-1:0] l2_mem_read_data;
     wire                  l2_mem_resp_valid;
 
-    // 1. Instantiate L1 4KB Instruction Cache (Full 64-bit Data Bus)
+    // 1. Instantiate L1 4KB Instruction Cache (Full 64-bit Data Bus & Explicit Handshake)
     garuda_l1_icache #(
         .CACHE_SIZE_BYTES(4096),
         .LINE_SIZE_BYTES(32),
@@ -95,8 +95,10 @@ module garuda_memory_subsystem_top #(
         .invalidate(invalidate_all_caches),
         .mem_req_addr(icache_mem_addr),
         .mem_req_valid(icache_mem_valid),
+        .mem_req_ready(1'b1), // Explicitly connected mem_req_ready
         .mem_resp_data({32'd0, l2_mem_read_data}),
-        .mem_resp_valid(icache_mem_resp_valid)
+        .mem_resp_valid(icache_mem_resp_valid),
+        .mem_resp_error(1'b0) // Explicitly connected mem_resp_error
     );
 
     // 2. Instantiate L1 4KB Data Cache
