@@ -1,15 +1,15 @@
 // =========================================================================
-// GARUDA SEMESTA — UNIFIED MEMORY SUBSYSTEM TOP-LEVEL (v12.0 TITAN-TITANIUM)
+// GARUDA SEMESTA — UNIFIED MEMORY SUBSYSTEM TOP-LEVEL (v12.3.2-R2)
 // Author & Chief System Architect: Anggit Prasetyo Mituhu
 // Copyright (c) 2026 Anggit Prasetyo Mituhu. All rights reserved.
 // Licensed under the Apache License, Version 2.0
 //
 // Synthesizable Top-Level Memory Subsystem:
-// - L1 Instruction Cache (4KB) & L1 Data Cache (4KB)
-// - L2 Cache Subsystem (32KB 4-Way Set Associative)
+// - L1 Instruction Cache (4KB, 64-bit Instruction Words)
+// - L1 Data Cache (4KB, 32-bit Data Bus) & L2 Unified Cache (32KB 4-Way)
 // - Low-Latency 16KB Scratchpad SRAM
 // - Multi-Master Memory Arbiter (CPU & GPU Masters)
-// - Main Memory Controller with 64KB SRAM Backend
+// - Main Memory Controller with 64KB SRAM Backend (Base: 0x80000000)
 // =========================================================================
 
 `timescale 1ns / 1ps
@@ -21,10 +21,10 @@ module garuda_memory_subsystem_top #(
     input  wire                  clk,
     input  wire                  rst_n,
 
-    // CPU Instruction Fetch Interface (Master 0)
+    // CPU Instruction Fetch Interface (Master 0) - Full 64-bit Instruction Bus
     input  wire [ADDR_WIDTH-1:0] cpu_inst_addr,
     input  wire                  cpu_inst_req_valid,
-    output wire [DATA_WIDTH-1:0] cpu_inst_data,
+    output wire [63:0]           cpu_inst_data,
     output wire                  cpu_inst_hit,
     output wire                  cpu_inst_valid,
     output wire                  cpu_inst_stall,
@@ -59,7 +59,7 @@ module garuda_memory_subsystem_top #(
     // Internal Wires for Interconnect
     wire [ADDR_WIDTH-1:0] icache_mem_addr;
     wire                  icache_mem_valid;
-    wire [DATA_WIDTH-1:0] icache_mem_data;
+    wire [63:0]           icache_mem_data;
     wire                  icache_mem_resp_valid;
 
     wire [ADDR_WIDTH-1:0] dcache_mem_addr;
@@ -76,12 +76,12 @@ module garuda_memory_subsystem_top #(
     wire [DATA_WIDTH-1:0] l2_mem_read_data;
     wire                  l2_mem_resp_valid;
 
-    // 1. Instantiate L1 4KB Instruction Cache
+    // 1. Instantiate L1 4KB Instruction Cache (Full 64-bit Data Bus)
     garuda_l1_icache #(
         .CACHE_SIZE_BYTES(4096),
         .LINE_SIZE_BYTES(32),
         .ADDR_WIDTH(32),
-        .DATA_WIDTH(32)
+        .DATA_WIDTH(64)
     ) u_icache (
         .clk(clk),
         .rst_n(rst_n),
@@ -95,7 +95,7 @@ module garuda_memory_subsystem_top #(
         .invalidate(invalidate_all_caches),
         .mem_req_addr(icache_mem_addr),
         .mem_req_valid(icache_mem_valid),
-        .mem_resp_data(l2_mem_read_data),
+        .mem_resp_data({32'd0, l2_mem_read_data}),
         .mem_resp_valid(icache_mem_resp_valid)
     );
 

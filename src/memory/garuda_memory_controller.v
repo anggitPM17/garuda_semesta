@@ -1,11 +1,12 @@
 // =========================================================================
-// GARUDA SEMESTA — MAIN MEMORY CONTROLLER & SRAM BACKEND (v12.0)
+// GARUDA SEMESTA — MAIN MEMORY CONTROLLER & SRAM BACKEND (v12.3.2-R2)
 // Author & Chief System Architect: Anggit Prasetyo Mituhu
 // Copyright (c) 2026 Anggit Prasetyo Mituhu. All rights reserved.
 // Licensed under the Apache License, Version 2.0
 //
 // Synthesizable Main Memory Controller with SRAM Behavioral Model:
-// - Address Decoder (Scratchpad 0x0000_0000, SRAM Main 0x8000_0000)
+// - Address Bounds Decoder (Base: 0x8000_0000, Size: 65,536 bytes, End: 0x8001_0000)
+// - Out-of-bounds addresses (< 0x8000_0000 OR >= 0x8001_0000) trigger resp_error = 1
 // - Configurable Wait States, Response Valid, Error Response
 // - Reset Recovery & Transaction Handshake
 // =========================================================================
@@ -31,12 +32,13 @@ module garuda_memory_controller #(
     output reg                   resp_error
 );
 
-    localparam NUM_WORDS = MEM_SIZE_BYTES / 4;
+    localparam NUM_WORDS = MEM_SIZE_BYTES / 4; // 16384 words
     localparam ADDR_BITS = 14;
 
     reg [31:0] main_sram [0:NUM_WORDS-1];
     wire [ADDR_BITS-1:0] word_addr = req_addr[ADDR_BITS+1:2];
 
+    // Address Bounds Validation: Base 0x8000_0000 to End-Exclusive 0x8001_0000
     wire addr_valid = (req_addr >= 32'h8000_0000) && (req_addr < 32'h8000_0000 + MEM_SIZE_BYTES);
 
     integer i;
@@ -54,7 +56,8 @@ module garuda_memory_controller #(
             resp_error <= 1'b0;
 
             if (req_valid) begin
-                if (!addr_valid && req_addr < 32'h8000_0000) begin
+                if (!addr_valid) begin
+                    // Out-of-bounds address error response (< 0x8000_0000 OR >= 0x8001_0000)
                     resp_error <= 1'b1;
                     resp_valid <= 1'b1;
                 end else begin
