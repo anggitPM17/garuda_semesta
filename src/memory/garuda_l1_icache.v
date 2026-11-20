@@ -1,5 +1,5 @@
 // =========================================================================
-// GARUDA SEMESTA — L1 4KB INSTRUCTION CACHE MODULE (v12.3.2-R4)
+// GARUDA SEMESTA — L1 4KB INSTRUCTION CACHE MODULE (v12.3.2-R5)
 // Author & Chief System Architect: Anggit Prasetyo Mituhu
 // Copyright (c) 2026 Anggit Prasetyo Mituhu. All rights reserved.
 // Licensed under the Apache License, Version 2.0
@@ -7,12 +7,13 @@
 // Synthesizable 4 KB L1 Instruction Cache:
 // - 32-bit Address, 64-bit Full GARUDA ISA Instruction Word Output
 // - Direct-Mapped (128 Lines, 32-Byte Line Size = 4 x 64-bit Words per Line)
-// - Exact Refill Address Increment FSM:
+// - Explicit Request/Accept & Response Handshake (`mem_req_valid`, `mem_req_ready`, `mem_resp_valid`)
+// - Refill Address Sequence:
 //   Word 0: line_base + 0
 //   Word 1: line_base + 8
 //   Word 2: line_base + 16
 //   Word 3: line_base + 24
-// - Valid Bit Array, Tag Array, Data SRAM Array
+// - Valid Bit Array set ONLY after all 4 words are populated
 // =========================================================================
 
 `timescale 1ns / 1ps
@@ -38,11 +39,13 @@ module garuda_l1_icache #(
     input  wire                  flush,
     input  wire                  invalidate,
 
-    // Memory Controller / L2 Interface
+    // Memory Controller / L2 Interface (Explicit Handshake)
     output reg  [ADDR_WIDTH-1:0] mem_req_addr,
     output reg                   mem_req_valid,
+    input  wire                  mem_req_ready,
     input  wire [DATA_WIDTH-1:0] mem_resp_data,
-    input  wire                  mem_resp_valid
+    input  wire                  mem_resp_valid,
+    input  wire                  mem_resp_error
 );
 
     localparam NUM_LINES      = CACHE_SIZE_BYTES / LINE_SIZE_BYTES; // 128 lines
@@ -75,7 +78,7 @@ module garuda_l1_icache #(
 
     integer i, j;
 
-    // Sequential State & Multi-Word Line Refill with Address Increment
+    // Sequential State & Multi-Word Line Refill with Explicit Handshake
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             state <= ST_IDLE;
@@ -122,24 +125,26 @@ module garuda_l1_icache #(
                     end else begin
                         resp_hit <= 1'b0;
                         mem_req_valid <= 1'b1;
-                        // Word 0: line_base + 0
-                        mem_req_addr <= line_base;
+                        mem_req_addr <= line_base; // Word 0: base + 0
                         stall <= 1'b1;
                         refill_word_cnt <= 2'b00;
                     end
                 end
 
                 ST_REFILL: begin
-                    if (mem_resp_valid) begin
+                    if (mem_resp_error) begin
+                        // Memory response error -> cancel refill safely
+                        valid_array[req_index] <= 1'b0;
+                        mem_req_valid <= 1'b0;
+                    end else if (mem_resp_valid) begin
                         data_array[req_index][refill_word_cnt] <= mem_resp_data;
                         if (refill_word_cnt == (WORDS_PER_LINE - 1)) begin
-                            // Set Valid Bit ONLY after full 4-word line is refilled
+                            // Set Valid Bit ONLY after all 4 words are received
                             tag_array[req_index] <= req_tag;
                             valid_array[req_index] <= 1'b1;
                             mem_req_valid <= 1'b0;
                         end else begin
                             refill_word_cnt <= refill_word_cnt + 1'b1;
-                            // Exact Address Increment: Word 1 -> line_base+8, Word 2 -> line_base+16, Word 3 -> line_base+24
                             mem_req_addr <= line_base + ((refill_word_cnt + 1'b1) * 8);
                         end
                     end
@@ -167,7 +172,9 @@ module garuda_l1_icache #(
                 else next_state = ST_REFILL;
             end
             ST_REFILL: begin
-                if (mem_resp_valid && (refill_word_cnt == (WORDS_PER_LINE - 1))) begin
+                if (mem_resp_error) begin
+                    next_state = ST_IDLE;
+                end else if (mem_resp_valid && (refill_word_cnt == (WORDS_PER_LINE - 1))) begin
                     next_state = ST_RESP;
                 end
             end
