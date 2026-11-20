@@ -34,7 +34,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             --text-main: #f8fafc;
             --text-sub: #94a3b8;
         }
-        body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg-color); color: var(--text-main); margin: 0; padding: 24px; }
+        body { font-family: 'Segoe UI', -apple-system, sans-serif; background: var(--bg-color); color: var(--text-main); margin: 0; padding: 24px; }
         .header { text-align: center; padding: 28px; background: linear-gradient(135deg, #1e293b, #0f172a); border-radius: 16px; border: 1px solid #334155; margin-bottom: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
         .header h1 { margin: 0; font-size: 32px; background: linear-gradient(90deg, #38bdf8, #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .header p { margin: 8px 0 0 0; color: var(--text-sub); font-size: 16px; }
@@ -140,13 +140,17 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
 class GarudaDashboardHandler(BaseHTTPRequestHandler):
     def do_GET(self):
+        # Force no-cache headers so browser never holds onto old HTML template
+        self.send_response(200)
+        self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
+        self.send_header("Pragma", "no-cache")
+        self.send_header("Expires", "0")
+
         if self.path == "/" or self.path == "/index.html":
-            self.send_response(200)
             self.send_header("Content-type", "text/html")
             self.end_headers()
             self.wfile.write(HTML_TEMPLATE.encode("utf-8"))
         elif self.path == "/api/telemetry":
-            self.send_response(200)
             self.send_header("Content-type", "application/json")
             self.end_headers()
             data = {
@@ -163,13 +167,11 @@ class GarudaDashboardHandler(BaseHTTPRequestHandler):
             }
             self.wfile.write(json.dumps(data).encode("utf-8"))
         elif self.path == "/api/test-trigger":
-            self.send_response(200)
             self.send_header("Content-type", "application/json")
             self.end_headers()
             res = {"status": "SUCCESS", "message": "ALL 5 CHIPS PASSED LIVE HARDWARE AUDIT (0 errors, 100% Titanium Grade)"}
             self.wfile.write(json.dumps(res).encode("utf-8"))
         else:
-            self.send_response(404)
             self.end_headers()
 
 def run_dashboard_server(port=8080):
