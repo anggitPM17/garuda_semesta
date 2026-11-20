@@ -1,0 +1,54 @@
+{
+  "audit_version": "12.0-BASELINE-V2",
+  "project_name": "GARUDA SEMESTA",
+  "owner": "AnggitPM17",
+  "author": "Anggit Prasetyo Mituhu",
+  "timestamp": "2026-11-20T16:15:00Z",
+  "git_branch": "engineering/hardening-v2",
+  "git_commit": "99cf0dd",
+  "repository_stats": {
+    "total_files": 461,
+    "verilog_rtl_files": 20,
+    "python_sdk_files": 19,
+    "firmware_c_files": 2,
+    "unrolled_part_files": 200,
+    "documentation_files": 14
+  },
+  "canonical_top_levels": {
+    "cpu": "cpu_src/garuda_cpu_top.v",
+    "gpu": "gpu_src/garuda_gpu_top.v",
+    "npu": "npu_src/garuda_npu_top.v",
+    "secure": "secure_src/garuda_secure_top.v",
+    "mcu": "mcu_src/garuda_mcu_top.v"
+  },
+  "tool_availability": {
+    "python3": true,
+    "verilator": false,
+    "icarus_verilog": false,
+    "yosys": false,
+    "openlane": true,
+    "docker": true,
+    "gtkwave": true,
+    "klayout": true
+  },
+  "findings": [
+    {
+      "finding_id": "FINDING-001",
+      "file_path": "software_sdk/garuda_desktop_app.py",
+      "severity": "MEDIUM",
+      "technical_explanation": "Relative import of garuda_klayout_reader required sys.path insertion for standalone execution.",
+      "reproduction_procedure": "python software_sdk/garuda_desktop_app.py",
+      "recommended_correction": "Insert current directory into sys.path before import.",
+      "verification_criteria": "Successful launch without ModuleNotFoundError."
+    },
+    {
+      "finding_id": "FINDING-002",
+      "file_path": "garuda_all_chips_docker_test.py",
+      "severity": "INFORMATIONAL",
+      "technical_explanation": "Docker verification script relies on Docker desktop engine active status.",
+      "reproduction_procedure": "python garuda_all_chips_docker_test.py",
+      "recommended_correction": "Execute multi-stage verification inside Docker container when engine active.",
+      "verification_criteria": "Exit code 0 with granular stage breakdown."
+    }
+  ]
+}

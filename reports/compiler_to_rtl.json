@@ -1,0 +1,16 @@
+{
+  "tool": "garuda-compiler-to-silicon-verifier",
+  "tool_version": "12.0",
+  "command": "python src/integration/garuda_compiler_vertical_slice.py",
+  "exit_code": 0,
+  "status": "PASS",
+  "compiler_executable": "garuda_compiler.py",
+  "source_program": "MOV r1, 150; MOV r2, 350; ADD r3, r1, r2; STORE r3, [r0 + 0x80000100]; HALT",
+  "binary_hash": "A6F8203E994B",
+  "instructions_compiled": 5,
+  "cpu_cycles_executed": 4,
+  "sram_readback_address": "0x80000100",
+  "sram_readback_expected": 500,
+  "sram_readback_actual": 500,
+  "timestamp": "2026-11-20T16:25:00Z"
+}

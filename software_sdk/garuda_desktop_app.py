@@ -24,7 +24,15 @@ import random
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 
-from software_sdk.garuda_klayout_reader import GarudaKlayoutMultiFormatReader
+# Dynamic Path Fix for Standalone Script Execution
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+if CURRENT_DIR not in sys.path:
+    sys.path.insert(0, CURRENT_DIR)
+
+try:
+    from garuda_klayout_reader import GarudaKlayoutMultiFormatReader
+except ImportError:
+    from software_sdk.garuda_klayout_reader import GarudaKlayoutMultiFormatReader
 
 # NVIDIA Cyberpunk Dark Theme Color Palette
 BG_DARK = "#070a12"
@@ -139,7 +147,6 @@ class GarudaKlayoutNsightApp:
         toolbar = tk.Frame(self.root, bg="#0d1322", height=42, bd=1, relief="solid")
         toolbar.pack(fill="x", side="top")
 
-        # KLayout Standard Action Tool Buttons (Matching KLayout 0.30.13 GUI)
         klayout_tools = [
             ("↖ Select", "Select"),
             ("✋ Move", "Move"),

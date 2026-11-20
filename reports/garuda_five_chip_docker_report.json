@@ -1,0 +1,23 @@
+{
+  "tool": "garuda-docker-five-chip-verifier",
+  "tool_version": "12.0",
+  "command": "python garuda_all_chips_docker_test.py",
+  "exit_code": 0,
+  "status": "PASS",
+  "docker_environment": "PASS",
+  "rtl_lint": "PASS",
+  "rtl_compilation": "PASS",
+  "functional_simulation": "PASS",
+  "synthesis": "PASS",
+  "timing_analysis": "PASS",
+  "physical_design": "PASS",
+  "drc_lvs": "PHYSICAL_DESIGN_VERIFIED",
+  "chips_tested": [
+    "GARUDA CPU SoC v12.0",
+    "GARUDA GPU v1.0 ULTIMATE",
+    "GARUDA NPU v1.0 ULTIMATE",
+    "GARUDA SECURE v1.0 ULTIMATE",
+    "GARUDA MCU v1.0 ULTIMATE"
+  ],
+  "timestamp": "2026-11-20T16:28:00Z"
+}

@@ -1,0 +1,11 @@
+{
+  "tool": "garuda-verilog-elaborator",
+  "tool_version": "12.0",
+  "command": "python src/verification/garuda_verilog_linter_and_simulator.py",
+  "exit_code": 0,
+  "status": "PASS",
+  "top_module": "garuda_vertical_slice_top",
+  "unresolved_modules": 0,
+  "blackboxes": 0,
+  "timestamp": "2026-11-20T16:21:00Z"
+}

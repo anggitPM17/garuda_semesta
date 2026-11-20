@@ -1,0 +1,22 @@
+{
+  "tool": "garuda-openlane-config-verifier",
+  "tool_version": "12.0",
+  "command": "python src/openlane/verify_openlane_config.py",
+  "exit_code": 0,
+  "status": "PASS",
+  "pdk": "sky130A",
+  "std_cell_library": "sky130_fd_sc_hd",
+  "openlane_configs": {
+    "garuda_alu": {
+      "clock_period_ns": 10.0,
+      "density": 0.65,
+      "status": "PASS"
+    },
+    "garuda_l1_icache": {
+      "clock_period_ns": 2.85,
+      "density": 0.60,
+      "status": "PASS"
+    }
+  },
+  "timestamp": "2026-11-20T16:27:00Z"
+}

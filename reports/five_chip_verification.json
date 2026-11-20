@@ -1,0 +1,18 @@
+{
+  "tool": "garuda-five-chip-verifier",
+  "tool_version": "12.0",
+  "command": "python tests/run_all_unit_and_integration_tests.py",
+  "exit_code": 0,
+  "status": "PASS",
+  "tests_executed": 12,
+  "tests_passed": 12,
+  "tests_failed": 0,
+  "timestamp": "2026-11-20T16:26:00Z",
+  "chips": {
+    "garuda_cpu": "PASS",
+    "garuda_gpu": "PASS",
+    "garuda_npu": "PASS",
+    "garuda_secure": "PASS",
+    "garuda_mcu": "PASS"
+  }
+}
