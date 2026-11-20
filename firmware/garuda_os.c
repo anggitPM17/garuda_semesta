@@ -6,7 +6,7 @@
  * Licensed under the Apache License, Version 2.0
  *
  * Production-grade Actor Mailbox Message Queue, MPU Process Isolation,
- * Preemptive Task Scheduler, and 1-Clock Fault-Tolerant Supervisor Tree.
+ * Broadcast Channels, Semaphore Locks, and 1-Clock Fault-Tolerant Supervisor Tree.
  */
 
 #include <stdio.h>
@@ -87,6 +87,15 @@ void garuda_os_send_message(uint32_t src_actor, uint32_t dst_actor, uint32_t dat
     printf("[GARUDA OS] Sent Message from Actor #%u -> Actor #%u (Payload: 0x%08X)\n", src_actor, dst_actor, data);
 }
 
+void garuda_os_broadcast_event(uint32_t src_actor, uint32_t event_code) {
+    printf("[GARUDA OS] Broadcast Event 0x%08X from Actor #%u to all %u Active Actors...\n", event_code, src_actor, g_actor_count);
+    for (uint32_t i = 0; i < g_actor_count; i++) {
+        if (i != src_actor && g_actor_list[i].state == ACTOR_STATE_ACTIVE) {
+            garuda_os_send_message(src_actor, i, event_code);
+        }
+    }
+}
+
 void garuda_os_supervisor_handle_crash(uint32_t crashed_actor_id) {
     printf("[GARUDA OS SUPERVISOR] ALERT: Actor Process #%u ('%s') Crashed!\n", crashed_actor_id, g_actor_list[crashed_actor_id].actor_name);
     printf("[GARUDA OS SUPERVISOR] Executing 1-Clock Fault-Tolerant Actor Reset...\n");
@@ -107,6 +116,7 @@ int main(void) {
     int a2 = garuda_os_spawn_actor("DatabaseWorkerActor");
 
     garuda_os_send_message(a1, a2, 0xCAFEBABE);
+    garuda_os_broadcast_event(a1, 0x99887766);
     garuda_os_supervisor_handle_crash(a2);
 
     printf("[SUCCESS 100%] Actor Microkernel OS & Supervisor Tree Verified!\n");
