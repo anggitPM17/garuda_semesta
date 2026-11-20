@@ -1,5 +1,5 @@
 // =========================================================================
-// GARUDA SEMESTA — MODULAR 5-STAGE PIPELINE CPU TOP-LEVEL (v12.0)
+// GARUDA SEMESTA — MODULAR 5-STAGE PIPELINE CPU TOP-LEVEL (v12.3.2-R1)
 // Author & Chief System Architect: Anggit Prasetyo Mituhu
 // Copyright (c) 2026 Anggit Prasetyo Mituhu. All rights reserved.
 // Licensed under the Apache License, Version 2.0
@@ -7,6 +7,7 @@
 // Synthesizable 5-Stage Pipeline CPU Core Top-Level:
 // - IF (Instruction Fetch), ID (Instruction Decode), EX (Execute), MEM (Memory), WB (Writeback)
 // - Integrated PC, Instruction Decoder, 32x64-bit RegFile, 64-bit ALU
+// - 64-bit Full GARUDA ISA Instruction Word Fetch Interface (No Truncation)
 // - Directly interfaces to FASE 2 GARUDA L1 I-Cache & L1 D-Cache
 // =========================================================================
 
@@ -19,10 +20,10 @@ module garuda_cpu_pipeline_top #(
     input  wire                  clk,
     input  wire                  rst_n,
 
-    // L1 Instruction Cache Interface
+    // L1 Instruction Cache Interface (Full 64-bit Instruction Word)
     output wire [ADDR_WIDTH-1:0] icache_addr,
     output wire                  icache_req_valid,
-    input  wire [31:0]           icache_inst_data,
+    input  wire [63:0]           icache_inst_data,
     input  wire                  icache_valid,
     input  wire                  icache_stall,
 
@@ -68,6 +69,7 @@ module garuda_cpu_pipeline_top #(
     reg                  mem_wb_reg_write;
     reg [4:0]            mem_wb_rd;
     reg [DATA_WIDTH-1:0] mem_wb_final_val;
+    reg [3:0]            mem_wb_opcode;
 
     // 1. Program Counter
     wire stall_pipeline = icache_stall || dcache_stall;
@@ -95,7 +97,7 @@ module garuda_cpu_pipeline_top #(
             if_id_inst <= 64'h0;
         end else if (!stall_pipeline) begin
             if_id_pc   <= current_pc;
-            if_id_inst <= {32'd0, icache_inst_data}; // Expand 32-bit instruction
+            if_id_inst <= icache_inst_data; // Full 64-bit GARUDA ISA instruction word
         end
     end
 
@@ -125,7 +127,7 @@ module garuda_cpu_pipeline_top #(
     );
 
     assign illegal_instruction = dec_illegal;
-    assign pipeline_halted = (dec_opcode == 4'hF);
+    assign pipeline_halted = (mem_wb_opcode == 4'hF);
 
     // 4. Register File (32 x 64-bit)
     wire [DATA_WIDTH-1:0] rf_rs1_val, rf_rs2_val;
@@ -216,10 +218,12 @@ module garuda_cpu_pipeline_top #(
             mem_wb_reg_write <= 1'b0;
             mem_wb_rd        <= 5'd0;
             mem_wb_final_val <= 64'd0;
+            mem_wb_opcode    <= 4'h0;
         end else if (!stall_pipeline) begin
             mem_wb_reg_write <= ex_mem_reg_write;
             mem_wb_rd        <= ex_mem_rd;
             mem_wb_final_val <= ex_mem_mem_read ? dcache_read_val : ex_mem_alu_res;
+            mem_wb_opcode    <= dec_opcode;
         end
     end
 

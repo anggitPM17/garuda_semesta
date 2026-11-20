@@ -1,12 +1,12 @@
 // =========================================================================
-// GARUDA SEMESTA — VERTICAL SLICE HARDWARE INTEGRATION TOP (v12.0)
+// GARUDA SEMESTA — VERTICAL SLICE HARDWARE INTEGRATION TOP (v12.3.2-R1)
 // Author & Chief System Architect: Anggit Prasetyo Mituhu
 // Copyright (c) 2026 Anggit Prasetyo Mituhu. All rights reserved.
 // Licensed under the Apache License, Version 2.0
 //
 // Synthesizable End-to-End Vertical Slice Integration Top:
-// - Integrates GARUDA 5-Stage CPU Core Pipeline
-// - Integrates L1 4KB I-Cache & L1 4KB D-Cache
+// - Integrates GARUDA 5-Stage CPU Core Pipeline (Full 64-bit ISA Word Fetch)
+// - Integrates L1 4KB I-Cache (64-bit) & L1 4KB D-Cache (64-bit)
 // - Integrates L2 32KB 4-Way Cache & Scratchpad SRAM
 // - Integrates Multi-Master Arbiter & Main Memory Controller
 // - Executes Compiled GARUDA Instructions from Fetch -> Memory Writeback
@@ -38,10 +38,10 @@ module garuda_vertical_slice_top #(
     output wire                  parity_error_detected
 );
 
-    // CPU Wires
+    // CPU Wires (Full 64-bit Instruction Word)
     wire [ADDR_WIDTH-1:0] icache_addr;
     wire                  icache_req_valid;
-    wire [31:0]           icache_inst_data;
+    wire [63:0]           icache_inst_data;
     wire                  icache_valid;
     wire                  icache_stall;
 
@@ -88,7 +88,7 @@ module garuda_vertical_slice_top #(
         .rst_n(rst_n),
         .cpu_inst_addr(icache_addr),
         .cpu_inst_req_valid(icache_req_valid),
-        .cpu_inst_data(icache_inst_data),
+        .cpu_inst_data(icache_inst_data[31:0]),
         .cpu_inst_hit(icache_valid),
         .cpu_inst_valid(icache_valid),
         .cpu_inst_stall(icache_stall),
