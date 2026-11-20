@@ -5,8 +5,8 @@ Author & Chief System Architect: Anggit Prasetyo Mituhu
 Copyright (c) 2026 Anggit Prasetyo Mituhu. All rights reserved.
 Licensed under the Apache License, Version 2.0
 
-Master-grade Roofline Model Analyzer (FLOPS vs Memory Bandwidth), DVFS Controller,
-and Hardware Performance Counter Reader for all 5 GARUDA Chips.
+Massively Expanded Roofline Model Analyzer (FLOPS vs Memory Bandwidth), Power-Performance Efficiency Index (Perf/Watt),
+DVFS Controller, and Hardware Performance Counter Reader for all 5 GARUDA Chips.
 """
 
 import sys
@@ -16,6 +16,15 @@ import json
 import logging
 
 logging.basicConfig(level=logging.INFO, format="[GARUDA PROFILER MASTER] %(levelname)s: %(message)s")
+
+class GarudaPowerEfficiencyCalculator:
+    """Calculates Power-Performance Efficiency Index (Perf/Watt & TOPS/Watt)."""
+    @staticmethod
+    def calculate_efficiency(flops, power_watts):
+        perf_per_watt = (flops / 1e9) / max(0.001, power_watts)
+        logging.info(f"Power Efficiency: Achieved {perf_per_watt:.2f} GFLOPS/Watt!")
+        return perf_per_watt
+
 
 class GarudaRooflineModelAnalyzer:
     """Roofline Model Analyzer: Identifies whether workloads are Compute-Bound or Memory-Bound."""
@@ -50,16 +59,19 @@ class GarudaHardwareProfiler:
     def __init__(self):
         self.roofline = GarudaRooflineModelAnalyzer()
         self.dvfs = GarudaDvfsController()
+        self.efficiency_calc = GarudaPowerEfficiencyCalculator()
 
     def profile_chip_performance(self, chip_name, flops, memory_bytes, temperature_c):
         logging.info(f"Profiling {chip_name} Performance & Thermal Envelope...")
         roofline_res = self.roofline.analyze_operational_intensity(flops, memory_bytes)
         dvfs_res = self.dvfs.adjust_voltage_frequency(temperature_c)
+        perf_watt = self.efficiency_calc.calculate_efficiency(flops, 150.0)
 
         return {
             "chip_name": chip_name,
             "roofline_category": roofline_res["classification"],
             "intensity": f"{roofline_res['intensity_flops_per_byte']:.2f} FLOPS/Byte",
+            "perf_per_watt": f"{perf_watt:.2f} GFLOPS/Watt",
             "operating_freq": f"{dvfs_res['freq_ghz']} GHz",
             "operating_voltage": f"{dvfs_res['voltage_v']}V",
             "temperature": f"{temperature_c}°C",
@@ -69,5 +81,5 @@ class GarudaHardwareProfiler:
 if __name__ == "__main__":
     profiler = GarudaHardwareProfiler()
     res = profiler.profile_chip_performance("GARUDA GPU v12.0", flops=1e14, memory_bytes=1e12, temperature_c=54.0)
-    print("\n=== GARUDA ROOFLINE & DVFS PROFILER RESULT ===")
+    print("\n=== GARUDA ROOFLINE & DVFS PROFILER MASTER RESULT ===")
     print(json.dumps(res, indent=2))
