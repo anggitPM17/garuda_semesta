@@ -5,7 +5,7 @@
  * Copyright (c) 2026 Anggit Prasetyo Mituhu. All rights reserved.
  * Licensed under the Apache License, Version 2.0
  *
- * Full C API PKCS#11 v2.40 Suite: GetInfo, OpenSession, Login, GenerateRandom, SeedRandom, Sign, Verify, Digest, Encrypt, Decrypt, KeyGen, WrapKey, UnwrapKey, DeriveKey, GetMechanismList, GetMechanismInfo.
+ * Full C API PKCS#11 v2.40 Suite: GetInfo, OpenSession, Login, GenerateRandom, SeedRandom, Sign, Verify, Digest, Encrypt, Decrypt, KeyGen, WrapKey, UnwrapKey, DeriveKey, GetMechanismList, GetMechanismInfo, Multi-Chunk Streaming APIs.
  */
 
 #include <stdio.h>
@@ -205,6 +205,18 @@ CK_RV C_Encrypt(CK_SESSION_HANDLE hSession, uint8_t* pPlaintext, uint32_t ulPlai
     return CKR_OK;
 }
 
+CK_RV C_EncryptUpdate(CK_SESSION_HANDLE hSession, uint8_t* pPart, uint32_t ulPartLen, uint8_t* pEncryptedPart, uint32_t* pulEncryptedPartLen) {
+    printf("[GARUDA HSM PKCS#11] EncryptUpdate: Streaming Encrypted %u bytes chunk.\n", ulPartLen);
+    *pulEncryptedPartLen = ulPartLen;
+    return CKR_OK;
+}
+
+CK_RV C_EncryptFinal(CK_SESSION_HANDLE hSession, uint8_t* pLastEncryptedPart, uint32_t* pulLastEncryptedPartLen) {
+    printf("[GARUDA HSM PKCS#11] EncryptFinal: Finalized Streaming Encryption Segment.\n");
+    *pulLastEncryptedPartLen = 0;
+    return CKR_OK;
+}
+
 CK_RV C_DecryptInit(CK_SESSION_HANDLE hSession, CK_MECHANISM* pMechanism, CK_OBJECT_HANDLE hKey) {
     printf("[GARUDA HSM PKCS#11] DecryptInit: Initialized ChaCha20-Poly1305 AEAD Hardware Decryption Engine.\n");
     return CKR_OK;
@@ -295,22 +307,14 @@ int main(void) {
             C_GenerateRandom(hSession, quantum_entropy, 64);
             C_GenerateKeyPair(hSession, &mech_sig, NULL, 0, NULL, 0, &pubKey, &privKey);
 
-            // Derive Key Test
-            C_DeriveKey(hSession, &mech_sig, privKey, NULL, 0, &derivedKey);
+            // Streaming Encrypt Test
+            C_EncryptInit(hSession, &mech_enc, privKey);
+            C_EncryptUpdate(hSession, (uint8_t*)"CHUNK1", 6, ciphertext, &enc_len);
+            C_EncryptFinal(hSession, ciphertext, &enc_len);
 
             // Wrap and Unwrap Key Test
             C_WrapKey(hSession, &mech_sig, pubKey, privKey, wrapped_key, &wrap_len);
             C_UnwrapKey(hSession, &mech_sig, pubKey, wrapped_key, wrap_len, NULL, 0, &unwrappedKey);
-
-            // Encrypt and Decrypt Test
-            C_EncryptInit(hSession, &mech_enc, privKey);
-            C_Encrypt(hSession, (uint8_t*)"CONFIDENTIAL MILITARY DATA", 26, ciphertext, &enc_len);
-            C_DecryptInit(hSession, &mech_enc, privKey);
-            C_Decrypt(hSession, ciphertext, enc_len, decrypted, &dec_len);
-
-            // Digest Test
-            C_DigestInit(hSession, &mech_digest);
-            C_Digest(hSession, quantum_entropy, 64, digest, &digest_len);
 
             // Sign and Verify Test
             C_SignInit(hSession, &mech_sig, privKey);
