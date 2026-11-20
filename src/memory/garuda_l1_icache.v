@@ -1,13 +1,17 @@
 // =========================================================================
-// GARUDA SEMESTA — L1 4KB INSTRUCTION CACHE MODULE (v12.3.2-R3)
+// GARUDA SEMESTA — L1 4KB INSTRUCTION CACHE MODULE (v12.3.2-R4)
 // Author & Chief System Architect: Anggit Prasetyo Mituhu
 // Copyright (c) 2026 Anggit Prasetyo Mituhu. All rights reserved.
 // Licensed under the Apache License, Version 2.0
 //
 // Synthesizable 4 KB L1 Instruction Cache:
 // - 32-bit Address, 64-bit Full GARUDA ISA Instruction Word Output
-// - Direct-Mapped (128 Lines, 32-Byte Line Size = 4 Words per Line)
-// - Full Multi-Word Line Refill FSM (Valid bit set ONLY after all words filled)
+// - Direct-Mapped (128 Lines, 32-Byte Line Size = 4 x 64-bit Words per Line)
+// - Exact Refill Address Increment FSM:
+//   Word 0: line_base + 0
+//   Word 1: line_base + 8
+//   Word 2: line_base + 16
+//   Word 3: line_base + 24
 // - Valid Bit Array, Tag Array, Data SRAM Array
 // =========================================================================
 
@@ -65,12 +69,13 @@ module garuda_l1_icache #(
     wire [TAG_BITS-1:0]    req_tag     = req_addr[ADDR_WIDTH-1 : INDEX_BITS+OFFSET_BITS];
     wire [INDEX_BITS-1:0]  req_index   = req_addr[INDEX_BITS+OFFSET_BITS-1 : OFFSET_BITS];
     wire [1:0]             word_offset = req_addr[OFFSET_BITS-1 : 3];
+    wire [ADDR_WIDTH-1:0]  line_base   = {req_addr[ADDR_WIDTH-1:OFFSET_BITS], {OFFSET_BITS{1'b0}}};
 
     wire tag_match = valid_array[req_index] && (tag_array[req_index] == req_tag);
 
     integer i, j;
 
-    // Sequential State & Multi-Word Line Refill Logic
+    // Sequential State & Multi-Word Line Refill with Address Increment
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             state <= ST_IDLE;
@@ -117,7 +122,8 @@ module garuda_l1_icache #(
                     end else begin
                         resp_hit <= 1'b0;
                         mem_req_valid <= 1'b1;
-                        mem_req_addr <= {req_addr[ADDR_WIDTH-1:OFFSET_BITS], {OFFSET_BITS{1'b0}}};
+                        // Word 0: line_base + 0
+                        mem_req_addr <= line_base;
                         stall <= 1'b1;
                         refill_word_cnt <= 2'b00;
                     end
@@ -133,6 +139,8 @@ module garuda_l1_icache #(
                             mem_req_valid <= 1'b0;
                         end else begin
                             refill_word_cnt <= refill_word_cnt + 1'b1;
+                            // Exact Address Increment: Word 1 -> line_base+8, Word 2 -> line_base+16, Word 3 -> line_base+24
+                            mem_req_addr <= line_base + ((refill_word_cnt + 1'b1) * 8);
                         end
                     end
                 end
