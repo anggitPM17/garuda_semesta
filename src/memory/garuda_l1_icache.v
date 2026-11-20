@@ -1,5 +1,5 @@
 // =========================================================================
-// GARUDA SEMESTA — L1 4KB INSTRUCTION CACHE MODULE (v12.3.2-R5)
+// GARUDA SEMESTA — L1 4KB INSTRUCTION CACHE MODULE (v12.3.2-R6)
 // Author & Chief System Architect: Anggit Prasetyo Mituhu
 // Copyright (c) 2026 Anggit Prasetyo Mituhu. All rights reserved.
 // Licensed under the Apache License, Version 2.0
@@ -8,6 +8,7 @@
 // - 32-bit Address, 64-bit Full GARUDA ISA Instruction Word Output
 // - Direct-Mapped (128 Lines, 32-Byte Line Size = 4 x 64-bit Words per Line)
 // - Explicit Request/Accept & Response Handshake (`mem_req_valid`, `mem_req_ready`, `mem_resp_valid`)
+// - FSM Checks `mem_req_valid && mem_req_ready` Before Refill Advances
 // - Refill Address Sequence:
 //   Word 0: line_base + 0
 //   Word 1: line_base + 8
@@ -78,7 +79,7 @@ module garuda_l1_icache #(
 
     integer i, j;
 
-    // Sequential State & Multi-Word Line Refill with Explicit Handshake
+    // Sequential State & Multi-Word Line Refill with Explicit Handshake Check
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             state <= ST_IDLE;
@@ -160,7 +161,7 @@ module garuda_l1_icache #(
         end
     end
 
-    // Next State Logic
+    // Next State Logic with Explicit Handshake Verification (mem_req_valid && mem_req_ready)
     always @(*) begin
         next_state = state;
         case (state)
@@ -168,8 +169,12 @@ module garuda_l1_icache #(
                 if (req_valid) next_state = ST_COMPARE;
             end
             ST_COMPARE: begin
-                if (tag_match) next_state = ST_IDLE;
-                else next_state = ST_REFILL;
+                if (tag_match) begin
+                    next_state = ST_IDLE;
+                end else if (mem_req_ready) begin
+                    // Advance to Refill ONLY when downstream accepts request
+                    next_state = ST_REFILL;
+                end
             end
             ST_REFILL: begin
                 if (mem_resp_error) begin
