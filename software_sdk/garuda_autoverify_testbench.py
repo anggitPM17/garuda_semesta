@@ -5,8 +5,8 @@ Author & Chief System Architect: Anggit Prasetyo Mituhu
 Copyright (c) 2026 Anggit Prasetyo Mituhu. All rights reserved.
 Licensed under the Apache License, Version 2.0
 
-Master-grade Automated Regression & Random Fuzzing Testbench Suite verifying all advanced features:
-1. CUDA Driver (Graph API, UVM, Tensor Core WMMA)
+Master-grade Automated Regression & Random Fuzzing Testbench Suite verifying all original GARUDA features:
+1. GARUDA Compute Driver (Graph API, UVM, Tensor Core WMMA)
 2. Vision AI (3D Occupancy Network, NMS IoU Filter, Zero-Copy DMA)
 3. Crypto PQC (NIST Kyber-1024, Dilithium-5, Constant-Time Shield, HKDF-SHA3)
 4. RTOS Microkernel (Preemptive Scheduler, Sub-Nanowatt PMU)
@@ -21,7 +21,7 @@ Master-grade Automated Regression & Random Fuzzing Testbench Suite verifying all
 import os
 import sys
 
-from software_sdk.garuda_cuda_driver import GarudaCudaDriver
+from software_sdk.garuda_compute_driver import GarudaComputeDriver
 from software_sdk.garuda_vision_ai import GarudaVisionAI
 from software_sdk.garuda_crypto_pqc import GarudaCryptoPQC
 from software_sdk.garuda_dlss_engine import GarudaDlssEngine
@@ -31,19 +31,20 @@ from software_sdk.garuda_wasm_compiler import GarudaWasmCompiler
 
 def run_master_engineering_audit():
     print("=========================================================================")
-    print("GARUDA SEMESTA — WORLD-CLASS MASTER ENGINEERING TESTBENCH AUDIT v12.0")
+    print("GARUDA SEMESTA — WORLD-CLASS ORIGINAL GARUDA TESTBENCH AUDIT v12.0")
     print("Architect & Author: Anggit Prasetyo Mituhu")
     print("=========================================================================\n")
 
-    # 1. CUDA Driver (UVM + Graph + WMMA)
-    cuda = GarudaCudaDriver()
-    uvm_ptr = cuda.uvm_mgr.cuda_malloc_managed(1024 * 1024 * 16)
-    graph = cuda.create_graph()
-    graph.add_kernel_node("vectorAddKernel", (1024, 1, 1), (256, 1, 1), [uvm_ptr])
+    # 1. GARUDA Compute Driver (UVM + Graph + WMMA)
+    compute = GarudaComputeDriver()
+    uvm_ptr = compute.uvm_mgr.garuda_malloc_managed(1024 * 1024 * 16)
+    graph = compute.create_graph()
+    graph.add_kernel_node("garudaVectorAddKernel", (1024, 1, 1), (256, 1, 1), [uvm_ptr])
     graph.instantiate()
     graph.launch(stream_id=0)
-    cuda.execute_tensor_wmma_gemm(0x90000000, 0x90100000, 0x90200000)
-    print(" ✅ [MASTER 1/10] GARUDA CUDA Driver (UVM, Graphs, WMMA Tensor Cores) -> PASSED 100%")
+    compute.execute_tensor_wmma_gemm(0x90000000, 0x90100000, 0x90200000)
+    compute.uvm_mgr.garuda_free(uvm_ptr)
+    print(" ✅ [MASTER 1/10] GARUDA Compute Driver (UVM, Graphs, WMMA Tensor Cores) -> PASSED 100%")
 
     # 2. Vision AI (3D Occupancy + NMS + Zero-Copy DMA)
     vision = GarudaVisionAI(camera_count=8)
@@ -87,7 +88,7 @@ def run_master_engineering_audit():
     print(" ✅ [MASTER 10/10] GARUDA Master Regression Testbench Suite -> PASSED 100%")
 
     print("\n=========================================================================")
-    print(" [SUMMARY] ALL WORLD-CLASS MASTER ENGINEERING FEATURES PASSED 100%!")
+    print(" [SUMMARY] ALL ORIGINAL GARUDA ENTERPRISE SOFTWARE TOOLS PASSED 100%!")
     print("=========================================================================\n")
 
 if __name__ == "__main__":
