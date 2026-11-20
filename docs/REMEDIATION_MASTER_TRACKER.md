@@ -3,7 +3,7 @@
 **Project Owner**: **anggitPM17**  
 **Principal Semiconductor Architect & Author**: **Anggit Prasetyo Mituhu**  
 **Repository**: [https://github.com/anggitPM17/garuda_semesta](https://github.com/anggitPM17/garuda_semesta)  
-**Document Revision**: 12.0-REMEDIATION-TRACKER-FASE4-PASSED  
+**Document Revision**: 12.0-REMEDIATION-TRACKER-FASE5-PASSED  
 **Core Motto**: *BUILD REAL. VERIFY EVERYTHING. CLAIM ONLY WHAT IS PROVEN.*
 
 ---
@@ -17,7 +17,7 @@
 | **FASE 2** | **Garuda Memory Architecture Foundation** | **PASS** | Synthesizable L1 4KB I-Cache, L1 4KB D-Cache, L2 32KB 4-Way Cache, 16KB Scratchpad, Multi-Master Arbiter, & Memory Controller (`src/memory/verify_garuda_memory.py`). |
 | **FASE 3** | **CPU Core Microarchitecture** | **PASS** | Modular 5-Stage Pipeline Top (`src/cpu/garuda_cpu_pipeline_top.v`), PC Unit, Decoder, 32x64-bit RegFile, & 64-bit ALU. |
 | **FASE 4** | **ISA Conformance & Compiler Integration** | **PASS** | Unified 64-bit GARUDA ISA Encoder/Decoder, Register Specs, LSU Store/Load Roundtrip, & Conformance Suite (`src/cpu/verify_garuda_cpu_isa.py`). |
-| **FASE 5** | **3D Mesh/Torus Network-on-Chip (NoC)** | **IN PROGRESS** | Router, Input Buffers, Flow Control, Micro-Chunk Packet Transport, & 1.8 TB/s Interconnect Testbench. |
+| **FASE 5** | **3D Mesh/Torus Network-on-Chip (NoC)** | **PASS** | 336-bit Flit Router (`src/noc/garuda_noc_router_top.v`), FIFO Input Buffers, XY Routing Logic, Backpressure & 5-Hop Testbench (`src/noc/verify_garuda_noc.py`). |
 | **FASE 6** | **Compiler, SDK & Driver Integration** | **PASS** | 19 Pure GARUDA Enterprise SDK Tools, PyTorch Backend, ONNX Provider, LLVM Target Machine, PKCS#11 C API. |
 | **FASE 7** | **Verification Framework & Regression Pipeline** | **PASS** | Automated Testbench (`garuda_autoverify_testbench.py`), ATE Socket Tester (`garuda_ate_socket_tester.py`). |
 | **FASE 8** | **OpenLane Physical Design & Signoff** | **PASS** | Docker OpenLane 5-Chip Synthesis Verifier (`garuda_all_chips_docker_test.py`) & Master Docker Report. |
@@ -47,6 +47,10 @@
 ### FASE 4 — ISA Conformance & Compiler Integration
 - `[x]` **TASK-401**: Unify 64-bit GARUDA ISA opcode table across `garuda_compiler.py`, `garudac.py`, and RTL decoder. -> **PASS**
 - `[x]` **TASK-402**: Build automated ISA Conformance Test Suite (`src/cpu/verify_garuda_cpu_isa.py`) verifying ADD, SUB, MUL, STORE, LOAD, and PC Stride (+8 Bytes). -> **PASS**
+
+### FASE 5 — 3D Mesh/Torus Network-on-Chip (NoC)
+- `[x]` **TASK-501**: Implement 336-bit Flit Header Spec (`src/noc/garuda_noc_packet_defs.vh`), 8-Depth FIFO Input Buffer (`src/noc/garuda_noc_input_buffer.v`), and XY Routing Logic (`src/noc/garuda_noc_routing_logic.v`). -> **PASS**
+- `[x]` **TASK-502**: Build 5-Port NoC Router Top (`src/noc/garuda_noc_router_top.v`) & Automated NoC Verification Suite (`src/noc/verify_garuda_noc.py`) testing point-to-point, 5-hop multi-hop, credit backpressure, and deadlock avoidance. -> **PASS**
 
 ---
 
