@@ -6,7 +6,7 @@ Copyright (c) 2026 Anggit Prasetyo Mituhu. All rights reserved.
 Licensed under the Apache License, Version 2.0
 
 Massively Expanded Roofline Model Analyzer (FLOPS vs Memory Bandwidth), Power-Performance Efficiency Index (Perf/Watt),
-DVFS Controller, and Hardware Performance Counter Reader for all 5 GARUDA Chips.
+Thermal Throttling History Logger, DVFS Controller, and Hardware Performance Counter Reader for all 5 GARUDA Chips.
 """
 
 import sys
@@ -16,6 +16,19 @@ import json
 import logging
 
 logging.basicConfig(level=logging.INFO, format="[GARUDA PROFILER MASTER] %(levelname)s: %(message)s")
+
+class GarudaThermalHistoryLogger:
+    """Logs & Monitors Thermal Throttling Events across 5 Chips."""
+    def __init__(self):
+        self.thermal_logs = []
+
+    def log_temperature(self, chip_name, temp_c):
+        event = {"timestamp": time.strftime('%H:%M:%S'), "chip": chip_name, "temp_c": temp_c, "throttled": temp_c > 85.0}
+        self.thermal_logs.append(event)
+        if event["throttled"]:
+            logging.warning(f"Thermal Logger: High Temperature ({temp_c}°C) detected on {chip_name}!")
+        return event
+
 
 class GarudaPowerEfficiencyCalculator:
     """Calculates Power-Performance Efficiency Index (Perf/Watt & TOPS/Watt)."""
@@ -60,9 +73,11 @@ class GarudaHardwareProfiler:
         self.roofline = GarudaRooflineModelAnalyzer()
         self.dvfs = GarudaDvfsController()
         self.efficiency_calc = GarudaPowerEfficiencyCalculator()
+        self.thermal_logger = GarudaThermalHistoryLogger()
 
     def profile_chip_performance(self, chip_name, flops, memory_bytes, temperature_c):
         logging.info(f"Profiling {chip_name} Performance & Thermal Envelope...")
+        self.thermal_logger.log_temperature(chip_name, temperature_c)
         roofline_res = self.roofline.analyze_operational_intensity(flops, memory_bytes)
         dvfs_res = self.dvfs.adjust_voltage_frequency(temperature_c)
         perf_watt = self.efficiency_calc.calculate_efficiency(flops, 150.0)
