@@ -5,7 +5,7 @@
  * Copyright (c) 2026 Anggit Prasetyo Mituhu. All rights reserved.
  * Licensed under the Apache License, Version 2.0
  *
- * Full C API PKCS#11 v2.40 Suite: GetInfo, OpenSession, Login, GenerateRandom, SeedRandom, Sign, Verify, Digest, Encrypt, Decrypt, KeyGen, WrapKey, UnwrapKey, DeriveKey, GetMechanismList.
+ * Full C API PKCS#11 v2.40 Suite: GetInfo, OpenSession, Login, GenerateRandom, SeedRandom, Sign, Verify, Digest, Encrypt, Decrypt, KeyGen, WrapKey, UnwrapKey, DeriveKey, GetMechanismList, GetMechanismInfo.
  */
 
 #include <stdio.h>
@@ -18,6 +18,7 @@
 #define CKR_SLOT_ID_INVALID 0x00000003
 #define CKR_USER_NOT_LOGGED_IN 0x00000101
 #define CKR_SIGNATURE_INVALID 0x000000C0
+#define CKR_BUFFER_TOO_SMALL 0x00000150
 #define CKR_DEVICE_ERROR 0x00000030
 #define CKR_HARDWARE_ZEROIZED 0x000000DF
 
@@ -49,6 +50,12 @@ typedef struct {
 } CK_INFO;
 
 typedef struct {
+    uint32_t ulMinKeySize;
+    uint32_t ulMaxKeySize;
+    uint32_t flags;
+} CK_MECHANISM_INFO;
+
+typedef struct {
     CK_MECHANISM_TYPE mechanism;
     void* pParameter;
     uint32_t ulParameterLen;
@@ -73,6 +80,30 @@ CK_RV C_GetInfo(CK_INFO* pInfo) {
     memcpy(pInfo->libraryDescription, "GARUDA SECURE PKCS#11 Vault", 27);
     pInfo->libraryVersion.major = 12;
     pInfo->libraryVersion.minor = 0;
+    return CKR_OK;
+}
+
+CK_RV C_GetMechanismList(uint32_t slotID, CK_MECHANISM_TYPE* pMechanismList, uint32_t* pulCount) {
+    if (slotID != 1 || !pulCount) return CKR_SLOT_ID_INVALID;
+    if (!pMechanismList) {
+        *pulCount = 5;
+        return CKR_OK;
+    }
+    pMechanismList[0] = CKM_DILITHIUM5;
+    pMechanismList[1] = CKM_KYBER1024;
+    pMechanismList[2] = CKM_AES_GCM;
+    pMechanismList[3] = CKM_SHA3_512;
+    pMechanismList[4] = CKM_CHACHA20_POLY1305;
+    *pulCount = 5;
+    printf("[GARUDA HSM PKCS#11] MechanismList: Enumerated 5 NIST PQC & AEAD Hardware Mechanisms.\n");
+    return CKR_OK;
+}
+
+CK_RV C_GetMechanismInfo(uint32_t slotID, CK_MECHANISM_TYPE type, CK_MECHANISM_INFO* pInfo) {
+    if (slotID != 1 || !pInfo) return CKR_ARGUMENTS_BAD;
+    pInfo->ulMinKeySize = 256;
+    pInfo->ulMaxKeySize = 4096;
+    pInfo->flags = 0x00010000; // HW Mechanism
     return CKR_OK;
 }
 
@@ -227,6 +258,9 @@ CK_RV C_Finalize(void* pReserved) {
 int main(void) {
     CK_INFO info;
     CK_SESSION_HANDLE hSession;
+    CK_MECHANISM_TYPE mech_list[5];
+    uint32_t mech_count = 5;
+
     CK_MECHANISM mech_sig = { CKM_DILITHIUM5, NULL, 0 };
     CK_MECHANISM mech_digest = { CKM_SHA3_512, NULL, 0 };
     CK_MECHANISM mech_enc = { CKM_CHACHA20_POLY1305, NULL, 0 };
@@ -252,6 +286,8 @@ int main(void) {
     if (C_Initialize(NULL) == CKR_OK && C_GetInfo(&info) == CKR_OK) {
         printf(" Manufacturer ID : %.32s\n", info.manufacturerID);
         printf(" PKCS#11 Version : %u.%u\n", info.cryptokiVersion.major, info.cryptokiVersion.minor);
+
+        C_GetMechanismList(1, mech_list, &mech_count);
 
         if (C_OpenSession(1, 0, NULL, &hSession) == CKR_OK) {
             C_Login(hSession, CKU_USER, (uint8_t*)"123456", 6);
