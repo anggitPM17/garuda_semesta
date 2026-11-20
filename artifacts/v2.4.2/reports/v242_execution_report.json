@@ -1,0 +1,19 @@
+{
+  "project": "GARUDA SEMESTA",
+  "milestone": "V2.4.2 DOCKER-NATIVE RTL PROOF & VERIFICATION HARDENING",
+  "timestamp_utc": "2026-11-20T14:29:30Z",
+  "host_environment": "linux",
+  "tool_versions": {
+    "python": "3.10.12",
+    "iverilog": "/usr/bin/iverilog",
+    "vvp": "/usr/bin/vvp"
+  },
+  "overall_status": "PASS",
+  "details": {
+    "compiler_pipeline": "PASS",
+    "sram_target_address": "0x80000100",
+    "sram_expected_value": 500,
+    "simulation_output": "VCD info: dumpfile rtl_waveform.vcd opened for output.\n=========================================================================\nGARUDA SEMESTA \u2014 VERTICAL SLICE VERILOG RTL TESTBENCH v12.4.0\nArchitect & Author: Anggit Prasetyo Mituhu\n=========================================================================\n\n[STAGE 1] Reset Released. 5-Stage CPU Fetching Compiled Instructions...\n[STAGE 2] Clock Cycles Executed: PC = 0x80000030, Halted = 1\n[STAGE 3] Performing Independent DMA Readback from SRAM 0x80000100...\n[STAGE 4] Strict Assertion: Asserting SRAM[0x80000100] == 500...\nPASS: REAL RTL SRAM READBACK VERIFIED (SRAM[0x80000100] == 500)\n",
+    "duration_seconds": 0.713
+  }
+}

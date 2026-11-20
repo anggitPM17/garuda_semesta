@@ -1,0 +1,15 @@
+{
+  "compiler": "garuda_compiler.py v12.2",
+  "target_isa": "GARUDA 64-bit Titanium ISA V2.4.2",
+  "instruction_width": 64,
+  "instructions_compiled": 5,
+  "source_sha256": "ef4abec7227213cfb75459cc14c285c2a289e3f7d29c6eda3e2456769faf877d",
+  "hex_sha256": "0e8b376fa399d5edc6da7e8be947b2abe794168a79d1f9b903c55f88286843ff",
+  "artifacts_generated": [
+    "source.garuda",
+    "compiler_output.ir",
+    "program.asm",
+    "program.hex",
+    "compiler_manifest.json"
+  ]
+}
