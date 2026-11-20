@@ -3,6 +3,12 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# Local OpenLane Run Outputs & EDA Temporary Databases
+src/runs/
+*.odb
+*.def
+*.def.tmp
+
 # Private Local Oscilloscope & Waveform Tools (Anggit Prasetyo Mituhu Local Private Assets)
 *.vcd
 *_audit_report.md
@@ -22,12 +28,6 @@ download_gtkwave.py
 fix_gtkwave_loaders.py
 gtkwave.zip
 gtkwave_app/
-
-# Temporary EDA Floorplan & Route Databases (>100MB)
-*.odb
-*.def
-*.def.tmp
-src/runs/*/tmp/floorplan/*
 
 # Temporary Download Utility Scripts
 download_klayout.py
