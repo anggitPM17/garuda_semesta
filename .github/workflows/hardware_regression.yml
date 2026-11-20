@@ -19,14 +19,42 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install Icarus Verilog
+      - name: Install Icarus Verilog & GTKWave
         run: |
           sudo apt-get update
-          sudo apt-get install -y iverilog gtkwave
+          sudo apt-get install -y iverilog vvp gtkwave
 
-      - name: Detect Available Tools
+      - name: Verify Installed EDA Tool Versions
         run: |
+          iverilog -v
+          vvp -V
           python src/verification/garuda_tool_detector.py
+
+      - name: Compile GARUDA Program via garuda_compiler.py
+        run: |
+          python garuda_compiler.py
+
+      - name: Compile Verilog RTL via Icarus Verilog (iverilog)
+        run: |
+          mkdir -p build
+          iverilog -g2012 -Wall -s tb_garuda_vertical_slice_v23_2 -o build/garuda_vertical_slice.vvp \
+            src/memory/garuda_l1_icache.v \
+            src/memory/garuda_l1_dcache.v \
+            src/memory/garuda_l2_cache.v \
+            src/memory/garuda_memory_arbiter.v \
+            src/memory/garuda_memory_controller.v \
+            src/memory/garuda_memory_subsystem_top.v \
+            src/cpu/garuda_pc.v \
+            src/cpu/garuda_idecode.v \
+            src/cpu/garuda_regfile.v \
+            src/cpu/garuda_alu.v \
+            src/cpu/garuda_cpu_pipeline_top.v \
+            src/integration/garuda_vertical_slice_top.v \
+            src/integration/tb_garuda_vertical_slice_v23_2.v
+
+      - name: Run RTL Simulation via VVP
+        run: |
+          vvp build/garuda_vertical_slice.vvp
 
       - name: Run Master Unit & Integration Test Suite
         run: |
@@ -36,10 +64,16 @@ jobs:
         run: |
           python src/integration/garuda_compiler_vertical_slice_v23.py
 
-      - name: Run RTL Verilog Linter & Simulator
-        run: |
-          python src/verification/garuda_verilog_linter_and_simulator.py
-
       - name: Generate Machine-Readable JSON Reports
         run: |
           python src/verification/generate_v231_reports.py
+
+      - name: Upload Simulation Artifacts & VCD Waveform
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: garuda-rtl-verification-artifacts
+          path: |
+            build/garuda_vertical_slice.vvp
+            reports/
+            *.vcd
