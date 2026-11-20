@@ -3,7 +3,7 @@
 **Project Owner**: **anggitPM17**  
 **Principal Semiconductor Architect & Author**: **Anggit Prasetyo Mituhu**  
 **Repository**: [https://github.com/anggitPM17/garuda_semesta](https://github.com/anggitPM17/garuda_semesta)  
-**Document Revision**: 12.0-REMEDIATION-TRACKER  
+**Document Revision**: 12.0-REMEDIATION-TRACKER-FASE2-PASSED  
 **Core Motto**: *BUILD REAL. VERIFY EVERYTHING. CLAIM ONLY WHAT IS PROVEN.*
 
 ---
@@ -14,7 +14,7 @@
 | :---: | :--- | :---: | :--- |
 | **FASE 0** | **Repository Baseline & Inventory** | **PASS** | Complete cataloging of 461 files, duplicate top-level RTL detection, and toolchain mapping. |
 | **FASE 1** | **RTL Consolidation & Single Source of Truth** | **PASS** | Unified canonical top-levels (`garuda_cpu_top.v`, `garuda_gpu_top.v`, `garuda_npu_top.v`, `garuda_secure_top.v`, `garuda_mcu_top.v`). |
-| **FASE 2** | **Garuda Memory Architecture Foundation** | **IN PROGRESS** | L1/L2 SRAM Cache, Memory Arbiter, Controller, Scratchpad, & Self-Checking Testbench. |
+| **FASE 2** | **Garuda Memory Architecture Foundation** | **PASS** | Synthesizable L1 4KB I-Cache, L1 4KB D-Cache, L2 32KB 4-Way Cache, 16KB Scratchpad, Multi-Master Arbiter, & Memory Controller (`src/memory/verify_garuda_memory.py`). |
 | **FASE 3** | **CPU Core ISA Conformance & Microarchitecture** | **IN PROGRESS** | 32-Core Ultra-SMP, Fetch/Decode/Execute/LSU/WB Pipeline, ISA Opcode Spec, & Conformance Tests. |
 | **FASE 4** | **3D Mesh/Torus Network-on-Chip (NoC)** | **IN PROGRESS** | Router, Input Buffers, Flow Control, Micro-Chunk Packet Transport, & 1.8 TB/s Interconnect Testbench. |
 | **FASE 5** | **GPU / NPU / SECURE / MCU Verification** | **IN PROGRESS** | Real Shader SIMD execution, Systolic Matrix Array, NIST PQC Kyber/Dilithium Vault, & Sub-Nanowatt PMU. |
@@ -36,9 +36,9 @@
 - `[x]` **TASK-102**: Eliminate undriven signals, width mismatches, and multi-driven nets across Verilog modules. -> **PASS**
 
 ### FASE 2 — Garuda Memory Architecture Foundation
-- `[/]` **TASK-201**: Implement L1 4KB Instruction Cache & 4KB Data Cache behavioral SRAM models. -> **IN PROGRESS**
-- `[/]` **TASK-202**: Implement L2 32KB Cache, Memory Arbiter, and Address Decoder logic. -> **IN PROGRESS**
-- `[ ]` **TASK-203**: Build self-checking memory regression testbench verifying cache hits/misses and dirty line eviction. -> **NOT STARTED**
+- `[x]` **TASK-201**: Implement synthesizable L1 4KB Instruction Cache (`src/memory/garuda_l1_icache.v`) & L1 4KB Data Cache (`src/memory/garuda_l1_dcache.v`) with write-back/dirty bits. -> **PASS**
+- `[x]` **TASK-202**: Implement L2 32KB 4-Way Set Associative Cache (`src/memory/garuda_l2_cache.v`), 16KB Scratchpad (`src/memory/garuda_scratchpad_mem.v`), Multi-Master Arbiter (`src/memory/garuda_memory_arbiter.v`), and Main Memory Controller (`src/memory/garuda_memory_controller.v`). -> **PASS**
+- `[x]` **TASK-203**: Build self-checking memory subsystem testbenches (`src/memory/tb_garuda_memory_subsystem.v` & `src/memory/verify_garuda_memory.py`) verifying sequential, random, hit/miss, flush/invalidate, byte-enable, and multi-master arbitration. -> **PASS**
 
 ### FASE 3 — CPU Core & ISA Conformance
 - `[/]` **TASK-301**: Unify ISA opcode table across `garuda_compiler.py`, `garudac.py`, and `cpu_src/garuda_cpu_top.v`. -> **IN PROGRESS**
