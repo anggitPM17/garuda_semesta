@@ -1,0 +1,1 @@
+RTL Simulation Log: Executed 4 cycles. Final PC=0x80000020, r1=150, r2=350, r3=500, SRAM[0x80000100]=500
