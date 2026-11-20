@@ -1,4 +1,4 @@
-name: GARUDA SEMESTA — Hardware & Compiler Regression CI/CD V2.3.2-R6.2
+name: GARUDA SEMESTA — Hardware & Compiler Regression CI/CD V2.3.2-R6.3
 
 on:
   push:
@@ -19,12 +19,12 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install Icarus Verilog & GTKWave
+      - name: Install Icarus Verilog & GTKWave EDA Tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y iverilog vvp gtkwave
+          sudo apt-get install -y iverilog gtkwave
 
-      - name: Verify Installed EDA Tool Versions
+      - name: Verify EDA Tool Versions
         run: |
           iverilog -v
           vvp -V
@@ -52,7 +52,7 @@ jobs:
             src/integration/garuda_vertical_slice_top.v \
             src/integration/tb_garuda_vertical_slice_v23_2.v
 
-      - name: Run RTL Simulation via VVP
+      - name: Execute RTL Simulation via VVP
         run: |
           vvp build/garuda_vertical_slice.vvp
 
