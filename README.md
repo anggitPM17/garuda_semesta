@@ -1,6 +1,6 @@
 # GARUDA SEMESTA — 5-Chip Semiconductor Enterprise Monorepo (v12.0 TITAN-TITANIUM Edition)
 
-**Portofolio 5 Raksasa Chip Semikonduktor v12.0 TITAN-TITANIUM GRADE (CPU, GPU, NPU, SECURE, MCU), 5.000.000 Baris Kode (5M LOC), & 19 Perangkat Lunak Murni Orisinal GARUDA Enterprise SDK**
+**Portofolio 5 Raksasa Chip Semikonduktor v12.0 TITAN-TITANIUM GRADE (CPU, GPU, NPU, SECURE, MCU), 5.000.000 Baris Kode (5M LOC), 5 Penemuan Paten Dunia (MITUHU Standards), & 19 Perangkat Lunak Murni Orisinal GARUDA Enterprise SDK**
 
 **Pendiri, Hak Cipta, & Arsitek Utama Sistem**: **Anggit Prasetyo Mituhu**  
 **Lisensi Perangkat Lunak & Perangkat Keras**: Apache License 2.0 (Copyright © 2026 **Anggit Prasetyo Mituhu**)
@@ -18,6 +18,18 @@ Seluruh 5 chip dirancang berbasis soket standar industri **LGA-6096 / BGA-6144 S
 | **3** | **GARUDA NPU v12.0 TITAN-TITANIUM** (128-Engine AI Vision) | [`npu/`](npu/) | BGA-6144 / LGA-6096 | [`gds/garuda_npu.gds`](gds/garuda_npu.gds) | [`docs/GARUDA_NPU_v1_Ultimate_Datasheet.md`](docs/GARUDA_NPU_v1_Ultimate_Datasheet.md) |
 | **4** | **GARUDA SECURE v12.0 TITAN-TITANIUM** (Crypto Vault) | [`secure/`](secure/) | BGA-6144 / LGA-6096 | [`gds/garuda_secure.gds`](gds/garuda_secure.gds) | [`docs/GARUDA_SECURE_v1_Ultimate_Datasheet.md`](docs/GARUDA_SECURE_v1_Ultimate_Datasheet.md) |
 | **5** | **GARUDA MCU v12.0 TITAN-TITANIUM** (128-Core RISC-V IoT) | [`mcu/`](mcu/) | BGA-6144 / LGA-6096 | [`gds/garuda_mcu.gds`](gds/garuda_mcu.gds) | [`docs/GARUDA_MCU_v1_Ultimate_Datasheet.md`](docs/GARUDA_MCU_v1_Ultimate_Datasheet.md) |
+
+---
+
+## 💡 5 Penemuan Paten Dunia & Pengungkapan Hak Cipta Resmi (MITUHU STANDARDS)
+
+Monorepo ini secara resmi memublikasikan **Prior Art Public Disclosure & Patent Specifications** untuk 5 Inovasi Arsitektur Semikonduktor Pertama di Dunia ciptaan **Anggit Prasetyo Mituhu** ([`docs/GARUDA_MITUHU_PATENT_DISCLOSURE_SPECIFICATIONS.md`](docs/GARUDA_MITUHU_PATENT_DISCLOSURE_SPECIFICATIONS.md)):
+
+1. **MITUHU-PQC Security Standard**: Sensor Fotonik InP di atas kisi Kyber/Dilithium untuk pemusnahan kunci rahasia sub-nanodetik saat peretasan laser.
+2. **MITUHU-NoC Interconnect Standard**: Router 3D Mesh Torus Self-Healing $1.8\text{ TB/s}$ yang otomatis memulihkan rute jika 1 node mati dalam $<1\text{ Clock Cycle}$.
+3. **MITUHU-PMU Energy Standard**: Pengatur daya FD-SOI + GaN dengan mode tidur Sub-Nanowatt ($<0,1\text{ nA}$) untuk ketahanan baterai sensor IoT 10+ tahun.
+4. **MITUHU-Vision AI Standard**: Jalur Zero-Copy Direct DMA yang menyalurkan video 8K 8-kamera ke SRAM NPU untuk rekonstruksi 3D Occupancy $0,35\text{ ms}$.
+5. **MITUHU-Compute Open GPGPU Standard**: Penerjemah instruksi hardware CUDA PTX ke RISC-V Vector Unit 512 Tensor Cores.
 
 ---
 
