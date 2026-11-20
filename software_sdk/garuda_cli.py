@@ -6,7 +6,7 @@ Copyright (c) 2026 Anggit Prasetyo Mituhu. All rights reserved.
 Licensed under the Apache License, Version 2.0
 
 Massively Expanded Production-Grade Unified CLI Tool for chip simulation, firmware flashing,
-GDSII inspection, software SDK verification, performance benchmarking, tapeout checking, and Docker signoff.
+GDSII inspection, VCD waveform viewing, software SDK verification, performance benchmarking, tapeout checking, and Docker signoff.
 """
 
 import os
@@ -41,6 +41,14 @@ def cli_gds(args):
     gds_script = os.path.join(PROJECT_DIR, "garuda_generate_unique_gds.py")
     if os.path.exists(gds_script):
         subprocess.run([sys.executable, gds_script])
+
+def cli_view(args):
+    gds_path = args.gds
+    vcd_path = args.vcd
+    logging.info(f"Launching Native C++ / Vulkan 60 FPS Viewport Renderer for {gds_path} and {vcd_path}...")
+    view_script = os.path.join(PROJECT_DIR, "software_sdk", "garuda_native_viewer.py")
+    if os.path.exists(view_script):
+        subprocess.run([sys.executable, view_script, gds_path, vcd_path])
 
 def cli_dashboard(args):
     port = args.port
@@ -115,20 +123,26 @@ def main():
     gds_parser = subparsers.add_parser("gds", help="Generate GDSII lithography masks and 4K CAD renders")
     gds_parser.set_defaults(func=cli_gds)
 
-    # 4. Dashboard Command
+    # 4. View Command (Native GDS & VCD Viewer)
+    view_parser = subparsers.add_parser("view", help="Launch Native C++/Vulkan 60 FPS GDSII and VCD Waveform Viewer")
+    view_parser.add_argument("--gds", type=str, default="gds/garuda_gpu.gds", help="GDSII mask file path")
+    view_parser.add_argument("--vcd", type=str, default="gpu_simulation.vcd", help="VCD waveform file path")
+    view_parser.set_defaults(func=cli_view)
+
+    # 5. Dashboard Command
     dash_parser = subparsers.add_parser("dashboard", help="Launch interactive web monitor dashboard")
     dash_parser.add_argument("--port", type=int, default=8080, help="Web dashboard port")
     dash_parser.set_defaults(func=cli_dashboard)
 
-    # 5. Status Command
+    # 6. Status Command
     status_parser = subparsers.add_parser("status", help="Print 5-chip system status and telemetry summary")
     status_parser.set_defaults(func=cli_status)
 
-    # 6. Benchmark Command
+    # 7. Benchmark Command
     bench_parser = subparsers.add_parser("benchmark", help="Run 5-chip performance benchmark suite")
     bench_parser.set_defaults(func=cli_benchmark)
 
-    # 7. Tapeout Check Command
+    # 8. Tapeout Check Command
     tapeout_parser = subparsers.add_parser("tapeout-check", help="Verify silicon tapeout DRC/LVS readiness")
     tapeout_parser.set_defaults(func=cli_tapeout_check)
 
