@@ -1,5 +1,5 @@
 // =========================================================================
-// GARUDA SEMESTA — MODULAR 5-STAGE PIPELINE CPU TOP-LEVEL (v12.4.3 V2.4.3)
+// GARUDA SEMESTA — MODULAR 5-STAGE PIPELINE CPU TOP-LEVEL (v12.4.4 V2.4.4)
 // Author & Chief System Architect: Anggit Prasetyo Mituhu
 // Copyright (c) 2026 Anggit Prasetyo Mituhu. All rights reserved.
 // Licensed under the Apache License, Version 2.0
@@ -52,10 +52,8 @@ module garuda_cpu_pipeline_top #(
         for (idx = 0; idx < 32; idx = idx + 1) begin
             instruction_rom[idx] = 64'h0;
         end
-        // Load compiler-generated HEX file via $readmemh
+        // Load compiler-generated garuda_program.hex file via $readmemh
         $readmemh("garuda_program.hex", instruction_rom);
-        $readmemh("program.hex", instruction_rom);
-        $readmemh("source.hex", instruction_rom);
     end
 
     // Pipeline Registers
