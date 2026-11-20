@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-GARUDA SEMESTA — EDA & SYSTEM TOOL DETECTOR ENGINE (v12.1 HARDENING)
+GARUDA SEMESTA — EDA & SYSTEM TOOL DETECTOR ENGINE (v12.4.1 HARDENING)
 Author & Chief System Architect: Anggit Prasetyo Mituhu
 Copyright (c) 2026 Anggit Prasetyo Mituhu. All rights reserved.
 Licensed under the Apache License, Version 2.0
@@ -10,10 +10,9 @@ Detects system EDA tools, versions, and produces JSON environment reports:
 - Docker
 - GTKWave
 - Verilator
-- Icarus Verilog (iverilog / vvp)
+- Icarus Verilog (iverilog -V / vvp -V)
 - Yosys
 - OpenLane / OpenROAD
-- KLayout
 """
 
 import sys
@@ -29,8 +28,9 @@ REPORTS_V21_DIR = os.path.join(PROJECT_DIR, "reports", "verification_v21")
 def check_cmd_version(cmd_list):
     try:
         res = subprocess.run(cmd_list, capture_output=True, text=True, timeout=5)
-        if res.returncode == 0:
-            out = res.stdout.strip() or res.stderr.strip()
+        # Accept exit code 0 or check if output contains version string
+        out = res.stdout.strip() or res.stderr.strip()
+        if out:
             return True, out.split('\n')[0]
         else:
             return False, f"Exit Code {res.returncode}"
@@ -45,7 +45,7 @@ def detect_all_tools():
 
     py_avail, py_ver = True, f"Python {sys.version.split()[0]}"
     docker_avail, docker_ver = check_cmd_version(["docker", "--version"])
-    iverilog_avail, iverilog_ver = check_cmd_version(["iverilog", "-v"])
+    iverilog_avail, iverilog_ver = check_cmd_version(["iverilog", "-V"]) # Fixed to capital -V
     verilator_avail, verilator_ver = check_cmd_version(["verilator", "--version"])
     yosys_avail, yosys_ver = check_cmd_version(["yosys", "-V"])
 
@@ -73,7 +73,7 @@ def detect_all_tools():
         json.dump(tool_versions, f, indent=2)
 
     print("=========================================================================")
-    print("GARUDA SEMESTA — EDA & SYSTEM TOOL AVAILABILITY AUDIT v12.1")
+    print("GARUDA SEMESTA — EDA & SYSTEM TOOL AVAILABILITY AUDIT v12.4.1")
     print("Architect & Author: Anggit Prasetyo Mituhu")
     print("=========================================================================\n")
     for tool_name, tinfo in tool_versions.items():
