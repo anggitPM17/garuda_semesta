@@ -1,4 +1,4 @@
-# GARUDA SEMESTA — MASTER REPOSITORY STATUS & TRUTH SPECIFICATION (v13.1)
+# GARUDA SEMESTA — MASTER REPOSITORY STATUS & TRUTH SPECIFICATION (v13.1-R3)
 **Author & Chief System Architect:** Anggit Prasetyo Mituhu  
 **Milestone:** GARUDA TITAN V13.1 — CHIP COMPLETION MISSION  
 **Date:** November 2026  
@@ -8,7 +8,7 @@
 
 ## 1. Purpose of This Document
 
-This document serves as the **Single Source of Truth** for the `anggitPM17/garuda_semesta` repository, resolving any ambiguity between historical iteration reports (V12.5 through V13.0) and the active hardware implementation on branch `engineering/v13.1-chip-completion` (merged into `main` at commit `7ea724f`).
+This document serves as the **Single Source of Truth** for the `anggitPM17/garuda_semesta` repository. To eliminate any confusion, **`goldenways/design-chip:v1.2`** is established as the **sole unified Docker EDA environment** for all simulation, verification, and Yosys synthesis tasks.
 
 ---
 
@@ -27,12 +27,12 @@ This document serves as the **Single Source of Truth** for the `anggitPM17/garud
 
 ---
 
-## 3. Authoritative Verification Entry Point
+## 3. Authoritative Verification Entry Point & Unified Docker Command
 
 The single authoritative runner for all hardware regression tests is:
 - [src/verification/garuda_v131_master_runner.py](file:///D:/richat/garuda_semesta_repo/src/verification/garuda_v131_master_runner.py)
 
-**Re-execution Command:**
+**Unified Docker Execution Command (using `goldenways/design-chip:v1.2` exclusively):**
 ```bash
-docker run --rm -v "${PWD}:/workspace" -w /workspace garuda-eda:v2.4.0 python3 -u src/verification/garuda_v131_master_runner.py
+docker run --rm -v "${PWD}:/workspace" -w /workspace goldenways/design-chip:v1.2 python3 -u src/verification/garuda_v131_master_runner.py
 ```
