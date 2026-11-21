@@ -1,5 +1,4 @@
 
-    # GARUDA Assembly Source Program (Phase 2 & Phase F Requirement)
     MOV r1, 150
     MOV r2, 350
     ADD r3, r1, r2

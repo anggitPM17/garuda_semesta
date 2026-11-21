@@ -1,30 +1,30 @@
 {
   "project": "GARUDA SEMESTA",
   "milestone": "TITAN V12-R2 INSTRUCTION FETCH & MEMORY FABRIC SYNTHESIS",
-  "timestamp_utc": "2026-11-21T03:01:35Z",
-  "host_environment": "linux",
+  "timestamp_utc": "2026-11-21T11:47:22Z",
+  "host_environment": "win32",
   "tool_versions": {
-    "python": "3.10.12",
-    "iverilog": "/usr/bin/iverilog",
-    "vvp": "/usr/bin/vvp",
+    "python": "3.14.3",
+    "iverilog": "BLOCKED",
+    "vvp": "BLOCKED",
     "verilator": "BLOCKED",
     "yosys": "BLOCKED"
   },
-  "overall_status": "FAIL",
+  "overall_status": "BLOCKED",
   "exit_code": 1,
   "stage_results": {
     "compiler_pipeline": "PASS",
     "verilator_lint": "SKIPPED",
     "yosys_synthesis": "SKIPPED",
-    "rtl_simulation": "FAIL",
-    "negative_tests": "PASS"
+    "rtl_simulation": "BLOCKED",
+    "negative_tests": "SKIPPED"
   },
   "details": {
     "hex_sha256": "f5ed31d12723d6dbe2683256214c106c31d1997001f5b53aa01841d3def21a8c",
     "instructions_compiled": 5,
     "sram_target_address": "0x80000100",
     "sram_expected_value": 500,
-    "simulation_output": "WARNING: /workspace/src/memory/garuda_memory_controller.v:51: $readmemh(program.hex): Not enough words in the file for the requested range [0:16383].\nVCD info: dumpfile rtl_waveform.vcd opened for output.\n=========================================================================\nGARUDA SEMESTA \u2014 VERTICAL SLICE VERILOG RTL TESTBENCH v12.4.6\nArchitect & Author: Anggit Prasetyo Mituhu\n=========================================================================\n\n[STAGE 1] Reset Released. 5-Stage CPU Fetching Compiled Instructions...\n[SRAM CONTROLLER LOG] READ addr=0x80000000, word_idx=    0, data=       150\n[SRAM CONTROLLER LOG] READ addr=0x80000000, word_idx=    0, data=       150\n[SRAM CONTROLLER LOG] READ addr=0x80000000, word_idx=    0, data=       150\n[SRAM CONTROLLER LOG] READ addr=0x80000000, word_idx=    0, data=       150\n[SRAM CONTROLLER LOG] READ addr=0x80000004, word_idx=    1, data= 268435520\n[SRAM CONTROLLER LOG] READ addr=0x80000004, word_idx=    1, data= 268435520\n[SRAM CONTROLLER LOG] READ addr=0x80000004, word_idx=    1, data= 268435520\n[SRAM CONTROLLER LOG] READ addr=0x80000004, word_idx=    1, data= 268435520\n[SRAM CONTROLLER LOG] READ addr=0x80000008, word_idx=    2, data=       350\n[SRAM CONTROLLER LOG] READ addr=0x80000008, word_idx=    2, data=       350\n[SRAM CONTROLLER LOG] READ addr=0x80000008, word_idx=    2, data=       350\n[SRAM CONTROLLER LOG] READ addr=0x80000008, word_idx=    2, data=       350\n[SRAM CONTROLLER LOG] READ addr=0x80000010, word_idx=    4, data=         0\n[SRAM CONTROLLER LOG] READ addr=0x80000010, word_idx=    4, data=         0\n[SRAM CONTROLLER LOG] READ addr=0x80000018, word_idx=    6, data=2147483904\n[SRAM CONTROLLER LOG] READ addr=0x80000018, word_idx=    6, data=2147483904\n[SRAM CONTROLLER LOG] READ addr=0x80000004, word_idx=    1, data= 268435520\n[SRAM CONTROLLER LOG] READ addr=0x80000004, word_idx=    1, data= 268435520\n[SRAM CONTROLLER LOG] READ addr=0x80000004, word_idx=    1, data= 268435520\n[SRAM CONTROLLER LOG] READ addr=0x80000004, word_idx=    1, data= 268435520\n[SRAM CONTROLLER LOG] READ addr=0x80000014, word_idx=    5, data= 277348544\n[SRAM CONTROLLER LOG] READ addr=0x80000014, word_idx=    5, data= 277348544\n[SRAM CONTROLLER LOG] READ addr=0x80000014, word_idx=    5, data= 277348544\n[SRAM CONTROLLER LOG] READ addr=0x80000014, word_idx=    5, data= 277348544\n[SRAM CONTROLLER LOG] READ addr=0x80000020, word_idx=    8, data=         0\n[SRAM CONTROLLER LOG] READ addr=0x80000020, word_idx=    8, data=         0\n[SRAM CONTROLLER LOG] READ addr=0x80000020, word_idx=    8, data=         0\n[SRAM CONTROLLER LOG] READ addr=0x80000020, word_idx=    8, data=         0\n[SRAM CONTROLLER LOG] READ addr=0x80000024, word_idx=    9, data=4026531840\n[SRAM CONTROLLER LOG] READ addr=0x80000024, word_idx=    9, data=4026531840\n[SRAM CONTROLLER LOG] READ addr=0x80000024, word_idx=    9, data=4026531840\n[SRAM CONTROLLER LOG] READ addr=0x80000024, word_idx=    9, data=4026531840\n[SRAM CONTROLLER LOG] READ addr=0x80000028, word_idx=   10, data=         0\n[SRAM CONTROLLER LOG] READ addr=0x80000028, word_idx=   10, data=         0\n[SRAM CONTROLLER LOG] READ addr=0x80000028, word_idx=   10, data=         0\n[SRAM CONTROLLER LOG] READ addr=0x80000028, word_idx=   10, data=         0\n[SRAM CONTROLLER LOG] READ addr=0x80000030, word_idx=   12, data=         0\n[SRAM CONTROLLER LOG] READ addr=0x80000030, word_idx=   12, data=         0\n[SRAM CONTROLLER LOG] READ addr=0x80000030, word_idx=   12, data=         0\n[SRAM CONTROLLER LOG] READ addr=0x80000030, word_idx=   12, data=         0\n[SRAM CONTROLLER LOG] READ addr=0x80000034, word_idx=   13, data=         0\n[SRAM CONTROLLER LOG] READ addr=0x80000034, word_idx=   13, data=         0\n[SRAM CONTROLLER LOG] READ addr=0x80000034, word_idx=   13, data=         0\n[SRAM CONTROLLER LOG] READ addr=0x80000034, word_idx=   13, data=         0\n[SRAM CONTROLLER LOG] READ addr=0x80000038, word_idx=   14, data=         0\n[SRAM CONTROLLER LOG] READ addr=0x80000038, word_idx=   14, data=         0\n[SRAM CONTROLLER LOG] READ addr=0x80000038, word_idx=   14, data=         0\n[SRAM CONTROLLER LOG] READ addr=0x80000038, word_idx=   14, data=         0\n[STAGE 2] Clock Cycles Executed: CPU HALTED at PC = 0x80000030\n[STAGE 3] Performing Independent DMA Readback from SRAM 0x80000100...\n[SRAM CONTROLLER LOG] READ addr=0x80000100, word_idx=   64, data=         0\n[SRAM CONTROLLER LOG] READ addr=0x80000100, word_idx=   64, data=         0\n[STAGE 4] Strict Assertion: Asserting SRAM[0x80000100] == 500...\nFAIL: SRAM READBACK MISMATCH (Got          0, Expected 500)\nFATAL: /workspace/src/integration/tb_garuda_vertical_slice_v24_6.v:139: Expected 500 in SRAM[0x80000100]\n       Time: 1696000 Scope: tb_garuda_vertical_slice_v24_6\n",
-    "duration_seconds": 1.52
+    "simulation_output": "Icarus Verilog or VVP not installed on host PATH.",
+    "duration_seconds": 0.014
   }
 }
