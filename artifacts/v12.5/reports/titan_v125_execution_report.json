@@ -1,7 +1,7 @@
 {
   "project": "GARUDA SEMESTA",
   "milestone": "GARUDA TITAN V12.6 \u2014 REAL CHIP INTEGRATION RECOVERY",
-  "timestamp_utc": "2026-11-21T11:14:17Z",
+  "timestamp_utc": "2026-11-21T11:20:26Z",
   "host_environment": "linux",
   "overall_status": "FAIL",
   "exit_code": 1,
@@ -27,5 +27,5 @@
     "Synthesizable Single-Driver UART Serial TX FSM Engine (0x41 'A')",
     "Active Interconnect Address Decoder Routing & Error Fault"
   ],
-  "duration_seconds": 246.41
+  "duration_seconds": 242.893
 }
