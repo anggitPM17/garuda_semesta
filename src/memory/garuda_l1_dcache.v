@@ -1,5 +1,5 @@
 // =========================================================================
-// GARUDA SEMESTA — L1 4KB DATA CACHE MODULE (v12.4.6)
+// GARUDA SEMESTA — L1 4KB DATA CACHE MODULE (v12.4.6-R2)
 // Author & Chief System Architect: Anggit Prasetyo Mituhu
 // Copyright (c) 2026 Anggit Prasetyo Mituhu. All rights reserved.
 // Licensed under the Apache License, Version 2.0
@@ -7,6 +7,7 @@
 // Synthesizable 4 KB L1 Data Cache:
 // - 32-bit Address, 32-bit Data Bus, 4-bit Byte Enable
 // - Direct-Mapped / Write-Through to guarantee SRAM consistency
+// - Hybrid combinational & latched memory address/data output for zero-lag write-through
 // =========================================================================
 
 `timescale 1ns / 1ps
@@ -38,8 +39,8 @@ module garuda_l1_dcache #(
     // Memory Controller / L2 Interconnect
     output wire [ADDR_WIDTH-1:0] mem_addr,
     output wire [DATA_WIDTH-1:0] mem_write_data,
-    output reg                   mem_write_en,
-    output reg                   mem_req_valid,
+    output wire                  mem_write_en,
+    output wire                  mem_req_valid,
     input  wire                  mem_backpressure,
     input  wire [DATA_WIDTH-1:0] mem_read_data,
     input  wire                  mem_resp_valid
@@ -58,6 +59,10 @@ module garuda_l1_dcache #(
     localparam ST_RESP         = 3'b101;
 
     reg [2:0] state, next_state;
+    reg [ADDR_WIDTH-1:0] latched_mem_addr;
+    reg [DATA_WIDTH-1:0] latched_mem_write_data;
+    reg                  latched_mem_write_en;
+    reg                  mem_req_valid_reg;
 
     // Cache Arrays
     reg [TAG_BITS-1:0]  tag_array   [0:NUM_LINES-1];
@@ -70,11 +75,13 @@ module garuda_l1_dcache #(
 
     wire hit = valid_array[req_index] && (tag_array[req_index] == req_tag);
 
-    // Combinational memory address and data assignment
-    assign mem_addr       = (req_write_en) ? req_addr : {req_addr[ADDR_WIDTH-1:OFFSET_BITS], {OFFSET_BITS{1'b0}}};
-    assign mem_write_data = req_write_data;
+    // Hybrid zero-lag combinational & latched memory assignments
+    assign mem_addr       = (state == ST_IDLE || state == ST_COMPARE) ? ((req_write_en) ? req_addr : {req_addr[ADDR_WIDTH-1:OFFSET_BITS], {OFFSET_BITS{1'b0}}}) : latched_mem_addr;
+    assign mem_write_data = (state == ST_IDLE || state == ST_COMPARE) ? req_write_data : latched_mem_write_data;
+    assign mem_write_en   = (state == ST_COMPARE) ? req_write_en : latched_mem_write_en;
+    assign mem_req_valid  = (state == ST_COMPARE && (!hit || req_write_en)) || mem_req_valid_reg;
 
-    integer i, j;
+    integer i;
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
@@ -83,15 +90,14 @@ module garuda_l1_dcache #(
             resp_hit <= 1'b0;
             resp_valid <= 1'b0;
             resp_read_data <= {DATA_WIDTH{1'b0}};
-            mem_req_valid <= 1'b0;
-            mem_write_en <= 1'b0;
+            mem_req_valid_reg <= 1'b0;
+            latched_mem_write_en <= 1'b0;
+            latched_mem_addr <= {ADDR_WIDTH{1'b0}};
+            latched_mem_write_data <= {DATA_WIDTH{1'b0}};
 
             for (i = 0; i < NUM_LINES; i = i + 1) begin
                 valid_array[i] <= 1'b0;
                 tag_array[i] <= {TAG_BITS{1'b0}};
-                for (j = 0; j < (LINE_SIZE_BYTES/4); j = j + 1) begin
-                    data_array[i][j] <= {DATA_WIDTH{1'b0}};
-                end
             end
         end else begin
             if (flush || invalidate) begin
@@ -106,6 +112,8 @@ module garuda_l1_dcache #(
                 ST_IDLE: begin
                     resp_valid <= 1'b0;
                     stall <= 1'b0;
+                    mem_req_valid_reg <= 1'b0;
+                    latched_mem_write_en <= 1'b0;
                     if (req_valid) stall <= 1'b1;
                 end
 
@@ -118,8 +126,11 @@ module garuda_l1_dcache #(
                     end else begin
                         resp_hit <= hit;
                         stall <= 1'b1;
-                        mem_req_valid <= 1'b1;
-                        mem_write_en <= req_write_en;
+                        mem_req_valid_reg <= 1'b1;
+                        latched_mem_write_en <= req_write_en;
+                        latched_mem_addr <= (req_write_en) ? req_addr : {req_addr[ADDR_WIDTH-1:OFFSET_BITS], {OFFSET_BITS{1'b0}}};
+                        latched_mem_write_data <= req_write_data;
+
                         if (req_write_en && hit) begin
                             if (req_byte_enable[0]) data_array[req_index][word_offset][7:0]   <= req_write_data[7:0];
                             if (req_byte_enable[1]) data_array[req_index][word_offset][15:8]  <= req_write_data[15:8];
@@ -130,25 +141,27 @@ module garuda_l1_dcache #(
                 end
 
                 ST_WRITE_THRU: begin
+                    stall <= 1'b1;
                     if (mem_resp_valid) begin
-                        mem_req_valid <= 1'b0;
-                        mem_write_en <= 1'b0;
+                        mem_req_valid_reg <= 1'b0;
+                        latched_mem_write_en <= 1'b0;
                     end
                 end
 
                 ST_REFILL: begin
+                    stall <= 1'b1;
                     if (mem_resp_valid) begin
                         tag_array[req_index] <= req_tag;
                         valid_array[req_index] <= 1'b1;
                         data_array[req_index][word_offset] <= mem_read_data;
-                        mem_req_valid <= 1'b0;
+                        mem_req_valid_reg <= 1'b0;
                     end
                 end
 
                 ST_RESP: begin
                     resp_hit <= 1'b1;
                     resp_valid <= 1'b1;
-                    resp_read_data <= (req_write_en) ? req_write_data : data_array[req_index][word_offset];
+                    resp_read_data <= (latched_mem_write_en) ? latched_mem_write_data : data_array[req_index][word_offset];
                     stall <= 1'b0;
                 end
             endcase

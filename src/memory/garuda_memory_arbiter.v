@@ -1,5 +1,5 @@
 // =========================================================================
-// GARUDA SEMESTA — MULTI-MASTER MEMORY ARBITER MODULE (v12.4.6)
+// GARUDA SEMESTA — MULTI-MASTER MEMORY ARBITER MODULE (v12.4.6-R2)
 // Author & Chief System Architect: Anggit Prasetyo Mituhu
 // Copyright (c) 2026 Anggit Prasetyo Mituhu. All rights reserved.
 // Licensed under the Apache License, Version 2.0
@@ -7,7 +7,7 @@
 // Synthesizable Multi-Master Memory Arbiter:
 // - Supports 2 Masters: Master #0 (CPU/L2 Core), Master #1 (GPU/DMA Core)
 // - True Round-Robin Arbitration to Prevent DMA Starvation
-// - Request Acceptance, Grant Signal, Lock Protection, and Backpressure
+// - Latching Read Data Registers to Preserve Response Data Across Clock Edges
 // =========================================================================
 
 `timescale 1ns / 1ps
@@ -123,7 +123,7 @@ module garuda_memory_arbiter #(
                 if (target_resp_valid) begin
                     busy <= 1'b0;
                     target_req_valid <= 1'b0;
-                    priority_toggle <= ~active_master; // Toggle priority to next master
+                    priority_toggle <= ~active_master;
                     if (active_master == 1'b0) begin
                         m0_grant <= 1'b0;
                         m0_read_data <= target_read_data;

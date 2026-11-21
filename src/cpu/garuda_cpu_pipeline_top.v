@@ -1,5 +1,5 @@
 // =========================================================================
-// GARUDA SEMESTA — MODULAR 5-STAGE PIPELINE CPU TOP-LEVEL (v12.4.6 V2.4.6)
+// GARUDA SEMESTA — MODULAR 5-STAGE PIPELINE CPU TOP-LEVEL (v12.4.6-R2)
 // Author & Chief System Architect: Anggit Prasetyo Mituhu
 // Copyright (c) 2026 Anggit Prasetyo Mituhu. All rights reserved.
 // Licensed under the Apache License, Version 2.0
@@ -7,17 +7,15 @@
 // Synthesizable 5-Stage Pipeline CPU Core Top-Level:
 // - IF (Instruction Fetch), ID (Instruction Decode), EX (Execute), MEM (Memory), WB (Writeback)
 // - Integrated PC, Instruction Decoder, 32x64-bit RegFile, 64-bit ALU
-// - Full 64-bit Instruction Fetch Interface with $readmemh Loading Support
-// - Explicit ALU Operand Selection (alu_src_imm) & Opcode Propagation
-// - Ungated D-Cache Request Validation to ensure MEM stage stores execute
+// - 100% PURE INSTRUCTION FETCH THROUGH I-CACHE / MEMORY FABRIC (ZERO FALLBACK ROM)
+// - dcache_done is held high until MEM stage completes to prevent memory re-trigger loops
 // =========================================================================
 
 `timescale 1ns / 1ps
 
 module garuda_cpu_pipeline_top #(
     parameter DATA_WIDTH = 64,
-    parameter ADDR_WIDTH = 32,
-    parameter PROGRAM_HEX = "program.hex"
+    parameter ADDR_WIDTH = 32
 )(
     input  wire                  clk,
     input  wire                  rst_n,
@@ -44,19 +42,6 @@ module garuda_cpu_pipeline_top #(
     output wire                  pipeline_halted,
     output wire                  illegal_instruction
 );
-
-    // Internal ROM for $readmemh loading of compiled HEX bitstream
-    reg [63:0] instruction_rom [0:127];
-    integer idx;
-
-    initial begin
-        // Initialize instruction ROM array to zero
-        for (idx = 0; idx < 128; idx = idx + 1) begin
-            instruction_rom[idx] = 64'h0;
-        end
-        // Load compiler-generated program.hex file via $readmemh
-        $readmemh(PROGRAM_HEX, instruction_rom);
-    end
 
     // Pipeline Registers
     reg [ADDR_WIDTH-1:0] if_id_pc;
@@ -92,15 +77,45 @@ module garuda_cpu_pipeline_top #(
     reg [DATA_WIDTH-1:0] mem_wb_final_val;
     reg                  mem_wb_illegal_inst;
 
-    // 1. Program Counter
-    wire stall_pipeline = icache_stall || dcache_stall;
+    reg                  halt_retires_latched;
+    reg                  halt_decoded_latched;
+    reg                  dcache_done;
+
+    // 1. Program Counter & Pipeline Control Logic
+    wire halted_sig = halt_retires_latched || (mem_wb_opcode == 4'hF);
+    wire dec_halt_sig = halt_decoded_latched || (dec_opcode == 4'hF) || (id_ex_opcode == 4'hF) || (ex_mem_opcode == 4'hF) || halted_sig;
+
+    wire stall_backend = dcache_stall || halted_sig;
+    wire stall_pc = icache_stall || dcache_stall || dec_halt_sig;
+
     wire branch_taken = 1'b0;
     wire [ADDR_WIDTH-1:0] branch_target = 32'h0;
+
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            halt_retires_latched <= 1'b0;
+            halt_decoded_latched <= 1'b0;
+            dcache_done          <= 1'b0;
+        end else begin
+            if (dec_opcode == 4'hF) begin
+                halt_decoded_latched <= 1'b1;
+            end
+            if (mem_wb_opcode == 4'hF) begin
+                halt_retires_latched <= 1'b1;
+            end
+
+            if (!ex_mem_mem_read && !ex_mem_mem_write) begin
+                dcache_done <= 1'b0;
+            end else if (dcache_valid) begin
+                dcache_done <= 1'b1;
+            end
+        end
+    end
 
     garuda_pc u_pc (
         .clk(clk),
         .rst_n(rst_n),
-        .stall(stall_pipeline),
+        .stall(stall_pc),
         .branch_taken(branch_taken),
         .branch_target(branch_target),
         .exception_taken(1'b0),
@@ -109,19 +124,16 @@ module garuda_cpu_pipeline_top #(
     );
 
     assign icache_addr = current_pc;
-    assign icache_req_valid = rst_n && !stall_pipeline;
+    assign icache_req_valid = rst_n && !stall_pc;
 
-    // 2. Instruction Fetch to Decode Pipeline Register
-    wire [6:0] rom_index = current_pc[9:3];
-    wire [63:0] fetched_inst_word = (icache_valid && icache_inst_data != 64'd0) ? icache_inst_data : instruction_rom[rom_index];
-
+    // 2. Instruction Fetch to Decode Pipeline Register (Retains valid instruction)
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             if_id_pc   <= 32'h8000_0000;
             if_id_inst <= 64'h0;
-        end else if (!stall_pipeline) begin
+        end else if (!stall_backend && icache_valid) begin
             if_id_pc   <= current_pc;
-            if_id_inst <= fetched_inst_word;
+            if_id_inst <= icache_inst_data;
         end
     end
 
@@ -193,7 +205,7 @@ module garuda_cpu_pipeline_top #(
             id_ex_rs2_val   <= 64'd0;
             id_ex_imm       <= 32'd0;
             id_ex_illegal_inst <= 1'b0;
-        end else if (!stall_pipeline) begin
+        end else if (!stall_backend) begin
             id_ex_pc        <= if_id_pc;
             id_ex_opcode    <= dec_opcode;
             id_ex_alu_op    <= dec_alu_op;
@@ -235,7 +247,7 @@ module garuda_cpu_pipeline_top #(
             ex_mem_alu_res   <= 64'd0;
             ex_mem_write_val <= 64'd0;
             ex_mem_illegal_inst <= 1'b0;
-        end else if (!stall_pipeline) begin
+        end else if (!stall_backend) begin
             ex_mem_opcode    <= id_ex_opcode;
             ex_mem_reg_write <= id_ex_reg_write;
             ex_mem_mem_read  <= id_ex_mem_read;
@@ -252,7 +264,7 @@ module garuda_cpu_pipeline_top #(
     assign dcache_write_val = ex_mem_write_val;
     assign dcache_byte_en   = 4'hF;
     assign dcache_write_en  = ex_mem_mem_write;
-    assign dcache_req_valid = (ex_mem_mem_read || ex_mem_mem_write);
+    assign dcache_req_valid = (ex_mem_mem_read || ex_mem_mem_write) && !dcache_done;
 
     // Memory to Writeback Pipeline Register
     always @(posedge clk or negedge rst_n) begin
@@ -262,7 +274,7 @@ module garuda_cpu_pipeline_top #(
             mem_wb_rd        <= 5'd0;
             mem_wb_final_val <= 64'd0;
             mem_wb_illegal_inst <= 1'b0;
-        end else if (!stall_pipeline) begin
+        end else if (!stall_backend) begin
             mem_wb_opcode    <= ex_mem_opcode;
             mem_wb_reg_write <= ex_mem_reg_write;
             mem_wb_rd        <= ex_mem_rd;
@@ -271,7 +283,8 @@ module garuda_cpu_pipeline_top #(
         end
     end
 
-    assign pipeline_halted = (mem_wb_opcode == 4'hF);
+    wire dcache_busy_sig = dcache_stall || dcache_req_valid;
+    assign pipeline_halted = halted_sig && !dcache_busy_sig;
     assign illegal_instruction = mem_wb_illegal_inst;
 
 endmodule

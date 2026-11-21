@@ -1,5 +1,5 @@
 // =========================================================================
-// GARUDA SEMESTA — L1 4KB INSTRUCTION CACHE MODULE (v12.3.2-R6)
+// GARUDA SEMESTA — L1 4KB INSTRUCTION CACHE MODULE (v12.4.6-R2)
 // Author & Chief System Architect: Anggit Prasetyo Mituhu
 // Copyright (c) 2026 Anggit Prasetyo Mituhu. All rights reserved.
 // Licensed under the Apache License, Version 2.0
@@ -7,14 +7,7 @@
 // Synthesizable 4 KB L1 Instruction Cache:
 // - 32-bit Address, 64-bit Full GARUDA ISA Instruction Word Output
 // - Direct-Mapped (128 Lines, 32-Byte Line Size = 4 x 64-bit Words per Line)
-// - Explicit Request/Accept & Response Handshake (`mem_req_valid`, `mem_req_ready`, `mem_resp_valid`)
-// - FSM Checks `mem_req_valid && mem_req_ready` Before Refill Advances
-// - Refill Address Sequence:
-//   Word 0: line_base + 0
-//   Word 1: line_base + 8
-//   Word 2: line_base + 16
-//   Word 3: line_base + 24
-// - Valid Bit Array set ONLY after all 4 words are populated
+// - Zero-lag combinational stall output on miss to freeze PC at exact request address
 // =========================================================================
 
 `timescale 1ns / 1ps
@@ -34,7 +27,7 @@ module garuda_l1_icache #(
     output reg  [DATA_WIDTH-1:0] resp_data,
     output reg                   resp_hit,
     output reg                   resp_valid,
-    output reg                   stall,
+    output wire                  stall,
 
     // Management Interface
     input  wire                  flush,
@@ -63,6 +56,7 @@ module garuda_l1_icache #(
 
     reg [1:0] state, next_state;
     reg [1:0] refill_word_cnt;
+    reg [ADDR_WIDTH-1:0] latched_req_addr;
 
     // Cache Storage Arrays
     reg [TAG_BITS-1:0]   tag_array   [0:NUM_LINES-1];
@@ -70,33 +64,35 @@ module garuda_l1_icache #(
     reg [DATA_WIDTH-1:0] data_array  [0:NUM_LINES-1][0:WORDS_PER_LINE-1];
 
     // Address Breakdown
-    wire [TAG_BITS-1:0]    req_tag     = req_addr[ADDR_WIDTH-1 : INDEX_BITS+OFFSET_BITS];
-    wire [INDEX_BITS-1:0]  req_index   = req_addr[INDEX_BITS+OFFSET_BITS-1 : OFFSET_BITS];
-    wire [1:0]             word_offset = req_addr[OFFSET_BITS-1 : 3];
-    wire [ADDR_WIDTH-1:0]  line_base   = {req_addr[ADDR_WIDTH-1:OFFSET_BITS], {OFFSET_BITS{1'b0}}};
+    wire [TAG_BITS-1:0]    req_tag           = req_addr[ADDR_WIDTH-1 : INDEX_BITS+OFFSET_BITS];
+    wire [INDEX_BITS-1:0]  req_index         = req_addr[INDEX_BITS+OFFSET_BITS-1 : OFFSET_BITS];
+    wire [1:0]             word_offset       = req_addr[OFFSET_BITS-1 : 3];
+    wire [INDEX_BITS-1:0]  latched_index     = latched_req_addr[INDEX_BITS+OFFSET_BITS-1 : OFFSET_BITS];
+    wire [1:0]             latched_offset    = latched_req_addr[OFFSET_BITS-1 : 3];
+    wire [ADDR_WIDTH-1:0]  latched_line_base = {latched_req_addr[ADDR_WIDTH-1:OFFSET_BITS], {OFFSET_BITS{1'b0}}};
 
     wire tag_match = valid_array[req_index] && (tag_array[req_index] == req_tag);
 
-    integer i, j;
+    // Zero-lag combinational stall to prevent PC increment during miss
+    assign stall = (state == ST_IDLE && req_valid && !tag_match) || (state == ST_COMPARE && !tag_match) || (state == ST_REFILL);
 
-    // Sequential State & Multi-Word Line Refill with Explicit Handshake Check
+    integer i;
+
+    // Sequential State & Multi-Word Line Refill
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             state <= ST_IDLE;
-            stall <= 1'b0;
             resp_hit <= 1'b0;
             resp_valid <= 1'b0;
             resp_data <= {DATA_WIDTH{1'b0}};
             mem_req_valid <= 1'b0;
             mem_req_addr <= {ADDR_WIDTH{1'b0}};
+            latched_req_addr <= {ADDR_WIDTH{1'b0}};
             refill_word_cnt <= 2'b00;
 
             for (i = 0; i < NUM_LINES; i = i + 1) begin
                 valid_array[i] <= 1'b0;
                 tag_array[i] <= {TAG_BITS{1'b0}};
-                for (j = 0; j < WORDS_PER_LINE; j = j + 1) begin
-                    data_array[i][j] <= {DATA_WIDTH{1'b0}};
-                end
             end
         end else begin
             if (flush || invalidate) begin
@@ -110,10 +106,9 @@ module garuda_l1_icache #(
             case (state)
                 ST_IDLE: begin
                     resp_valid <= 1'b0;
-                    stall <= 1'b0;
                     refill_word_cnt <= 2'b00;
                     if (req_valid) begin
-                        stall <= 1'b1;
+                        latched_req_addr <= req_addr;
                     end
                 end
 
@@ -122,31 +117,27 @@ module garuda_l1_icache #(
                         resp_hit <= 1'b1;
                         resp_valid <= 1'b1;
                         resp_data <= data_array[req_index][word_offset];
-                        stall <= 1'b0;
                     end else begin
                         resp_hit <= 1'b0;
                         mem_req_valid <= 1'b1;
-                        mem_req_addr <= line_base; // Word 0: base + 0
-                        stall <= 1'b1;
+                        mem_req_addr <= latched_line_base; // Word 0: latched_base + 0
                         refill_word_cnt <= 2'b00;
                     end
                 end
 
                 ST_REFILL: begin
                     if (mem_resp_error) begin
-                        // Memory response error -> cancel refill safely
-                        valid_array[req_index] <= 1'b0;
+                        valid_array[latched_index] <= 1'b0;
                         mem_req_valid <= 1'b0;
                     end else if (mem_resp_valid) begin
-                        data_array[req_index][refill_word_cnt] <= mem_resp_data;
+                        data_array[latched_index][refill_word_cnt] <= mem_resp_data;
                         if (refill_word_cnt == (WORDS_PER_LINE - 1)) begin
-                            // Set Valid Bit ONLY after all 4 words are received
-                            tag_array[req_index] <= req_tag;
-                            valid_array[req_index] <= 1'b1;
+                            tag_array[latched_index] <= latched_req_addr[ADDR_WIDTH-1 : INDEX_BITS+OFFSET_BITS];
+                            valid_array[latched_index] <= 1'b1;
                             mem_req_valid <= 1'b0;
                         end else begin
                             refill_word_cnt <= refill_word_cnt + 1'b1;
-                            mem_req_addr <= line_base + ((refill_word_cnt + 1'b1) * 8);
+                            mem_req_addr <= latched_line_base + ((refill_word_cnt + 1'b1) * 8);
                         end
                     end
                 end
@@ -154,14 +145,13 @@ module garuda_l1_icache #(
                 ST_RESP: begin
                     resp_hit <= 1'b1;
                     resp_valid <= 1'b1;
-                    resp_data <= data_array[req_index][word_offset];
-                    stall <= 1'b0;
+                    resp_data <= data_array[latched_index][latched_offset];
                 end
             endcase
         end
     end
 
-    // Next State Logic with Explicit Handshake Verification (mem_req_valid && mem_req_ready)
+    // Next State Logic
     always @(*) begin
         next_state = state;
         case (state)
@@ -172,7 +162,6 @@ module garuda_l1_icache #(
                 if (tag_match) begin
                     next_state = ST_IDLE;
                 end else if (mem_req_ready) begin
-                    // Advance to Refill ONLY when downstream accepts request
                     next_state = ST_REFILL;
                 end
             end

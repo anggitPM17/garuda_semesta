@@ -1,11 +1,11 @@
 // =========================================================================
-// GARUDA SEMESTA — 64-BIT TO 32-BIT BUS ADAPTER (v12.4.4)
+// GARUDA SEMESTA — 64-BIT TO 32-BIT BUS ADAPTER (v12.4.6-R2)
 // Author & Chief System Architect: Anggit Prasetyo Mituhu
 // Copyright (c) 2026 Anggit Prasetyo Mituhu. All rights reserved.
 // Licensed under the Apache License, Version 2.0
 //
 // Converts a 64-bit read request into two sequential 32-bit read requests.
-// Used for I-Cache (64-bit) to L2 Cache (32-bit) connectivity.
+// Ultra-fast 4-state deterministic bus adapter.
 // =========================================================================
 
 `timescale 1ns / 1ps
@@ -99,6 +99,7 @@ module garuda_bus_adapter_64to32 #(
                 m_resp_error = error_flag;
                 next_state = ST_IDLE;
             end
+            default: next_state = ST_IDLE;
         endcase
     end
 
