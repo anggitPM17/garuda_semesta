@@ -1,0 +1,10 @@
+=========================================================================
+GARUDA SEMESTA V0.3.3-R1 — DEDICATED MMIO UART WAVEFORM TESTBENCH
+Architect & Author: Anggit Prasetyo Mituhu
+=========================================================================
+
+[UART TEST] Write 0x41 ('A') issued to MMIO TX register.
+[UART TEST] Start Bit (0) Captured on uart_tx!
+[UART TEST] Transmit Complete Interrupt (uart_tx_irq) Asserted!
+UART_WAVEFORM_ASSERTION_PASS: SERIAL TX WAVEFORM VERIFIED (0x41 'A')
+

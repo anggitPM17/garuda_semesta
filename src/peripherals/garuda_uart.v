@@ -1,5 +1,5 @@
 // =========================================================================
-// GARUDA SEMESTA — HARDWARE MMIO UART SERIAL PERIPHERAL (v0.3.1)
+// GARUDA SEMESTA — HARDWARE MMIO UART SERIAL PERIPHERAL (v12.6.0)
 // Author & Chief System Architect: Anggit Prasetyo Mituhu
 // Copyright (c) 2026 Anggit Prasetyo Mituhu. All rights reserved.
 // Licensed under the Apache License, Version 2.0
@@ -8,6 +8,7 @@
 // - Hardware Baud-Rate Divider & Serial TX FSM (Start bit, 8 data bits, Stop bit)
 // - Hardware Serial RX sampler & RX valid status
 // - TX & RX interrupt generation (uart_tx_irq)
+// - Single procedural driver per register for clean ASIC/FPGA synthesis
 // =========================================================================
 
 `timescale 1ns / 1ps
@@ -41,7 +42,6 @@ module garuda_uart #(
     reg [3:0]  bit_index;
     reg [7:0]  tx_shift_reg;
     reg        tx_busy;
-    reg        tx_start;
 
     // Serial TX FSM States
     localparam STATE_IDLE  = 2'b00;
@@ -53,24 +53,49 @@ module garuda_uart #(
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            state        <= STATE_IDLE;
-            uart_tx      <= 1'b1;
-            baud_cnt     <= 16'd0;
-            bit_index    <= 4'd0;
-            tx_shift_reg <= 8'h0;
-            tx_busy      <= 1'b0;
-            uart_tx_irq  <= 1'b0;
+            state          <= STATE_IDLE;
+            uart_tx        <= 1'b1;
+            baud_cnt       <= 16'd0;
+            bit_index      <= 4'd0;
+            tx_shift_reg   <= 8'h0;
+            tx_busy        <= 1'b0;
+            uart_tx_irq    <= 1'b0;
+            resp_read_data <= 32'd0;
+            resp_valid     <= 1'b0;
         end else begin
+            resp_valid <= 1'b0;
+
+            // MMIO Write Request Handling
+            if (req_valid && req_write_en) begin
+                resp_valid <= 1'b1;
+                case (req_addr[3:0])
+                    4'h0: begin // Write TX Data Register
+                        if (!tx_busy && state == STATE_IDLE) begin
+                            tx_shift_reg <= req_write_data[7:0];
+                            state        <= STATE_START;
+                            tx_busy      <= 1'b1;
+                            baud_cnt     <= 16'd0;
+                        end
+                    end
+                    4'h8: begin // W1C Clear Interrupt
+                        uart_tx_irq <= 1'b0;
+                    end
+                    default: ;
+                endcase
+            end else if (req_valid && !req_write_en) begin // MMIO Read Request Handling
+                resp_valid <= 1'b1;
+                case (req_addr[3:0])
+                    4'h0: resp_read_data <= {24'd0, tx_shift_reg};
+                    4'h4: resp_read_data <= {31'd0, tx_busy}; // Status Reg
+                    4'h8: resp_read_data <= {31'd0, uart_tx_irq};
+                    default: resp_read_data <= 32'd0;
+                endcase
+            end
+
+            // Serial TX FSM Execution
             case (state)
                 STATE_IDLE: begin
-                    uart_tx  <= 1'b1;
-                    baud_cnt <= 16'd0;
-                    if (tx_start) begin
-                        state    <= STATE_START;
-                        tx_busy  <= 1'b1;
-                    end else begin
-                        tx_busy  <= 1'b0;
-                    end
+                    uart_tx <= 1'b1;
                 end
 
                 STATE_START: begin
@@ -110,43 +135,6 @@ module garuda_uart #(
                     end
                 end
             endcase
-        end
-    end
-
-    // MMIO Register Access
-    always @(posedge clk or negedge rst_n) begin
-        if (!rst_n) begin
-            tx_start       <= 1'b0;
-            tx_shift_reg   <= 8'h0;
-            resp_read_data <= 32'd0;
-            resp_valid     <= 1'b0;
-        end else begin
-            tx_start   <= 1'b0;
-            resp_valid <= 1'b0;
-
-            if (req_valid) begin
-                resp_valid <= 1'b1;
-                if (req_write_en) begin
-                    case (req_addr[3:0])
-                        4'h0: begin // TX Data Register
-                            if (!tx_busy) begin
-                                tx_shift_reg <= req_write_data[7:0];
-                                tx_start     <= 1'b1;
-                                $display("[UART SERIAL HW LOG] TX Character Transmitted: '%c' (0x%h)", req_write_data[7:0], req_write_data[7:0]);
-                            end
-                        end
-                        4'h8: uart_tx_irq <= 1'b0; // Clear IRQ
-                        default: ;
-                    endcase
-                end else begin
-                    case (req_addr[3:0])
-                        4'h0: resp_read_data <= {24'd0, tx_shift_reg};
-                        4'h4: resp_read_data <= {31'd0, tx_busy}; // Status Reg
-                        4'h8: resp_read_data <= {31'd0, uart_tx_irq};
-                        default: resp_read_data <= 32'd0;
-                    endcase
-                end
-            end
         end
     end
 

@@ -1,30 +1,15 @@
 {
   "project": "GARUDA SEMESTA",
-  "milestone": "GARUDA TITAN V12.5.2 — SOC INTEGRATION & TRANSACTION INTEGRITY RECOVERY",
-  "timestamp_utc": "2026-11-21T10:30:00Z",
-  "host_environment": "win32 / linux (Docker garuda-eda:v2.4.0)",
-  "overall_status": "PASS",
-  "exit_code": 0,
+  "milestone": "GARUDA TITAN V12.5 \u2014 COMPLETE CPU EXECUTION ENGINE",
+  "timestamp_utc": "2026-11-21T10:53:39Z",
+  "host_environment": "linux",
+  "overall_status": "FAIL",
+  "exit_code": 1,
   "stage_results": {
     "tb_garuda_v125_branch_jump": "PASS",
     "tb_garuda_v033_interconnect": "PASS",
     "tb_garuda_v033_uart": "PASS",
-    "tb_garuda_semesta_chip_v031": "PASS"
+    "tb_garuda_semesta_chip_v031": "FAIL"
   },
-  "assertions_verified": [
-    "r1 == 10",
-    "r2 == 10",
-    "BEQ r1, r2 branch taken to 0x80000028",
-    "r3 == 0 (Flushed wrong-path speculative instructions)",
-    "r4 == 500 (Executed branch target instruction)",
-    "JMP 0x80000040 jump taken",
-    "r5 == 0 (Flushed jump wrong-path instruction)",
-    "SRAM[0x80000100] == 500 (STORE)",
-    "r4 == 500 (LOADED from SRAM)",
-    "r5 == 650 (r4 + r1)",
-    "DMA Readback SRAM[0x80000100] == 500",
-    "Active Interconnect MMIO MUX Routing to CPU",
-    "Synthesizable Single-Driver UART Serial TX FSM Engine (0x41 'A')"
-  ],
-  "duration_seconds": 12.5
+  "duration_seconds": 123.902
 }
