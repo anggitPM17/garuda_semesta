@@ -1,0 +1,17 @@
+{
+  "tool": "garuda-cpu-isa-verifier",
+  "tool_version": "12.0",
+  "command": "python src/cpu/verify_garuda_cpu_isa.py",
+  "exit_code": 0,
+  "status": "PASS",
+  "tests_executed": 4,
+  "tests_passed": 4,
+  "tests_failed": 0,
+  "timestamp": "2026-11-20T16:24:00Z",
+  "cpu_tests": {
+    "regfile_r0_constant_zero": "PASS",
+    "alu_64bit_multiplication": "PASS",
+    "lsu_store_load_roundtrip": "PASS",
+    "pc_stride_8byte": "PASS"
+  }
+}

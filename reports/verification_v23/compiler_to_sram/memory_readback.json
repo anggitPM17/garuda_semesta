@@ -1,0 +1,16 @@
+{
+  "test_identifier": "COMPILER_TO_SRAM_PROOF_V23",
+  "compiler_executable": "garuda_compiler.py v12.2",
+  "source_program_path": "D:\\richat\\garuda_semesta_repo\\reports\\verification_v23\\compiler_to_sram\\source.garuda",
+  "hex_artifact_path": "D:\\richat\\garuda_semesta_repo\\reports\\verification_v23\\compiler_to_sram\\program.hex",
+  "vcd_waveform_path": "D:\\richat\\garuda_semesta_repo\\reports\\verification_v23\\compiler_to_sram\\rtl_waveform.vcd",
+  "tool_and_version": "Python 3.14 / Verilog RTL Simulator",
+  "command": "python src/integration/garuda_compiler_vertical_slice_v23.py",
+  "exit_code": 0,
+  "status": "PASS",
+  "assertion_count": 2,
+  "sram_target_address": "0x80000100",
+  "sram_expected_value": 500,
+  "sram_actual_value": 500,
+  "duration_seconds": 0.016
+}

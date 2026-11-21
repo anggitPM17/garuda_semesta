@@ -1,0 +1,10 @@
+{
+  "test_identifier": "CPU_CORE_ISA_VERIFICATION",
+  "tool_and_version": "Garuda CPU ISA Verifier v12.1",
+  "command": "python src/cpu/verify_garuda_cpu_isa.py",
+  "exit_code": 0,
+  "status": "PASS",
+  "assertions": 10,
+  "tests_passed": 4,
+  "timestamp": "2026-11-20T20:01:22Z"
+}

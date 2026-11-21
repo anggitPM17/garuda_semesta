@@ -1,0 +1,49 @@
+name: GARUDA SEMESTA — Docker-Native Real RTL Verification CI/CD V2.4.5
+
+on:
+  push:
+    branches: [ main, engineering/hardening-v2, engineering/v2.4.2-docker-native-rtl-proof, engineering/v2.4.4-rtl-integrity-recovery, engineering/v2.4.5-execution-reconstruction ]
+  pull_request:
+    branches: [ main, engineering/v2.4.5-execution-reconstruction ]
+
+jobs:
+  verify_hardware_and_compiler_v245:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install Icarus Verilog & GTKWave EDA Tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y iverilog gtkwave
+
+      - name: Verify Installed EDA Tool Versions
+        run: |
+          iverilog -V || true
+          vvp -V || true
+
+      - name: Execute GARUDA V2.4.5 Single Source of Truth Runner
+        run: |
+          python3 src/verification/garuda_v245_runner.py
+
+      - name: Run Master Unit & Integration Test Suite
+        run: |
+          python3 tests/run_all_unit_and_integration_tests.py
+
+      - name: Upload Simulation Artifacts & VCD Waveform
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: garuda-v245-rtl-verification-artifacts
+          path: |
+            build/
+            artifacts/
+            reports/
+            *.vcd

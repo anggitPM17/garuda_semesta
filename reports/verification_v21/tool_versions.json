@@ -1,0 +1,32 @@
+{
+  "python": {
+    "available": true,
+    "version": "Python 3.10.12",
+    "status": "AVAILABLE"
+  },
+  "docker": {
+    "available": false,
+    "version": "[Errno 2] No such file or directory: 'docker'",
+    "status": "BLOCKED: TOOL NOT AVAILABLE"
+  },
+  "gtkwave": {
+    "available": false,
+    "version": "Exit Code 1",
+    "status": "BLOCKED: TOOL NOT AVAILABLE"
+  },
+  "iverilog": {
+    "available": false,
+    "version": "Exit Code 1",
+    "status": "BLOCKED: TOOL NOT AVAILABLE"
+  },
+  "verilator": {
+    "available": false,
+    "version": "[Errno 2] No such file or directory: 'verilator'",
+    "status": "BLOCKED: TOOL NOT AVAILABLE"
+  },
+  "yosys": {
+    "available": false,
+    "version": "[Errno 2] No such file or directory: 'yosys'",
+    "status": "BLOCKED: TOOL NOT AVAILABLE"
+  }
+}

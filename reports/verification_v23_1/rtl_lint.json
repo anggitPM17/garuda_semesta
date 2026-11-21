@@ -1,0 +1,10 @@
+{
+  "test_identifier": "RTL_STATIC_LINTING_V231",
+  "tool_and_version": "Garuda RTL Linter v12.3.1",
+  "command": "python src/verification/garuda_verilog_linter_and_simulator.py",
+  "exit_code": 0,
+  "status": "PASS",
+  "files_linted": 20,
+  "errors_found": 0,
+  "warnings_found": 0
+}

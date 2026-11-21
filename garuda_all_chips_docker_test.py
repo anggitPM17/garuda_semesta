@@ -1,119 +1,164 @@
 #!/usr/bin/env python3
 """
-GARUDA SEMESTA — Master 5-Chip Batch Docker Signoff Verifier
+GARUDA SEMESTA — Master 5-Chip Signoff Verifier (V2.4.6-R1 RECOVERY)
 Author & Chief System Architect: Anggit Prasetyo Mituhu
 Copyright (c) 2026 Anggit Prasetyo Mituhu. All rights reserved.
 Licensed under the Apache License, Version 2.0
 
-Granular Multi-Stage Docker Signoff & Physical Design Verification Suite:
-1. Docker Environment Audit (PASS)
-2. RTL Lint (PASS)
-3. RTL Compilation & Elaboration (PASS)
-4. Functional Simulation (PASS)
-5. Synthesis & Gate-Level Mapping (PASS)
-6. Timing Analysis / STA (PASS)
-7. Physical Design & Floorplanning (PASS)
-8. DRC/LVS Verification (PASS).
+Enforced Granular Verification Suite (Removes False PASS):
+- Executes real EDA tools (iverilog, verilator) via subprocess.
+- Eliminates fake python:3.11-slim container 'print("PASS")' bypasses.
+- Requires explicit RTL compilation for each target chip.
+- Flags unimplemented testbenches as NOT_VERIFIED.
 """
 
 import os
 import sys
 import subprocess
 import time
+import json
 
 PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
-CONFIG_TCL = os.path.join(PROJECT_DIR, "src", "config.tcl")
 REPORT_PATH = os.path.join(PROJECT_DIR, "docs", "GARUDA_5_Chip_Master_Docker_Report.md")
+JSON_REPORT_PATH = os.path.join(PROJECT_DIR, "artifacts", "v2.4.6-r1", "five_chip_report.json")
 
+# Define target chips. Right now only CPU has a full vertical slice verified in V2.4.6-R1
 CHIPS = [
-    {"name": "GARUDA CPU SoC v12.0", "top": "garuda_cpu_top", "verilog": "/workspace/cpu/garuda_cpu_top.v"},
-    {"name": "GARUDA GPU v1.0 ULTIMATE", "top": "garuda_gpu_top", "verilog": "/workspace/gpu/garuda_gpu_top.v"},
-    {"name": "GARUDA NPU v1.0 ULTIMATE", "top": "garuda_npu_top", "verilog": "/workspace/npu/garuda_npu_top.v"},
-    {"name": "GARUDA SECURE v1.0 ULTIMATE", "top": "garuda_secure_top", "verilog": "/workspace/secure/garuda_secure_top.v"},
-    {"name": "GARUDA MCU v1.0 ULTIMATE", "top": "garuda_mcu_top", "verilog": "/workspace/mcu/garuda_mcu_top.v"},
+    {
+        "name": "GARUDA CPU SoC v12.4.6",
+        "top": "garuda_vertical_slice_top",
+        "verilog_files": [
+            "src/memory/garuda_bus_adapter_64to32.v",
+            "src/memory/garuda_l1_icache.v",
+            "src/memory/garuda_l1_dcache.v",
+            "src/memory/garuda_l2_cache.v",
+            "src/memory/garuda_memory_arbiter.v",
+            "src/memory/garuda_memory_controller.v",
+            "src/memory/garuda_memory_subsystem_top.v",
+            "src/cpu/garuda_pc.v",
+            "src/cpu/garuda_idecode.v",
+            "src/cpu/garuda_regfile.v",
+            "src/cpu/garuda_alu.v",
+            "src/cpu/garuda_cpu_pipeline_top.v",
+            "src/integration/garuda_vertical_slice_top.v"
+        ],
+        "testbench": "src/integration/tb_garuda_vertical_slice_v24_6.v"
+    },
+    {
+        "name": "GARUDA GPU v1.0",
+        "top": "garuda_gpu_top",
+        "verilog_files": ["src/gpu/garuda_gpu_shader_simd.v", "src/gpu/garuda_gpu_bvh_raytracer.v"],
+        "testbench": None
+    },
+    {
+        "name": "GARUDA NPU v1.0",
+        "top": "garuda_npu_top",
+        "verilog_files": ["src/npu/garuda_npu_systolic_array.v"],
+        "testbench": None
+    },
+    {
+        "name": "GARUDA SECURE v1.0",
+        "top": "garuda_secure_top",
+        "verilog_files": ["src/secure/garuda_secure_crypto_engine.v"],
+        "testbench": None
+    },
+    {
+        "name": "GARUDA MCU v1.0",
+        "top": "garuda_mcu_top",
+        "verilog_files": ["src/mcu/garuda_mcu_peripherals.v"],
+        "testbench": None
+    }
 ]
 
-def run_strict_docker_test():
+def run_real_verification():
     print("=========================================================================")
-    print("GARUDA SEMESTA — STRICT DOCKER-ONLY 5-CHIP SIGNOFF VERIFIER v12.0")
+    print("GARUDA SEMESTA — REAL DOCKER-NATIVE 5-CHIP SIGNOFF VERIFIER v12.4.6-R1")
     print("Architect & Author: Anggit Prasetyo Mituhu")
     print("=========================================================================\n")
 
-    print("[STRICT DOCKER MODE] Executing Granular Multi-Stage Docker Container Verification...\n")
+    os.makedirs(os.path.join(PROJECT_DIR, "build"), exist_ok=True)
+    os.makedirs(os.path.dirname(JSON_REPORT_PATH), exist_ok=True)
 
     results = []
+    all_passed = True
+
     for idx, chip in enumerate(CHIPS, 1):
-        print(f"[{idx}/5] Launching Real Docker Container for {chip['name']} (Top: {chip['top']})...")
+        print(f"[{idx}/5] Verifying {chip['name']} (Top: {chip['top']})...")
 
-        docker_cmd = [
-            "docker", "run", "--rm",
-            "-v", f"{PROJECT_DIR}:/workspace",
-            "python:3.11-slim",
-            "python", "-c",
-            f"import os; print(' [DOCKER CONTAINER INSIDE] Granular Multi-Stage Verification: {chip['verilog']} -> ALL STAGES PASSED')"
-        ]
+        # Check if RTL source files actually exist
+        missing_files = [f for f in chip['verilog_files'] if not os.path.exists(os.path.join(PROJECT_DIR, f))]
 
-        start_t = time.time()
-        res = subprocess.run(docker_cmd, capture_output=True, text=True, encoding='utf-8', errors='replace')
-        elapsed = time.time() - start_t
+        if missing_files:
+            print(f"  -> BLOCKED: Missing RTL sources: {missing_files}")
+            results.append((chip['name'], chip['top'], "BLOCKED"))
+            all_passed = False
+            continue
 
-        print(res.stdout.strip())
-        status = "PASSED 100% IN DOCKER" if res.returncode == 0 else f"FAILED (Code {res.returncode})"
-        print(f"  -> Docker Exit Code: {res.returncode} | Time: {elapsed:.2f}s\n")
-        results.append((chip['name'], chip['top'], status, f"{elapsed:.2f}s"))
+        if chip['testbench'] is None or not os.path.exists(os.path.join(PROJECT_DIR, str(chip['testbench']))):
+            print(f"  -> NOT_VERIFIED: No testbench available for {chip['top']}")
+            results.append((chip['name'], chip['top'], "NOT_VERIFIED"))
+            all_passed = False
+            continue
+
+        # Compile with Icarus Verilog
+        out_vvp = os.path.join(PROJECT_DIR, "build", f"{chip['top']}.vvp")
+        compile_cmd = ["iverilog", "-g2012", "-Wall", "-s", "tb_garuda_vertical_slice_v24_6", "-o", out_vvp] + chip['verilog_files'] + [chip['testbench']]
+
+        print(f"  -> Compiling RTL via Icarus Verilog...")
+        res_compile = subprocess.run(compile_cmd, capture_output=True, text=True, cwd=PROJECT_DIR)
+
+        if res_compile.returncode != 0:
+            print(f"  -> FAILED: Compilation Error\n{res_compile.stderr}")
+            results.append((chip['name'], chip['top'], "FAILED_COMPILE"))
+            all_passed = False
+            continue
+
+        # Simulate with VVP
+        print(f"  -> Executing Simulation via VVP...")
+        res_sim = subprocess.run(["vvp", out_vvp], capture_output=True, text=True, cwd=PROJECT_DIR, timeout=30)
+
+        if res_sim.returncode == 0 and "FATAL" not in res_sim.stdout.upper() and "FAIL" not in res_sim.stdout.upper():
+            print(f"  -> PASS: Execution Verified successfully!")
+            results.append((chip['name'], chip['top'], "RTL_SIMULATED_PASS"))
+        else:
+            print(f"  -> FAILED: Simulation Errors Detected\n{res_sim.stdout}\n{res_sim.stderr}")
+            results.append((chip['name'], chip['top'], "FAILED_SIMULATION"))
+            all_passed = False
 
     generate_master_report(results)
 
-def generate_master_report(results):
-    report_md = f"""# GARUDA SEMESTA — Master 5-Chip Docker Verification & Granular Signoff Report
+    with open(JSON_REPORT_PATH, "w") as f:
+        json.dump({"milestone": "V2.4.6-R1", "status": "PASS" if all_passed else "INCOMPLETE", "results": results}, f, indent=2)
 
-**Document Revision**: 12.0-GRANULAR-DOCKER-PASSED
+    sys.exit(0 if all_passed else 1)
+
+def generate_master_report(results):
+    report_md = f"""# GARUDA SEMESTA — Master 5-Chip Verification Report
+
+**Document Revision**: 12.4.6-R1-REAL-RTL-ENFORCED
 **Author & Chief System Architect**: **Anggit Prasetyo Mituhu**
 **License**: Apache License 2.0 (Copyright © 2026 Anggit Prasetyo Mituhu)
 **Verification Date**: {time.strftime('%Y-%m-%d %H:%M:%S')}
 
 ---
 
-## 1. Granular Multi-Stage Verification Summary
+## 1. 5-Chip Master Signoff Matrix
 
-All 5 BGA-6144 Socket Chips in the **GARUDA SEMESTA Semiconductor Portfolio** designed by **Anggit Prasetyo Mituhu** have been synthesized and verified sequentially inside real Docker containers across 8 granular engineering stages.
+*Note: In V2.4.6-R1, false PASS states have been eliminated. Only chips with real testbenches and execution proofs are marked PASS.*
 
----
-
-## 2. Granular 8-Stage Verification Matrix
-
-| Verification Stage | Stage Description | Status | Logs & Proof |
-| :---: | :--- | :---: | :--- |
-| **Stage 1** | **Docker Environment Audit** | **PASS** | Verified Docker Daemon 29.9.3 & Container Volumes |
-| **Stage 2** | **RTL Linting** | **PASS** | Verilator Clean (0 Syntax / Multi-driver / Latch Errors) |
-| **Stage 3** | **RTL Compilation & Elaboration** | **PASS** | Synthesizable Verilog Elaboration Verified |
-| **Stage 4** | **Functional Simulation** | **PASS** | 5-Stage CPU Pipeline, L1/L2 Caches & NoC 336-bit Flits Verified |
-| **Stage 5** | **Logic Synthesis** | **PASS** | Yosys Gate-Level Standard Cell Mapping Completed |
-| **Stage 6** | **Static Timing Analysis (STA)** | **PASS** | OpenSTA 3.5 GHz Setup/Hold Slack Positive |
-| **Stage 7** | **Physical Design (Floorplan / CTS)** | **PASS** | OpenROAD BGA-6144 Floorplan & Routing Verified |
-| **Stage 8** | **DRC / LVS Signoff** | **PASS** | KLayout Lithography Mask DRC 0 Errors (`gds/*.gds`) |
-
----
-
-## 3. 5-Chip Master Signoff Matrix
-
-| Chip # | Chip Name & Domain | Top Verilog Module | Package Socket | Real Docker Container Status |
-| :---: | :--- | :--- | :---: | :---: |
-| **1** | **GARUDA CPU SoC v12.0** (32-Core SMP) | `garuda_cpu_top` | BGA-6144 / LGA-6096 | **{results[0][2]}** |
-| **2** | **GARUDA GPU v1.0** (64-Core Ray-Tracing) | `garuda_gpu_top` | BGA-6144 / LGA-6096 | **{results[1][2]}** |
-| **3** | **GARUDA NPU v1.0** (64-Engine AI Vision) | `garuda_npu_top` | BGA-6144 / LGA-6096 | **{results[2][2]}** |
-| **4** | **GARUDA SECURE v1.0** (Crypto Vault) | `garuda_secure_top` | BGA-6144 / LGA-6096 | **{results[3][2]}** |
-| **5** | **GARUDA MCU v1.0** (64-Core RISC-V IoT) | `garuda_mcu_top` | BGA-6144 / LGA-6096 | **{results[4][2]}** |
-
----
-
-## 4. Official Master Certification
-
-This certifies that all 5 chips in the **GARUDA SEMESTA Monorepo** designed by **Anggit Prasetyo Mituhu** are 100% verified inside real Docker containers across all 8 granular stages, synthesizable, and ready for silicon tapeout at target foundries.
+| Chip # | Chip Name & Domain | Top Verilog Module | V2.4.6-R1 Actual Status |
+| :---: | :--- | :--- | :---: |
 """
+    for idx, r in enumerate(results, 1):
+        report_md += f"| **{idx}** | **{r[0]}** | `{r[1]}` | **{r[2]}** |\n"
+
+    report_md += "\n---\n\n## 2. Note on Physical Design Signoff\n"
+    report_md += "Claims regarding 3.5 GHz OpenLane signoff are downgraded to **TARGET_ONLY** until an automated OpenROAD flow is definitively reproduced and included in this test suite with physical DRC/LVS artifacts.\n"
+
+    os.makedirs(os.path.dirname(REPORT_PATH), exist_ok=True)
     with open(REPORT_PATH, "w", encoding="utf-8") as f:
         f.write(report_md)
-    print(f"[MASTER REPORT SAVED] Saved to {REPORT_PATH}")
+    print(f"\n[MASTER REPORT SAVED] Saved to {REPORT_PATH}")
 
 if __name__ == "__main__":
-    run_strict_docker_test()
+    run_real_verification()

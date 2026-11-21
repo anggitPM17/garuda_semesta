@@ -1,0 +1,5 @@
+IR_ADD rd=r1, rs1=r0, imm=150
+IR_ADD rd=r2, rs1=r0, imm=350
+IR_ADD rd=r3, rs1=r1, rs2=r2
+IR_STORE rs1=r0, rs2=r3, imm=0x80000100
+IR_HALT

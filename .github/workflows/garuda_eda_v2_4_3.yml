@@ -1,0 +1,48 @@
+name: GARUDA SEMESTA — Docker-Native Real RTL Verification CI/CD V2.4.3
+
+on:
+  push:
+    branches: [ main, engineering/hardening-v2, engineering/hardening-v2.3.2, engineering/v2.4.0-real-rtl-docker, engineering/v2.4.1-real-rtl-docker, engineering/v2.4.2-docker-native-rtl-proof, engineering/v2.4.3-true-rtl-execution ]
+  pull_request:
+    branches: [ main, engineering/hardening-v2.3.2, engineering/v2.4.3-true-rtl-execution ]
+
+jobs:
+  verify_hardware_and_compiler_v243:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Build Docker EDA Workstation Container
+        run: |
+          docker build -t garuda-eda:v2.4.3 -f docker/eda/Dockerfile .
+
+      - name: Verify Toolchain in Container
+        run: |
+          docker run --rm garuda-eda:v2.4.3 iverilog -V || true
+          docker run --rm garuda-eda:v2.4.3 vvp -V || true
+
+      - name: Execute Compiler & RTL Verilog Simulation in Container
+        run: |
+          docker run --rm -v "${PWD}:/workspace" -w /workspace garuda-eda:v2.4.3 python3 src/verification/garuda_v242_runner.py
+
+      - name: Run Master Unit & Integration Test Suite in Container
+        run: |
+          docker run --rm -v "${PWD}:/workspace" -w /workspace garuda-eda:v2.4.3 python3 tests/run_all_unit_and_integration_tests.py
+
+      - name: Upload Simulation Artifacts & VCD Waveform
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: garuda-v243-rtl-verification-artifacts
+          path: |
+            build/
+            artifacts/
+            reports/
+            *.vcd

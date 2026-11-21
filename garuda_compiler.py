@@ -1,93 +1,133 @@
 #!/usr/bin/env python3
 """
-GARUDA Compiler & Assembler Toolchain v12.0 TITAN-TITANIUM (32-Core Hyperscale Edition)
+GARUDA Compiler & Assembler Toolchain v12.2 (64-bit TITANIUM ISA)
+Author & Chief System Architect: Anggit Prasetyo Mituhu
 Copyright (c) 2026 Anggit Prasetyo Mituhu. All rights reserved.
 Licensed under the Apache License, Version 2.0
 
-Translates GARUDA high-level instructions into 64-bit TITANIUM ISA
-for the 32-Core Ultra-SMP Hyperscale 3D Torus Network-on-Chip (NoC) Architecture.
-
+Translates GARUDA high-level instructions & assembly into 64-bit TITANIUM ISA:
 64-Bit Titanium ISA Format:
-[Opcode: 4 bit][PID: 5 bit][Target/Addr: 12 bit][Size: 11 bit][Data/Payload: 32 bit]
+[Opcode: 4 bit][RS1: 5 bit][RS2: 5 bit][Unused: 7 bit][RD: 5 bit][Unused: 6 bit][Data/Imm: 32 bit]
 """
 
 import sys
+import os
+import json
+import hashlib
 
 class GarudaCompiler:
     OPCODES = {
-        'NOP': 0,
-        'HALT': 0,
-        'ALLOC': 1,
-        'WRITE': 2,
-        'SEND_MSG': 2,
-        'READ': 3,
-        'GC_FREE': 4
+        'NOP': 0x0,
+        'ADD': 0x1,
+        'SUB': 0x2,
+        'LOAD': 0x3,
+        'STORE': 0x4,
+        'BEQ': 0x5,
+        'JMP': 0x6,
+        'MUL': 0x7,
+        'AND': 0x8,
+        'OR': 0x9,
+        'XOR': 0xA,
+        'HALT': 0xF,
+        'ALLOC': 0x1,
+        'WRITE': 0x4,
+        'READ': 0x3,
+        'GC_FREE': 0x0
     }
 
     def __init__(self):
         self.rom_binary = []
+        self.assembly_lines = []
+        self.ir_lines = []
 
-    def compile_instruction(self, opcode, pid, addr_or_target, size, data):
-        """
-        Membentuk bitstream 64-bit Titanium sesuai spesifikasi 32-Core NoC CPU Core v12.0.
-        - Opcode       : 4 bit  (bit 63..60)
-        - PID          : 5 bit  (bit 59..55, PID 0..31)
-        - Addr/Target  : 12 bit (bit 54..43)
-        - Size         : 11 bit (bit 42..32)
-        - Data/Payload : 32 bit (bit 31..0)
-        """
+    def compile_instruction(self, opcode, rs1=0, rs2=0, rd=0, imm=0):
         if isinstance(opcode, str):
             opcode = self.OPCODES.get(opcode.upper(), 0)
 
         binary_instruction = (
             ((opcode & 0xF) << 60) |
-            ((pid & 0x1F) << 55) |
-            ((addr_or_target & 0xFFF) << 43) |
-            ((size & 0x7FF) << 32) |
-            (data & 0xFFFFFFFF)
+            ((rs1 & 0x1F) << 55) |
+            ((rs2 & 0x1F) << 50) |
+            ((rd & 0x1F) << 38) |
+            (imm & 0xFFFFFFFF)
         )
         self.rom_binary.append(binary_instruction)
         return binary_instruction
 
-    def alloc(self, pid, size):
-        return self.compile_instruction('ALLOC', pid=pid, addr_or_target=0, size=size, data=0)
+    def compile_source_file(self, garuda_src_text, output_dir=None):
+        """Compiles GARUDA assembly source text into artifacts."""
+        lines = [l.strip() for l in garuda_src_text.strip().split('\n') if l.strip() and not l.strip().startswith('#')]
 
-    def write(self, pid, address, data):
-        return self.compile_instruction('WRITE', pid=pid, addr_or_target=address, size=0, data=data)
+        self.rom_binary = []
+        self.assembly_lines = []
+        self.ir_lines = []
 
-    def neuromorphic_spike_array(self, pid, synapse_mask):
-        return self.compile_instruction('WRITE', pid=pid, addr_or_target=0x046, size=0, data=synapse_mask)
+        for line in lines:
+            self.assembly_lines.append(line)
+            tokens = line.replace(',', ' ').replace('[', ' ').replace(']', ' ').replace('+', ' ').split()
+            if not tokens:
+                continue
 
-    def gemm_transformer_op(self, pid, matrix_data):
-        return self.compile_instruction('WRITE', pid=pid, addr_or_target=0x048, size=0, data=matrix_data)
+            mnemonic = tokens[0].upper()
+            op = self.OPCODES.get(mnemonic, 0)
 
-    def pqc_lattice_op(self, pid, input_data):
-        return self.compile_instruction('WRITE', pid=pid, addr_or_target=0x050, size=0, data=input_data)
+            if mnemonic in ['MOV', 'ADD']:
+                # Example: MOV r1, 150 -> ADD r1, r0, 150
+                # Example: ADD r3, r1, r2
+                rd = int(tokens[1].replace('r', '')) if 'r' in tokens[1] else 0
+                if len(tokens) == 3: # MOV r1, 150 -> ADD r0, r0, r1, 150
+                    imm_val = int(tokens[2], 0) if not 'r' in tokens[2] else 0
+                    rs1_val = int(tokens[2].replace('r', '')) if 'r' in tokens[2] else 0
+                    self.compile_instruction('ADD', rs1=rs1_val, rs2=0, rd=rd, imm=imm_val)
+                    self.ir_lines.append(f"IR_ADD rd=r{rd}, rs1=r{rs1_val}, imm={imm_val}")
+                elif len(tokens) == 4: # ADD r3, r1, r2
+                    rs1_val = int(tokens[2].replace('r', ''))
+                    rs2_val = int(tokens[3].replace('r', ''))
+                    self.compile_instruction('ADD', rs1=rs1_val, rs2=rs2_val, rd=rd, imm=0)
+                    self.ir_lines.append(f"IR_ADD rd=r{rd}, rs1=r{rs1_val}, rs2=r{rs2_val}")
 
-    def vector_simd_op(self, pid, operand_data):
-        return self.compile_instruction('WRITE', pid=pid, addr_or_target=0x054, size=0, data=operand_data)
+            elif mnemonic == 'STORE':
+                # Example: STORE r3, [r0 + 0x80000100] -> STORE rs1=0, rs2=3, imm=0x80000100
+                rs2_val = int(tokens[1].replace('r', ''))
+                rs1_val = int(tokens[2].replace('r', '')) if 'r' in tokens[2] else 0
+                imm_val = int(tokens[3], 0) if len(tokens) > 3 else 0
+                self.compile_instruction('STORE', rs1=rs1_val, rs2=rs2_val, rd=0, imm=imm_val)
+                self.ir_lines.append(f"IR_STORE rs1=r{rs1_val}, rs2=r{rs2_val}, imm=0x{imm_val:08X}")
 
-    def aes_encrypt(self, pid, key_data):
-        return self.compile_instruction('WRITE', pid=pid, addr_or_target=0x056, size=0, data=key_data)
+            elif mnemonic == 'HALT':
+                self.compile_instruction('HALT', 0, 0, 0, 0)
+                self.ir_lines.append("IR_HALT")
 
-    def print_uart(self, pid, char):
-        ascii_code = ord(char) if isinstance(char, str) else char
-        return self.compile_instruction('WRITE', pid=pid, addr_or_target=0x062, size=0, data=ascii_code)
+        if output_dir:
+            os.makedirs(output_dir, exist_ok=True)
+            with open(os.path.join(output_dir, "source.garuda"), "w", encoding="utf-8") as f:
+                f.write(garuda_src_text)
 
-    def send_mailbox(self, src_pid, target_pid, payload):
-        return self.compile_instruction('SEND_MSG', pid=src_pid, addr_or_target=0x060 + (target_pid & 0x1F), size=0, data=payload)
+            with open(os.path.join(output_dir, "source.ir"), "w", encoding="utf-8") as f:
+                f.write("\n".join(self.ir_lines) + "\n")
 
-    def gc_free(self, pid, size):
-        return self.compile_instruction('GC_FREE', pid=pid, addr_or_target=0, size=size, data=0)
+            with open(os.path.join(output_dir, "source.asm"), "w", encoding="utf-8") as f:
+                f.write("\n".join(self.assembly_lines) + "\n")
 
-    def halt(self, pid=0):
-        return self.compile_instruction('HALT', pid=pid, addr_or_target=0, size=0, data=0)
+            hex_lines = [f"{inst:016X}" for inst in self.rom_binary]
+            with open(os.path.join(output_dir, "source.hex"), "w", encoding="utf-8") as f:
+                f.write("\n".join(hex_lines) + "\n")
+
+            manifest = {
+                "compiler": "garuda_compiler.py v12.2",
+                "instructions_compiled": len(self.rom_binary),
+                "binary_sha256": hashlib.sha256("\n".join(hex_lines).encode()).hexdigest()
+            }
+            with open(os.path.join(output_dir, "compiler_manifest.json"), "w", encoding="utf-8") as f:
+                json.dump(manifest, f, indent=2)
+
+        return self.rom_binary
 
     def generate_verilog_rom(self, output_file=None):
         lines = [
             "// =========================================================",
-            "// AUTO-GENERATED GARUDA ROM BY AI COMPILER AGENT v12.0 TITAN-TITANIUM",
-            "// Target Architecture: GARUDA SEMESTA 32-Core LGA-6096 3D Torus ASIC (64-bit Bitstream)",
+            "// AUTO-GENERATED GARUDA ROM BY AI COMPILER AGENT v12.2 TITAN-TITANIUM",
+            "// Target Architecture: GARUDA SEMESTA 32-Core ASIC (64-bit Bitstream)",
             "// ========================================================="
         ]
         for idx, inst in enumerate(self.rom_binary):
@@ -97,19 +137,18 @@ class GarudaCompiler:
         if output_file:
             with open(output_file, "w", encoding="utf-8") as f:
                 f.write(output_str + "\n")
-            print(f"Generated Verilog ROM saved to: {output_file}")
         return output_str
 
 
 if __name__ == "__main__":
     compiler = GarudaCompiler()
-    compiler.alloc(pid=0, size=4)
-    compiler.neuromorphic_spike_array(pid=0, synapse_mask=0xFFFFFFFF)
-    compiler.gemm_transformer_op(pid=0, matrix_data=0x00020003)
-    compiler.pqc_lattice_op(pid=31, input_data=0x12345678)
-    compiler.print_uart(pid=0, char='G')
-    compiler.send_mailbox(src_pid=0, target_pid=31, payload=0xDEADBEEF)
-    compiler.gc_free(pid=0, size=4)
-    compiler.halt(pid=0)
-
-    print(compiler.generate_verilog_rom())
+    src = """
+    MOV r1, 150
+    MOV r2, 350
+    ADD r3, r1, r2
+    STORE r3, [r0 + 0x80000100]
+    HALT
+    """
+    out_dir = os.path.join(os.path.dirname(__file__), "reports", "verification_v22", "compiler_to_sram")
+    insts = compiler.compile_source_file(src, output_dir=out_dir)
+    print(f"Compiled {len(insts)} instructions to {out_dir}")

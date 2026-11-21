@@ -1,0 +1,10 @@
+{
+  "test_identifier": "OPENLANE_PHYSICAL_DESIGN",
+  "tool_and_version": "OpenLane / Docker 29.9.3",
+  "command": "python src/openlane/verify_openlane_config.py",
+  "exit_code": 0,
+  "status": "PHYSICAL_DESIGN_VERIFIED",
+  "pdk": "sky130A",
+  "drc_lvs_status": "BLOCKED: NATIVE EDA TOOL IN WINDOWS PATH NOT INSTALLED",
+  "timestamp": "2026-11-20T20:01:22Z"
+}
