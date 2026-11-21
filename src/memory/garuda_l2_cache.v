@@ -1,5 +1,5 @@
 // =========================================================================
-// GARUDA SEMESTA — L2 CACHE SUBSYSTEM (v12.4.6-R2)
+// GARUDA SEMESTA — L2 CACHE SUBSYSTEM (v12.4.6-R2-FIXED)
 // Author & Chief System Architect: Anggit Prasetyo Mituhu
 // Copyright (c) 2026 Anggit Prasetyo Mituhu. All rights reserved.
 // Licensed under the Apache License, Version 2.0
@@ -8,6 +8,7 @@
 // - 32-bit Address, 32-bit Data Bus
 // - Per-Word Valid Vector (valid_array[WAYS][SETS][7:0])
 // - High-speed zero-lag L2 Cache state machine
+// - Fixed LRU way allocation per line tag
 // =========================================================================
 
 `timescale 1ns / 1ps
@@ -62,10 +63,20 @@ module garuda_l2_cache #(
     reg [WORDS_PER_LINE-1:0]    valid_array [0:WAYS-1][0:SETS-1];
     reg [DATA_WIDTH-1:0]        data_array  [0:WAYS-1][0:SETS-1][0:WORDS_PER_LINE-1];
     reg [1:0]                   lru_way     [0:SETS-1]; // Round-Robin pointer per set
+    reg [1:0]                   refill_way;
 
     wire [TAG_BITS-1:0]   req_tag     = l1_req_addr[ADDR_WIDTH-1 : INDEX_BITS+OFFSET_BITS];
     wire [INDEX_BITS-1:0] req_set     = l1_req_addr[INDEX_BITS+OFFSET_BITS-1 : OFFSET_BITS];
     wire [2:0]            word_offset = l1_req_addr[OFFSET_BITS-1 : 2];
+
+    // Check if line tag is already allocated in any way
+    wire way0_tag_match = (tag_array[0][req_set] == req_tag) && (|valid_array[0][req_set]);
+    wire way1_tag_match = (tag_array[1][req_set] == req_tag) && (|valid_array[1][req_set]);
+    wire way2_tag_match = (tag_array[2][req_set] == req_tag) && (|valid_array[2][req_set]);
+    wire way3_tag_match = (tag_array[3][req_set] == req_tag) && (|valid_array[3][req_set]);
+
+    wire tag_allocated = way0_tag_match || way1_tag_match || way2_tag_match || way3_tag_match;
+    wire [1:0] allocated_way = way0_tag_match ? 2'b00 : (way1_tag_match ? 2'b01 : (way2_tag_match ? 2'b10 : 2'b11));
 
     // 4-Way Parallel Hit Comparator (Per-Word Valid Bit Vector Check)
     wire way0_hit = valid_array[0][req_set][word_offset] && (tag_array[0][req_set] == req_tag);
@@ -92,6 +103,7 @@ module garuda_l2_cache #(
             parity_error_detected <= 1'b0;
             mem_req_valid <= 1'b0;
             mem_write_en <= 1'b0;
+            refill_way <= 2'b00;
 
             for (s = 0; s < SETS; s = s + 1) begin
                 lru_way[s] <= 2'b00;
@@ -123,6 +135,16 @@ module garuda_l2_cache #(
                         l1_backpressure <= 1'b1;
                         mem_req_valid <= 1'b1;
                         mem_write_en <= l1_req_write_en;
+
+                        if (any_hit) begin
+                            refill_way <= hit_way;
+                        end else if (tag_allocated) begin
+                            refill_way <= allocated_way;
+                        end else begin
+                            refill_way <= lru_way[req_set];
+                            lru_way[req_set] <= lru_way[req_set] + 1'b1;
+                        end
+
                         if (any_hit && l1_req_write_en) begin
                             data_array[hit_way][req_set][word_offset] <= l1_req_write_data;
                             valid_array[hit_way][req_set][word_offset] <= 1'b1;
@@ -132,11 +154,10 @@ module garuda_l2_cache #(
 
                 ST_REFILL: begin
                     if (mem_resp_valid) begin
-                        w = lru_way[req_set];
+                        w = refill_way;
                         tag_array[w][req_set] <= req_tag;
                         valid_array[w][req_set][word_offset] <= 1'b1;
                         data_array[w][req_set][word_offset] <= (l1_req_write_en) ? l1_req_write_data : mem_read_data;
-                        lru_way[req_set] <= lru_way[req_set] + 1'b1;
                         mem_req_valid <= 1'b0;
                     end
                 end

@@ -138,6 +138,7 @@ module garuda_l1_icache #(
                         end else begin
                             refill_word_cnt <= refill_word_cnt + 1'b1;
                             mem_req_addr <= latched_line_base + ((refill_word_cnt + 1'b1) * 8);
+                            mem_req_valid <= 1'b1; // Explicitly request next word
                         end
                     end
                 end

@@ -23,18 +23,26 @@ module garuda_pc #(
     input  wire [PC_WIDTH-1:0] branch_target,
     input  wire                exception_taken,
     input  wire [PC_WIDTH-1:0] exception_vector,
-    output reg  [PC_WIDTH-1:0] pc
+    output wire [PC_WIDTH-1:0] pc
 );
+
+    reg [PC_WIDTH-1:0] pc_reg;
+
+    initial begin
+        pc_reg = RESET_VECTOR;
+    end
+
+    assign pc = pc_reg;
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            pc <= RESET_VECTOR;
-        end else if (exception_taken) begin
-            pc <= exception_vector;
-        end else if (branch_taken) begin
-            pc <= branch_target;
-        end else if (!stall) begin
-            pc <= pc + 32'd8; // 64-bit (8-byte) instruction word stride
+            pc_reg <= RESET_VECTOR;
+        end else if (exception_taken === 1'b1) begin
+            pc_reg <= exception_vector;
+        end else if (branch_taken === 1'b1) begin
+            pc_reg <= branch_target;
+        end else if (stall === 1'b0) begin
+            pc_reg <= pc_reg + 32'd8; // 64-bit (8-byte) instruction word stride
         end
     end
 

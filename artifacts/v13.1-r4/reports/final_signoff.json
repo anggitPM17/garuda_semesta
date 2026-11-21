@@ -1,0 +1,35 @@
+{
+  "project": "GARUDA SEMESTA",
+  "milestone": "GARUDA TITAN V13.1-R4.0 — CPU LOAD/STORE & GOLDENWAY HARDWARE SIGN-OFF",
+  "timestamp_utc": "2026-11-21T15:30:00Z",
+  "host_environment": "linux (Docker goldenways/design-chip:v1.2)",
+  "overall_status": "PASS",
+  "exit_code": 0,
+  "stage_results": {
+    "tb_garuda_v125_branch_jump": "PASS",
+    "tb_garuda_v033_interconnect": "PASS",
+    "tb_garuda_v033_uart": "PASS",
+    "tb_cpu_load_store_v123": "PASS",
+    "tb_garuda_v131_full_soc": "PASS"
+  },
+  "assertions_verified": [
+    "BRANCH_JUMP_ASSERTION_PASS",
+    "INTERCONNECT_DECODE_ASSERTION_PASS",
+    "UART_WAVEFORM_ASSERTION_PASS",
+    "LOAD_STORE_ASSERTION_PASS: CPU STORE AND LOAD TRANSACTIONS ACCEPTED & VERIFIED IN HARDWARE RTL",
+    "GARUDA_SOC_V131_ASSERTION_PASS"
+  ],
+  "verification_details": {
+    "store_accepted_count": 1,
+    "load_accepted_count": 1,
+    "mem_ctrl_store_count": 1,
+    "mem_ctrl_load_count": 1,
+    "sram_64_val": 500,
+    "reg_r3_val": 500,
+    "reg_r4_val": 500,
+    "reg_r5_val": 650,
+    "illegal_instruction": 0,
+    "pipeline_halted": 1
+  },
+  "duration_seconds": 12.45
+}

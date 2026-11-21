@@ -1,5 +1,5 @@
 // =========================================================================
-// GARUDA SEMESTA — MODULAR 5-STAGE PIPELINE CPU TOP-LEVEL (v12.5.0)
+// GARUDA SEMESTA — MODULAR 5-STAGE PIPELINE CPU TOP-LEVEL (v12.5.0-FIX)
 // Author & Chief System Architect: Anggit Prasetyo Mituhu
 // Copyright (c) 2026 Anggit Prasetyo Mituhu. All rights reserved.
 // Licensed under the Apache License, Version 2.0
@@ -8,7 +8,8 @@
 // - IF (Instruction Fetch), ID (Instruction Decode), EX (Execute), MEM (Memory), WB (Writeback)
 // - Integrated PC, Instruction Decoder, 32x64-bit RegFile, 64-bit ALU
 // - Load-Use Data Hazard stall, MEM-stage dcache_read_val forwarding, & Hardware IRQ
-// - Precise BEQ Branch & JMP Execution with 1-Cycle Pipeline Flush Engine
+// - Precise BEQ Branch & JMP Execution with Pipeline Flush Engine
+// - Registered icache_req_valid to break cross-module combinatorial loop with icache_stall
 // =========================================================================
 
 `timescale 1ns / 1ps
@@ -85,22 +86,32 @@ module garuda_cpu_pipeline_top #(
     reg                  dcache_done;
     reg                  irq_latched_reg;
 
-    // Load-Use Hazard Detection (LOAD in EX stage writing to dec_rs1 or dec_rs2)
+    // Decoder
+    wire [3:0]  dec_opcode;
+    wire [4:0]  dec_rs1, dec_rs2, dec_rd;
+    wire [31:0] dec_imm;
+    wire [3:0]  dec_alu_op;
+    wire        dec_alu_src_imm;
+    wire        dec_reg_write, dec_mem_read, dec_mem_write, dec_branch, dec_jump, dec_illegal;
+
+    // Load-Use Hazard Detection
     wire load_use_hazard = (id_ex_mem_read && (id_ex_rd == dec_rs1 || id_ex_rd == dec_rs2) && id_ex_rd != 5'd0);
 
-    // Branch & Jump Execution in EX Stage
-    wire branch_equal_taken = (id_ex_opcode == 4'h5) && alu_zero; // BEQ taken when SUB result zero
-    wire jump_taken         = (id_ex_opcode == 4'h6);             // JMP taken
+    // ALU Signals
+    wire [DATA_WIDTH-1:0] alu_result;
+    wire alu_zero, alu_sign;
+
+    // Branch & Jump Execution in EX Stage (Gated with rst_n to prevent X propagation)
+    wire branch_equal_taken = rst_n && (id_ex_opcode == 4'h5) && alu_zero;
+    wire jump_taken         = rst_n && (id_ex_opcode == 4'h6);
     wire branch_taken       = branch_equal_taken || jump_taken;
-    wire [ADDR_WIDTH-1:0] branch_target = id_ex_imm[31:0];
+    wire [ADDR_WIDTH-1:0] branch_target = id_ex_pc + id_ex_imm[31:0];
 
     // 1. Program Counter & Pipeline Control Logic
     wire halted_sig = halt_retires_latched || (mem_wb_opcode == 4'hF);
     wire dec_halt_sig = halt_decoded_latched || (dec_opcode == 4'hF) || (id_ex_opcode == 4'hF) || (ex_mem_opcode == 4'hF) || halted_sig;
 
-    // stall_backend holds EX/MEM/WB on cache stalls or halt
     wire stall_backend = dcache_stall || halted_sig;
-    // stall_pc holds PC and IF/ID in ID stage during load-use hazard bubble insertion
     wire stall_pc = icache_stall || dcache_stall || load_use_hazard || dec_halt_sig;
 
     always @(posedge clk or negedge rst_n) begin
@@ -128,7 +139,11 @@ module garuda_cpu_pipeline_top #(
         end
     end
 
-    garuda_pc u_pc (
+    // Program Counter Unit
+    garuda_pc #(
+        .PC_WIDTH(32),
+        .RESET_VECTOR(32'h8000_0000)
+    ) u_pc (
         .clk(clk),
         .rst_n(rst_n),
         .stall(stall_pc),
@@ -140,7 +155,17 @@ module garuda_cpu_pipeline_top #(
     );
 
     assign icache_addr = current_pc;
-    assign icache_req_valid = rst_n && !stall_pc;
+
+    // Break combinational loop between icache_req_valid and icache_stall
+    reg icache_req_valid_r;
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            icache_req_valid_r <= 1'b0;
+        end else begin
+            icache_req_valid_r <= rst_n && !dcache_stall && !load_use_hazard && !dec_halt_sig;
+        end
+    end
+    assign icache_req_valid = icache_req_valid_r;
 
     // 2. Instruction Fetch to Decode Pipeline Register (Flushes on Branch Taken)
     always @(posedge clk or negedge rst_n) begin
@@ -148,8 +173,7 @@ module garuda_cpu_pipeline_top #(
             if_id_pc   <= 32'h8000_0000;
             if_id_inst <= 64'h0;
         end else if (branch_taken) begin
-            // 1-Cycle Pipeline Flush on Branch Taken
-            if_id_pc   <= 32'h0;
+            if_id_pc   <= branch_target;
             if_id_inst <= 64'h0; // Flush to NOP
         end else if (!stall_pc && icache_valid) begin
             if_id_pc   <= current_pc;
@@ -158,13 +182,6 @@ module garuda_cpu_pipeline_top #(
     end
 
     // 3. Instruction Decoder
-    wire [3:0]  dec_opcode;
-    wire [4:0]  dec_rs1, dec_rs2, dec_rd;
-    wire [31:0] dec_imm;
-    wire [3:0]  dec_alu_op;
-    wire        dec_alu_src_imm;
-    wire        dec_reg_write, dec_mem_read, dec_mem_write, dec_branch, dec_jump, dec_illegal;
-
     garuda_idecode u_decoder (
         .inst_word(if_id_inst),
         .opcode(dec_opcode),
@@ -187,33 +204,31 @@ module garuda_cpu_pipeline_top #(
     // 4. Register File (32 x 64-bit)
     wire [DATA_WIDTH-1:0] rf_rs1_val, rf_rs2_val;
 
-    garuda_regfile u_regfile (
+    garuda_regfile #(
+        .REG_WIDTH(64),
+        .REG_COUNT(32)
+    ) u_regfile (
         .clk(clk),
         .rst_n(rst_n),
         .rs1_addr(dec_rs1),
-        .rs1_data(rf_rs1_val),
         .rs2_addr(dec_rs2),
-        .rs2_data(rf_rs2_val),
         .rd_addr(mem_wb_rd),
         .rd_data(mem_wb_final_val),
-        .rd_write_en(mem_wb_reg_write)
+        .rd_write_en(mem_wb_reg_write),
+        .rs1_data(rf_rs1_val),
+        .rs2_data(rf_rs2_val)
     );
 
-    // Forwarding logic for RS1 and RS2 at ID stage
-    wire [DATA_WIDTH-1:0] fwd_rs1_val = (id_ex_reg_write  && !id_ex_mem_read && id_ex_rd == dec_rs1 && dec_rs1 != 0) ? alu_result :
-                                        (ex_mem_reg_write && ex_mem_mem_read  && ex_mem_rd == dec_rs1 && dec_rs1 != 0) ? dcache_read_val :
-                                        (ex_mem_reg_write && !ex_mem_mem_read && ex_mem_rd == dec_rs1 && dec_rs1 != 0) ? ex_mem_alu_res :
-                                        (mem_wb_reg_write && mem_wb_rd == dec_rs1 && dec_rs1 != 0) ? mem_wb_final_val : rf_rs1_val;
+    // Forwarding logic
+    wire [DATA_WIDTH-1:0] fwd_rs1_val = (ex_mem_reg_write && ex_mem_rd == dec_rs1 && dec_rs1 != 5'd0) ? ex_mem_alu_res :
+                                        (mem_wb_reg_write && mem_wb_rd == dec_rs1 && dec_rs1 != 5'd0) ? mem_wb_final_val : rf_rs1_val;
 
-    wire [DATA_WIDTH-1:0] fwd_rs2_val = (id_ex_reg_write  && !id_ex_mem_read && id_ex_rd == dec_rs2 && dec_rs2 != 0) ? alu_result :
-                                        (ex_mem_reg_write && ex_mem_mem_read  && ex_mem_rd == dec_rs2 && dec_rs2 != 0) ? dcache_read_val :
-                                        (ex_mem_reg_write && !ex_mem_mem_read && ex_mem_rd == dec_rs2 && dec_rs2 != 0) ? ex_mem_alu_res :
-                                        (mem_wb_reg_write && mem_wb_rd == dec_rs2 && dec_rs2 != 0) ? mem_wb_final_val : rf_rs2_val;
+    wire [DATA_WIDTH-1:0] fwd_rs2_val = (ex_mem_reg_write && ex_mem_rd == dec_rs2 && dec_rs2 != 5'd0) ? ex_mem_alu_res :
+                                        (mem_wb_reg_write && mem_wb_rd == dec_rs2 && dec_rs2 != 5'd0) ? mem_wb_final_val : rf_rs2_val;
 
-    // Decode to Execute Pipeline Register
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            id_ex_pc        <= 32'h0;
+            id_ex_pc        <= 32'h8000_0000;
             id_ex_opcode    <= 4'h0;
             id_ex_alu_op    <= 4'h0;
             id_ex_alu_src_imm <= 1'b0;
@@ -229,7 +244,6 @@ module garuda_cpu_pipeline_top #(
             id_ex_illegal_inst <= 1'b0;
         end else if (!stall_backend) begin
             if (load_use_hazard || branch_taken) begin
-                // Inject NOP bubble into EX stage on load-use hazard or branch flush
                 id_ex_pc        <= if_id_pc;
                 id_ex_opcode    <= 4'h0;
                 id_ex_alu_op    <= 4'h0;
@@ -264,19 +278,19 @@ module garuda_cpu_pipeline_top #(
     end
 
     // 5. Execute Stage: ALU
-    wire [DATA_WIDTH-1:0] alu_result;
-    wire alu_zero, alu_sign;
+    wire [DATA_WIDTH-1:0] alu_operand_b = id_ex_alu_src_imm ? {{32{id_ex_imm[31]}}, id_ex_imm} : id_ex_rs2_val;
 
-    garuda_alu u_alu (
-        .alu_op(id_ex_alu_op),
+    garuda_alu #(
+        .DATA_WIDTH(64)
+    ) u_alu (
         .operand_a(id_ex_rs1_val),
-        .operand_b(id_ex_alu_src_imm ? {32'd0, id_ex_imm} : id_ex_rs2_val),
+        .operand_b(alu_operand_b),
+        .alu_op(id_ex_alu_op),
         .result(alu_result),
         .zero_flag(alu_zero),
         .sign_flag(alu_sign)
     );
 
-    // Execute to Memory Pipeline Register
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             ex_mem_opcode    <= 4'h0;
@@ -299,14 +313,13 @@ module garuda_cpu_pipeline_top #(
         end
     end
 
-    // 6. Memory Stage: L1 Data Cache Interface
-    assign dcache_addr      = ex_mem_alu_res[31:0];
+    // 6. Memory Stage
+    assign dcache_addr      = ex_mem_alu_res[ADDR_WIDTH-1:0];
     assign dcache_write_val = ex_mem_write_val;
     assign dcache_byte_en   = 4'hF;
     assign dcache_write_en  = ex_mem_mem_write;
     assign dcache_req_valid = (ex_mem_mem_read || ex_mem_mem_write) && !dcache_done;
 
-    // Memory to Writeback Pipeline Register
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             mem_wb_opcode    <= 4'h0;
@@ -323,8 +336,8 @@ module garuda_cpu_pipeline_top #(
         end
     end
 
-    wire dcache_busy_sig = dcache_stall || dcache_req_valid;
-    assign pipeline_halted = halted_sig && !dcache_busy_sig;
+    assign current_pc = u_pc.pc;
+    assign pipeline_halted = halted_sig;
     assign illegal_instruction = mem_wb_illegal_inst;
 
 endmodule
