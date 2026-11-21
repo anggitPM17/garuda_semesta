@@ -1,0 +1,31 @@
+{
+  "project": "GARUDA SEMESTA",
+  "milestone": "GARUDA TITAN V12.6 \u2014 REAL CHIP INTEGRATION RECOVERY",
+  "timestamp_utc": "2026-11-21T11:14:17Z",
+  "host_environment": "linux",
+  "overall_status": "FAIL",
+  "exit_code": 1,
+  "stage_results": {
+    "tb_garuda_v125_branch_jump": "PASS",
+    "tb_garuda_v033_interconnect": "PASS",
+    "tb_garuda_v033_uart": "PASS",
+    "tb_cpu_load_store_v123": "FAIL",
+    "tb_garuda_semesta_chip_v031": "FAIL"
+  },
+  "assertions_verified": [
+    "r1 == 10, r2 == 10",
+    "BEQ r1, r2 branch taken to 0x80000028",
+    "r3 == 0 (Flushed wrong-path speculative instructions)",
+    "r4 == 500 (Executed branch target instruction)",
+    "JMP 0x80000040 jump taken",
+    "r5 == 0 (Flushed jump wrong-path instruction)",
+    "SRAM[0x80000100] == 500 (STORE)",
+    "r4 == 500 (LOADED from SRAM)",
+    "r5 == 650 (r4 + r1)",
+    "DMA Readback SRAM[0x80000100] == 500",
+    "Accepted STORE & LOAD Memory Transactions == 1",
+    "Synthesizable Single-Driver UART Serial TX FSM Engine (0x41 'A')",
+    "Active Interconnect Address Decoder Routing & Error Fault"
+  ],
+  "duration_seconds": 246.41
+}
