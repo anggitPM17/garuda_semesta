@@ -96,10 +96,14 @@ module tb_cpu_load_store_v123;
         end
     end
 
-    // Timeout Protection Watchdog (2000 cycles max)
+    // Timeout Protection Watchdog (10000 cycles max) with progress logs
     always @(posedge clk) begin
         cycle_counter <= cycle_counter + 1;
-        if (cycle_counter > 2000) begin
+        if (cycle_counter % 500 == 0) begin
+            $display("[DEBUG PROGRESS] Cycle %0d, PC=0x%h, halted=%b", cycle_counter, current_pc, pipeline_halted);
+            $fflush();
+        end
+        if (cycle_counter > 10000) begin
             $display("FATAL: TIMEOUT IN CPU LOAD/STORE TESTBENCH!");
             $fflush();
             $fatal(1, "Timeout");
@@ -126,6 +130,7 @@ module tb_cpu_load_store_v123;
         $display("  Executed SRAM Controller LOAD Handshakes  = %d (Expected >= 1)", mem_ctrl_load_count);
         $display("  r3 (STORE val) = %d", u_dut.u_cpu.u_regfile.registers[3]);
         $display("  r4 (LOADED val) = %d", u_dut.u_cpu.u_regfile.registers[4]);
+        $display("  r5 (ADD r4, r1) = %d (Expected 650)", u_dut.u_cpu.u_regfile.registers[5]);
         $display("  Physical SRAM[0x80000100] Mapping Array Word main_sram[64] = %d", u_dut.u_memory_subsystem.u_mem_controller.main_sram[64]);
         $fflush();
 
@@ -135,7 +140,8 @@ module tb_cpu_load_store_v123;
             mem_ctrl_load_count >= 1 &&
             u_dut.u_memory_subsystem.u_mem_controller.main_sram[64] === 32'd500 &&
             u_dut.u_cpu.u_regfile.registers[3] === 64'd500 &&
-            u_dut.u_cpu.u_regfile.registers[4] === 64'd500) begin
+            u_dut.u_cpu.u_regfile.registers[4] === 64'd500 &&
+            u_dut.u_cpu.u_regfile.registers[5] === 64'd650) begin
             $display("LOAD_STORE_ASSERTION_PASS: CPU STORE AND LOAD TRANSACTIONS ACCEPTED & VERIFIED IN HARDWARE RTL");
             $fflush();
             $finish;

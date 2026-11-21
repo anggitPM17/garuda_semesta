@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 """
-GARUDA SEMESTA — TITAN V13.1 MASTER CHIP EXECUTION & SIGN-OFF RUNNER
+GARUDA SEMESTA — TITAN V13.1-R3.2 FAILURE-DRIVEN RECOVERY MASTER RUNNER
 Author & Chief System Architect: Anggit Prasetyo Mituhu
 Copyright (c) 2026 Anggit Prasetyo Mituhu. All rights reserved.
 Licensed under the Apache License, Version 2.0
 
-Master Single-Source-of-Truth Orchestrator for Hardware Verification:
+Master Verification Orchestrator with Strict Fail-Fast & Truthful Sign-Off:
 - STAGE 1: Real Compiler Pipeline (garuda_compiler.py -> program.hex)
 - STAGE 2: Real BEQ & JMP Branch Execution Engine (tb_garuda_v125_branch_jump)
 - STAGE 3: Interconnect Address Decoder & FSM Test (tb_garuda_v033_interconnect)
-- STAGE 4: Synthesizable UART Waveform Test (tb_garuda_v033_uart)
+- STAGE 4: Synthesizable Bit-Level UART Waveform Test (tb_garuda_v033_uart)
 - STAGE 5: CPU LOAD/STORE Transaction Acceptance Test (tb_cpu_load_store_v123)
-- STAGE 6: Full SoC Integration Test (tb_garuda_v131_full_soc)
-- STAGE 7: Master Reports Generation (artifacts/v13.1/)
+- STAGE 6: Full SoC Integration Test (tb_garuda_v131_full_soc) - Fails fast if STAGE 5 fails.
+- STAGE 7: Truthful Sign-Off JSON & Diagnostic Logs Generation (artifacts/v13.1-r3/)
 """
 
 import sys
@@ -29,21 +29,21 @@ if PROJECT_DIR not in sys.path:
 
 from src.verification.garuda_compiler_pipeline import run_garuda_compiler_pipeline
 
-logging.basicConfig(level=logging.INFO, format="[GARUDA V13.1 RUNNER] %(levelname)s: %(message)s")
+logging.basicConfig(level=logging.INFO, format="[GARUDA V13.1-R3.2 RUNNER] %(levelname)s: %(message)s")
 
 BUILD_DIR = os.path.join(PROJECT_DIR, "build")
-V131_ARTIFACTS_DIR = os.path.join(PROJECT_DIR, "artifacts", "v13.1")
-REPORTS_DIR = os.path.join(V131_ARTIFACTS_DIR, "reports")
-LOGS_DIR = os.path.join(V131_ARTIFACTS_DIR, "logs")
+V131R3_ARTIFACTS_DIR = os.path.join(PROJECT_DIR, "artifacts", "v13.1-r3")
+REPORTS_DIR = os.path.join(V131R3_ARTIFACTS_DIR, "reports")
+LOGS_DIR = os.path.join(V131R3_ARTIFACTS_DIR, "logs")
 
-class GarudaV131MasterRunner:
+class GarudaV131R32MasterRunner:
     def __init__(self):
         os.makedirs(BUILD_DIR, exist_ok=True)
         os.makedirs(REPORTS_DIR, exist_ok=True)
         os.makedirs(LOGS_DIR, exist_ok=True)
 
-        self.iverilog_path = shutil.which("iverilog")
-        self.vvp_path = shutil.which("vvp")
+        self.iverilog_path = shutil.which("iverilog") or "/usr/local/bin/iverilog"
+        self.vvp_path = shutil.which("vvp") or "/usr/bin/vvp" or "/usr/local/bin/vvp"
 
     def log(self, msg, level="info"):
         if level == "info":
@@ -58,9 +58,13 @@ class GarudaV131MasterRunner:
         cmd_c = [self.iverilog_path, "-g2012", "-Wall", "-s", tb_name, "-o", out_vvp] + rtl_files + [tb_file]
         res_c = subprocess.run(cmd_c, capture_output=True, text=True, cwd=PROJECT_DIR)
 
+        log_path = os.path.join(LOGS_DIR, f"{tb_name}.log")
+
         if res_c.returncode != 0:
             self.log(f"[{tb_name}] Compilation FAILED:\n{res_c.stderr}", level="error")
-            return False
+            with open(log_path, "w", encoding="utf-8") as f:
+                f.write(f"=== COMPILATION STDOUT ===\n{res_c.stdout}\n=== COMPILATION STDERR ===\n{res_c.stderr}\n")
+            return False, res_c.returncode, "COMPILE_FAIL"
 
         self.log(f"Simulating '{tb_name}' via VVP...")
         cmd_s = [self.vvp_path, out_vvp]
@@ -68,24 +72,25 @@ class GarudaV131MasterRunner:
             res_s = subprocess.run(cmd_s, capture_output=True, text=True, timeout=120, cwd=PROJECT_DIR)
         except subprocess.TimeoutExpired:
             self.log(f"[{tb_name}] Simulation TIMEOUT after 120s!", level="error")
-            return False
+            with open(log_path, "w", encoding="utf-8") as f:
+                f.write(f"=== SIMULATION TIMEOUT AFTER 120s ===\n")
+            return False, -1, "TIMEOUT"
 
-        log_path = os.path.join(LOGS_DIR, f"{tb_name}.log")
         with open(log_path, "w", encoding="utf-8") as f:
-            f.write(res_s.stdout + "\n" + res_s.stderr)
+            f.write(f"=== SIMULATION STDOUT ===\n{res_s.stdout}\n=== SIMULATION STDERR ===\n{res_s.stderr}\n")
 
         passed = (res_s.returncode == 0 and pass_marker in res_s.stdout)
         if passed:
             self.log(f"[{tb_name}] PASSED: Found marker '{pass_marker}'")
+            return True, res_s.returncode, "PASS"
         else:
-            self.log(f"[{tb_name}] FAILED: Missing marker '{pass_marker}'", level="error")
-
-        return passed
+            self.log(f"[{tb_name}] FAILED: Missing marker '{pass_marker}' or nonzero exit code ({res_s.returncode})", level="error")
+            return False, res_s.returncode, "FAIL"
 
     def run_v131_pipeline(self):
         start_t = time.time()
         print("=========================================================================")
-        print("GARUDA SEMESTA — TITAN V13.1 FAST TRACK HARDWARE EXECUTION RUNNER")
+        print("GARUDA SEMESTA — TITAN V13.1-R3.2 FAILURE-DRIVEN REPAIR RUNNER")
         print("Architect & Author: Anggit Prasetyo Mituhu")
         print("=========================================================================\n")
         sys.stdout.flush()
@@ -105,17 +110,17 @@ class GarudaV131MasterRunner:
             os.path.join(PROJECT_DIR, "src", "cpu", "garuda_cpu_pipeline_top.v")
         ]
         branch_tb = os.path.join(PROJECT_DIR, "tests", "cpu", "tb_garuda_v125_branch_jump.v")
-        ok_branch = self.run_single_tb("tb_garuda_v125_branch_jump", branch_tb, branch_rtl, "BRANCH_JUMP_ASSERTION_PASS")
+        ok_branch, code_branch, status_branch = self.run_single_tb("tb_garuda_v125_branch_jump", branch_tb, branch_rtl, "BRANCH_JUMP_ASSERTION_PASS")
 
         # STAGE 3: Interconnect FSM Test
         interconnect_rtl = [os.path.join(PROJECT_DIR, "src", "chip", "garuda_chip_interconnect.v")]
         interconnect_tb = os.path.join(PROJECT_DIR, "tests", "chip", "tb_garuda_v033_interconnect.v")
-        ok_interconnect = self.run_single_tb("tb_garuda_v033_interconnect", interconnect_tb, interconnect_rtl, "INTERCONNECT_DECODE_ASSERTION_PASS")
+        ok_interconnect, code_interconnect, status_interconnect = self.run_single_tb("tb_garuda_v033_interconnect", interconnect_tb, interconnect_rtl, "INTERCONNECT_DECODE_ASSERTION_PASS")
 
-        # STAGE 4: UART Serial Waveform Test
+        # STAGE 4: UART Bit-Level Waveform Test
         uart_rtl = [os.path.join(PROJECT_DIR, "src", "peripherals", "garuda_uart.v")]
         uart_tb = os.path.join(PROJECT_DIR, "tests", "peripherals", "tb_garuda_v033_uart.v")
-        ok_uart = self.run_single_tb("tb_garuda_v033_uart", uart_tb, uart_rtl, "UART_WAVEFORM_ASSERTION_PASS")
+        ok_uart, code_uart, status_uart = self.run_single_tb("tb_garuda_v033_uart", uart_tb, uart_rtl, "UART_WAVEFORM_ASSERTION_PASS")
 
         # STAGE 5: CPU LOAD/STORE Transaction Acceptance Test
         ls_rtl = [
@@ -134,61 +139,60 @@ class GarudaV131MasterRunner:
             os.path.join(PROJECT_DIR, "src", "integration", "garuda_vertical_slice_top.v")
         ]
         ls_tb = os.path.join(PROJECT_DIR, "tests", "rtl", "cpu", "tb_cpu_load_store_v123.v")
-        ok_ls = self.run_single_tb("tb_cpu_load_store_v123", ls_tb, ls_rtl, "LOAD_STORE_ASSERTION_PASS")
+        ok_ls, code_ls, status_ls = self.run_single_tb("tb_cpu_load_store_v123", ls_tb, ls_rtl, "LOAD_STORE_ASSERTION_PASS")
 
-        # STAGE 6: Full SoC Integration Test
-        soc_rtl = [
-            os.path.join(PROJECT_DIR, "src", "peripherals", "garuda_interrupt_controller.v"),
-            os.path.join(PROJECT_DIR, "src", "peripherals", "garuda_timer.v"),
-            os.path.join(PROJECT_DIR, "src", "peripherals", "garuda_uart.v"),
-            os.path.join(PROJECT_DIR, "src", "chip", "garuda_chip_interconnect.v"),
-            os.path.join(PROJECT_DIR, "src", "memory", "garuda_bus_adapter_64to32.v"),
-            os.path.join(PROJECT_DIR, "src", "memory", "garuda_l1_icache.v"),
-            os.path.join(PROJECT_DIR, "src", "memory", "garuda_l1_dcache.v"),
-            os.path.join(PROJECT_DIR, "src", "memory", "garuda_l2_cache.v"),
-            os.path.join(PROJECT_DIR, "src", "memory", "garuda_memory_arbiter.v"),
-            os.path.join(PROJECT_DIR, "src", "memory", "garuda_memory_controller.v"),
-            os.path.join(PROJECT_DIR, "src", "memory", "garuda_memory_subsystem_top.v"),
-            os.path.join(PROJECT_DIR, "src", "cpu", "garuda_pc.v"),
-            os.path.join(PROJECT_DIR, "src", "cpu", "garuda_idecode.v"),
-            os.path.join(PROJECT_DIR, "src", "cpu", "garuda_regfile.v"),
-            os.path.join(PROJECT_DIR, "src", "cpu", "garuda_alu.v"),
-            os.path.join(PROJECT_DIR, "src", "cpu", "garuda_cpu_pipeline_top.v"),
-            os.path.join(PROJECT_DIR, "src", "chip", "garuda_semesta_chip_top.v")
-        ]
-        soc_tb = os.path.join(PROJECT_DIR, "tests", "v13_1", "tb_garuda_v131_full_soc.v")
-        ok_soc = self.run_single_tb("tb_garuda_v131_full_soc", soc_tb, soc_rtl, "GARUDA_SOC_V131_ASSERTION_PASS")
+        # STAGE 6: Full SoC Integration Test (FAIL-FAST: Only run if prerequisite ok_ls passed)
+        ok_soc = False
+        code_soc = -1
+        status_soc = "NOT_RUN"
+        if ok_ls:
+            soc_rtl = [
+                os.path.join(PROJECT_DIR, "src", "peripherals", "garuda_interrupt_controller.v"),
+                os.path.join(PROJECT_DIR, "src", "peripherals", "garuda_timer.v"),
+                os.path.join(PROJECT_DIR, "src", "peripherals", "garuda_uart.v"),
+                os.path.join(PROJECT_DIR, "src", "chip", "garuda_chip_interconnect.v"),
+                os.path.join(PROJECT_DIR, "src", "memory", "garuda_bus_adapter_64to32.v"),
+                os.path.join(PROJECT_DIR, "src", "memory", "garuda_l1_icache.v"),
+                os.path.join(PROJECT_DIR, "src", "memory", "garuda_l1_dcache.v"),
+                os.path.join(PROJECT_DIR, "src", "memory", "garuda_l2_cache.v"),
+                os.path.join(PROJECT_DIR, "src", "memory", "garuda_memory_arbiter.v"),
+                os.path.join(PROJECT_DIR, "src", "memory", "garuda_memory_controller.v"),
+                os.path.join(PROJECT_DIR, "src", "memory", "garuda_memory_subsystem_top.v"),
+                os.path.join(PROJECT_DIR, "src", "cpu", "garuda_pc.v"),
+                os.path.join(PROJECT_DIR, "src", "cpu", "garuda_idecode.v"),
+                os.path.join(PROJECT_DIR, "src", "cpu", "garuda_regfile.v"),
+                os.path.join(PROJECT_DIR, "src", "cpu", "garuda_alu.v"),
+                os.path.join(PROJECT_DIR, "src", "cpu", "garuda_cpu_pipeline_top.v"),
+                os.path.join(PROJECT_DIR, "src", "chip", "garuda_semesta_chip_top.v")
+            ]
+            soc_tb = os.path.join(PROJECT_DIR, "tests", "v13_1", "tb_garuda_v131_full_soc.v")
+            ok_soc, code_soc, status_soc = self.run_single_tb("tb_garuda_v131_full_soc", soc_tb, soc_rtl, "GARUDA_SOC_V131_ASSERTION_PASS")
+        else:
+            self.log("[STAGE 6/7] FAIL-FAST TRIGGERED: Skipping Full SoC Integration because CPU Load/Store prerequisite failed.", level="warning")
 
         passed = ok_branch and ok_interconnect and ok_uart and ok_ls and ok_soc
         duration = time.time() - start_t
 
         report_json = {
             "project": "GARUDA SEMESTA",
-            "milestone": "GARUDA TITAN V13.1 — FAST TRACK HARDWARE EXECUTION",
+            "milestone": "GARUDA TITAN V13.1-R3.2 — FAILURE-DRIVEN REPAIR & SIGN-OFF",
             "timestamp_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ"),
             "host_environment": sys.platform,
             "overall_status": "PASS" if passed else "FAIL",
             "exit_code": 0 if passed else 1,
             "stage_results": {
-                "tb_garuda_v125_branch_jump": "PASS" if ok_branch else "FAIL",
-                "tb_garuda_v033_interconnect": "PASS" if ok_interconnect else "FAIL",
-                "tb_garuda_v033_uart": "PASS" if ok_uart else "FAIL",
-                "tb_cpu_load_store_v123": "PASS" if ok_ls else "FAIL",
-                "tb_garuda_v131_full_soc": "PASS" if ok_soc else "FAIL"
+                "tb_garuda_v125_branch_jump": status_branch,
+                "tb_garuda_v033_interconnect": status_interconnect,
+                "tb_garuda_v033_uart": status_uart,
+                "tb_cpu_load_store_v123": status_ls,
+                "tb_garuda_v131_full_soc": status_soc
             },
             "assertions_verified": [
-                "r1 == 10, r2 == 10",
-                "BEQ r1, r2 branch taken to 0x80000028",
-                "r3 == 0 (Flushed wrong-path speculative instructions)",
-                "r4 == 500 (Executed branch target instruction)",
-                "JMP 0x80000040 jump taken",
-                "r5 == 0 (Flushed jump wrong-path instruction)",
-                "SRAM[0x80000100] == 500 (STORE)",
-                "r4 == 500 (LOADED from SRAM)",
-                "r5 == 650 (r4 + r1)",
-                "DMA Readback SRAM[0x80000100] == 500",
-                "Single-Outstanding Interconnect Transaction FSM Routing & Error Fault (0xDEADBEEF)",
-                "Synthesizable Single-Driver UART Serial TX FSM Engine (0x41 'A')"
+                "r1 == 10, r2 == 10" if ok_branch else "Branch verification failed",
+                "INTERCONNECT_DECODE_ASSERTION_PASS" if ok_interconnect else "Interconnect failed",
+                "UART_WAVEFORM_ASSERTION_PASS" if ok_uart else "UART failed",
+                "LOAD_STORE_ASSERTION_PASS" if ok_ls else "CPU Load/Store failed",
+                "GARUDA_SOC_V131_ASSERTION_PASS" if ok_soc else "Full SoC not proven"
             ],
             "duration_seconds": round(duration, 3)
         }
@@ -197,13 +201,13 @@ class GarudaV131MasterRunner:
             json.dump(report_json, f, indent=2)
 
         print("\n=========================================================================")
-        print(f" GARUDA V13.1 MASTER RUNNER STATUS: {'PASS' if passed else 'FAIL'} (Exit Code: {0 if passed else 1})")
+        print(f" GARUDA V13.1-R3.2 MASTER RUNNER STATUS: {'PASS' if passed else 'FAIL'} (Exit Code: {0 if passed else 1})")
         print("=========================================================================\n")
         sys.stdout.flush()
 
         return passed
 
 if __name__ == "__main__":
-    runner = GarudaV131MasterRunner()
+    runner = GarudaV131R32MasterRunner()
     success = runner.run_v131_pipeline()
     sys.exit(0 if success else 1)
