@@ -1,0 +1,15 @@
+{
+  "project": "GARUDA SEMESTA",
+  "milestone": "GARUDA TITAN V12.5 \u2014 COMPLETE CPU EXECUTION ENGINE",
+  "timestamp_utc": "2026-11-21T10:37:58Z",
+  "host_environment": "linux",
+  "overall_status": "FAIL",
+  "exit_code": 1,
+  "stage_results": {
+    "tb_garuda_v125_branch_jump": "PASS",
+    "tb_garuda_v033_interconnect": "PASS",
+    "tb_garuda_v033_uart": "PASS",
+    "tb_garuda_semesta_chip_v031": "FAIL"
+  },
+  "duration_seconds": 121.549
+}
