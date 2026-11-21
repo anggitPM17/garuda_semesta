@@ -86,6 +86,14 @@ class GarudaCompiler:
                     self.compile_instruction('ADD', rs1=rs1_val, rs2=rs2_val, rd=rd, imm=0)
                     self.ir_lines.append(f"IR_ADD rd=r{rd}, rs1=r{rs1_val}, rs2=r{rs2_val}")
 
+            elif mnemonic == 'LOAD':
+                # Example: LOAD r4, [r0 + 0x80000100] -> LOAD rs1=0, rs2=0, rd=4, imm=0x80000100
+                rd_val = int(tokens[1].replace('r', ''))
+                rs1_val = int(tokens[2].replace('r', '')) if 'r' in tokens[2] else 0
+                imm_val = int(tokens[3], 0) if len(tokens) > 3 else 0
+                self.compile_instruction('LOAD', rs1=rs1_val, rs2=0, rd=rd_val, imm=imm_val)
+                self.ir_lines.append(f"IR_LOAD rd=r{rd_val}, rs1=r{rs1_val}, imm=0x{imm_val:08X}")
+
             elif mnemonic == 'STORE':
                 # Example: STORE r3, [r0 + 0x80000100] -> STORE rs1=0, rs2=3, imm=0x80000100
                 rs2_val = int(tokens[1].replace('r', ''))

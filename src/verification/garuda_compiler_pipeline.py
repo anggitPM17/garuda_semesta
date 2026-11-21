@@ -39,12 +39,14 @@ def run_garuda_compiler_pipeline():
     print("Architect & Author: Anggit Prasetyo Mituhu")
     print("=========================================================================\n")
 
-    # The single unified test program for Acceptance Execution
-    assembly_source = """# GARUDA Assembly Source Program (V2.4.6-R2 Target Requirement)
+    # The single unified test program for Acceptance Execution (V12.3 Target Program)
+    assembly_source = """# GARUDA Assembly Source Program (V12.3 Requirement)
 MOV r1, 150
 MOV r2, 350
 ADD r3, r1, r2
 STORE r3, [r0 + 0x80000100]
+LOAD r4, [r0 + 0x80000100]
+ADD r5, r4, r1
 HALT
 """
 

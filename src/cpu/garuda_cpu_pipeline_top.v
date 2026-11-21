@@ -1,5 +1,5 @@
 // =========================================================================
-// GARUDA SEMESTA — MODULAR 5-STAGE PIPELINE CPU TOP-LEVEL (v12.4.6-R2)
+// GARUDA SEMESTA — MODULAR 5-STAGE PIPELINE CPU TOP-LEVEL (v12.4.6-R3)
 // Author & Chief System Architect: Anggit Prasetyo Mituhu
 // Copyright (c) 2026 Anggit Prasetyo Mituhu. All rights reserved.
 // Licensed under the Apache License, Version 2.0
@@ -7,8 +7,7 @@
 // Synthesizable 5-Stage Pipeline CPU Core Top-Level:
 // - IF (Instruction Fetch), ID (Instruction Decode), EX (Execute), MEM (Memory), WB (Writeback)
 // - Integrated PC, Instruction Decoder, 32x64-bit RegFile, 64-bit ALU
-// - 100% PURE INSTRUCTION FETCH THROUGH I-CACHE / MEMORY FABRIC (ZERO FALLBACK ROM)
-// - dcache_done is held high until MEM stage completes to prevent memory re-trigger loops
+// - Load-Use Data Hazard stall & WB forwarding for hardware LOAD instructions
 // =========================================================================
 
 `timescale 1ns / 1ps
@@ -81,12 +80,15 @@ module garuda_cpu_pipeline_top #(
     reg                  halt_decoded_latched;
     reg                  dcache_done;
 
+    // Load-Use Hazard Detection
+    wire load_use_hazard = (id_ex_mem_read && (id_ex_rd == dec_rs1 || id_ex_rd == dec_rs2) && id_ex_rd != 5'd0);
+
     // 1. Program Counter & Pipeline Control Logic
     wire halted_sig = halt_retires_latched || (mem_wb_opcode == 4'hF);
     wire dec_halt_sig = halt_decoded_latched || (dec_opcode == 4'hF) || (id_ex_opcode == 4'hF) || (ex_mem_opcode == 4'hF) || halted_sig;
 
-    wire stall_backend = dcache_stall || halted_sig;
-    wire stall_pc = icache_stall || dcache_stall || dec_halt_sig;
+    wire stall_backend = dcache_stall || load_use_hazard || halted_sig;
+    wire stall_pc = icache_stall || dcache_stall || load_use_hazard || dec_halt_sig;
 
     wire branch_taken = 1'b0;
     wire [ADDR_WIDTH-1:0] branch_target = 32'h0;
@@ -180,12 +182,12 @@ module garuda_cpu_pipeline_top #(
     );
 
     // Forwarding logic for RS1 and RS2 at ID stage
-    wire [DATA_WIDTH-1:0] fwd_rs1_val = (id_ex_reg_write  && id_ex_rd  == dec_rs1 && dec_rs1 != 0) ? alu_result :
-                                        (ex_mem_reg_write && ex_mem_rd == dec_rs1 && dec_rs1 != 0) ? ex_mem_alu_res :
+    wire [DATA_WIDTH-1:0] fwd_rs1_val = (id_ex_reg_write  && !id_ex_mem_read && id_ex_rd == dec_rs1 && dec_rs1 != 0) ? alu_result :
+                                        (ex_mem_reg_write && !ex_mem_mem_read && ex_mem_rd == dec_rs1 && dec_rs1 != 0) ? ex_mem_alu_res :
                                         (mem_wb_reg_write && mem_wb_rd == dec_rs1 && dec_rs1 != 0) ? mem_wb_final_val : rf_rs1_val;
 
-    wire [DATA_WIDTH-1:0] fwd_rs2_val = (id_ex_reg_write  && id_ex_rd  == dec_rs2 && dec_rs2 != 0) ? alu_result :
-                                        (ex_mem_reg_write && ex_mem_rd == dec_rs2 && dec_rs2 != 0) ? ex_mem_alu_res :
+    wire [DATA_WIDTH-1:0] fwd_rs2_val = (id_ex_reg_write  && !id_ex_mem_read && id_ex_rd == dec_rs2 && dec_rs2 != 0) ? alu_result :
+                                        (ex_mem_reg_write && !ex_mem_mem_read && ex_mem_rd == dec_rs2 && dec_rs2 != 0) ? ex_mem_alu_res :
                                         (mem_wb_reg_write && mem_wb_rd == dec_rs2 && dec_rs2 != 0) ? mem_wb_final_val : rf_rs2_val;
 
     // Decode to Execute Pipeline Register
@@ -206,20 +208,28 @@ module garuda_cpu_pipeline_top #(
             id_ex_imm       <= 32'd0;
             id_ex_illegal_inst <= 1'b0;
         end else if (!stall_backend) begin
-            id_ex_pc        <= if_id_pc;
-            id_ex_opcode    <= dec_opcode;
-            id_ex_alu_op    <= dec_alu_op;
-            id_ex_alu_src_imm <= dec_alu_src_imm;
-            id_ex_reg_write <= dec_reg_write;
-            id_ex_mem_read  <= dec_mem_read;
-            id_ex_mem_write <= dec_mem_write;
-            id_ex_rs1       <= dec_rs1;
-            id_ex_rs2       <= dec_rs2;
-            id_ex_rd        <= dec_rd;
-            id_ex_rs1_val   <= fwd_rs1_val;
-            id_ex_rs2_val   <= fwd_rs2_val;
-            id_ex_imm       <= dec_imm;
-            id_ex_illegal_inst <= dec_illegal;
+            if (load_use_hazard) begin
+                // Bubble insertion on load-use hazard
+                id_ex_opcode    <= 4'h0;
+                id_ex_reg_write <= 1'b0;
+                id_ex_mem_read  <= 1'b0;
+                id_ex_mem_write <= 1'b0;
+            end else begin
+                id_ex_pc        <= if_id_pc;
+                id_ex_opcode    <= dec_opcode;
+                id_ex_alu_op    <= dec_alu_op;
+                id_ex_alu_src_imm <= dec_alu_src_imm;
+                id_ex_reg_write <= dec_reg_write;
+                id_ex_mem_read  <= dec_mem_read;
+                id_ex_mem_write <= dec_mem_write;
+                id_ex_rs1       <= dec_rs1;
+                id_ex_rs2       <= dec_rs2;
+                id_ex_rd        <= dec_rd;
+                id_ex_rs1_val   <= fwd_rs1_val;
+                id_ex_rs2_val   <= fwd_rs2_val;
+                id_ex_imm       <= dec_imm;
+                id_ex_illegal_inst <= dec_illegal;
+            end
         end
     end
 

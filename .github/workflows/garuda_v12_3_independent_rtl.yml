@@ -1,0 +1,48 @@
+name: GARUDA SEMESTA V12.3 — Independent RTL Verification Pipeline
+
+on:
+  push:
+    branches: [ main, "engineering/**" ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  rtl_verification:
+    name: Real Verilog RTL Compilation, CPU LOAD/STORE & DMA Assertion Suite
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v3
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Install Hardware EDA Toolchain (Icarus Verilog & VVP)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y iverilog vvp
+
+      - name: Audit EDA Environment
+        run: |
+          bash scripts/garuda_v12_1_r3.sh environment
+
+      - name: Compile Verilog RTL Hierarchy
+        run: |
+          bash scripts/garuda_v12_1_r3.sh compile
+
+      - name: Execute Independent RTL Testbenches & Master Integration Suite
+        run: |
+          python3 -u src/verification/garuda_v123_runner.py
+
+      - name: Upload Verification Evidence Artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: garuda-v123-verification-evidence
+          path: |
+            artifacts/v12.3/
+            artifacts/v2.4.6/compiler/
+            build/

@@ -2,4 +2,6 @@ MOV r1, 150
 MOV r2, 350
 ADD r3, r1, r2
 STORE r3, [r0 + 0x80000100]
+LOAD r4, [r0 + 0x80000100]
+ADD r5, r4, r1
 HALT

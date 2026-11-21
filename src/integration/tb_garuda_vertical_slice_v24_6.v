@@ -10,7 +10,7 @@
 // - Waits dynamically for pipeline_halted (no hardcoded delay loop)
 // - Verifies Instruction Fetch, 5-Stage CPU Execution, L1/L2 Caches,
 //   and Main Memory Controller Writeback into SRAM location 0x80000100
-// - Strictly asserts SRAM[0x80000100] == 500 without ANY loose PC fallback!
+// - Strictly asserts r1=150, r2=350, r3=500, SRAM[0x80000100]=500, r4=500 (LOAD), r5=650 (ADD)
 // =========================================================================
 
 `timescale 1ns / 1ps
@@ -71,10 +71,10 @@ module tb_garuda_vertical_slice_v24_6;
         end
     end
 
-    // Timeout protection watchdog (1000 cycles max)
+    // Timeout protection watchdog (2000 cycles max)
     always @(posedge clk) begin
         cycle_counter <= cycle_counter + 1;
-        if (cycle_counter > 1000) begin
+        if (cycle_counter > 2000) begin
             $display("FATAL: SIMULATION TIMEOUT IN RTL TESTBENCH!");
             $fatal(1, "RTL Execution Timeout");
         end
@@ -111,6 +111,23 @@ module tb_garuda_vertical_slice_v24_6;
         if (illegal_instruction) begin
             $display("FAIL: ILLEGAL INSTRUCTION DETECTED");
             $fatal(1, "Unexpected Illegal Instruction");
+        end
+
+        // Assert Register File Values
+        $display("[STAGE 2.1] Asserting Register File Values...");
+        $display("  r1 = %d (Expected 150)", u_dut.u_cpu.u_regfile.registers[1]);
+        $display("  r2 = %d (Expected 350)", u_dut.u_cpu.u_regfile.registers[2]);
+        $display("  r3 = %d (Expected 500)", u_dut.u_cpu.u_regfile.registers[3]);
+        $display("  r4 = %d (Expected 500 - Loaded from SRAM)", u_dut.u_cpu.u_regfile.registers[4]);
+        $display("  r5 = %d (Expected 650 - r4 + r1)", u_dut.u_cpu.u_regfile.registers[5]);
+
+        if (u_dut.u_cpu.u_regfile.registers[1] !== 64'd150 ||
+            u_dut.u_cpu.u_regfile.registers[2] !== 64'd350 ||
+            u_dut.u_cpu.u_regfile.registers[3] !== 64'd500 ||
+            u_dut.u_cpu.u_regfile.registers[4] !== 64'd500 ||
+            u_dut.u_cpu.u_regfile.registers[5] !== 64'd650) begin
+            $display("FAIL: REGISTER FILE ASSERTION MISMATCH");
+            $fatal(1, "Register State Verification Failed");
         end
 
         // Wait a few cycles to ensure pipeline memory writes flush to SRAM via Cache
