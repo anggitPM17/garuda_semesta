@@ -1,5 +1,5 @@
 // =========================================================================
-// GARUDA SEMESTA — MODULAR 5-STAGE PIPELINE CPU TOP-LEVEL (v12.4.6-R3.2)
+// GARUDA SEMESTA — MODULAR 5-STAGE PIPELINE CPU TOP-LEVEL (v12.4.6-R3.3)
 // Author & Chief System Architect: Anggit Prasetyo Mituhu
 // Copyright (c) 2026 Anggit Prasetyo Mituhu. All rights reserved.
 // Licensed under the Apache License, Version 2.0
@@ -7,7 +7,7 @@
 // Synthesizable 5-Stage Pipeline CPU Core Top-Level:
 // - IF (Instruction Fetch), ID (Instruction Decode), EX (Execute), MEM (Memory), WB (Writeback)
 // - Integrated PC, Instruction Decoder, 32x64-bit RegFile, 64-bit ALU
-// - Load-Use Data Hazard stall, MEM-stage dcache_read_val forwarding, & WB forwarding
+// - Load-Use Data Hazard stall, MEM-stage dcache_read_val forwarding, & Hardware IRQ input
 // =========================================================================
 
 `timescale 1ns / 1ps
@@ -18,6 +18,9 @@ module garuda_cpu_pipeline_top #(
 )(
     input  wire                  clk,
     input  wire                  rst_n,
+
+    // Hardware Interrupt Request Line
+    input  wire                  irq_req,
 
     // L1 Instruction Cache Interface (Full 64-bit Instruction Word)
     output wire [ADDR_WIDTH-1:0] icache_addr,
@@ -79,6 +82,7 @@ module garuda_cpu_pipeline_top #(
     reg                  halt_retires_latched;
     reg                  halt_decoded_latched;
     reg                  dcache_done;
+    reg                  irq_latched_reg;
 
     // Load-Use Hazard Detection (LOAD in EX stage writing to dec_rs1 or dec_rs2)
     wire load_use_hazard = (id_ex_mem_read && (id_ex_rd == dec_rs1 || id_ex_rd == dec_rs2) && id_ex_rd != 5'd0);
@@ -100,7 +104,11 @@ module garuda_cpu_pipeline_top #(
             halt_retires_latched <= 1'b0;
             halt_decoded_latched <= 1'b0;
             dcache_done          <= 1'b0;
+            irq_latched_reg      <= 1'b0;
         end else begin
+            if (irq_req) begin
+                irq_latched_reg <= 1'b1;
+            end
             if (dec_opcode == 4'hF && !load_use_hazard && !dcache_stall) begin
                 halt_decoded_latched <= 1'b1;
             end

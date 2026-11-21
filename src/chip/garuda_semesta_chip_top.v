@@ -1,16 +1,16 @@
 // =========================================================================
-// GARUDA SEMESTA — CHIP SYSTEM-ON-CHIP TOP-LEVEL MODULE (v0.3.2)
+// GARUDA SEMESTA — CHIP SYSTEM-ON-CHIP TOP-LEVEL MODULE (v0.3.3)
 // Author & Chief System Architect: Anggit Prasetyo Mituhu
 // Copyright (c) 2026 Anggit Prasetyo Mituhu. All rights reserved.
 // Licensed under the Apache License, Version 2.0
 //
 // Synthesizable GARUDA SEMESTA Chip System-on-Chip Entry Point:
-// - Integrates 5-Stage CPU Core Pipeline (garuda_cpu_pipeline_top)
+// - Integrates 5-Stage CPU Core Pipeline (garuda_cpu_pipeline_top) with IRQ Line
 // - Integrates Memory Subsystem Top (garuda_memory_subsystem_top)
 // - Integrates Active System Interconnect & MMIO MUX (garuda_chip_interconnect)
 // - Integrates Active MMIO Interrupt Controller (garuda_interrupt_controller)
 // - Integrates Active MMIO Timer Peripheral (garuda_timer)
-// - Integrates Active MMIO UART Peripheral (garuda_uart)
+// - Integrates Active MMIO UART Serial Engine (garuda_uart)
 // - Integrates Main SRAM Controller (garuda_memory_controller)
 // =========================================================================
 
@@ -81,10 +81,10 @@ module garuda_semesta_chip_top #(
     wire is_mmio_addr = (dcache_addr < 32'h8000_0000);
 
     // Muxing MMIO Read Data & Valid Response back into CPU D-Cache Interface
-    assign dcache_read_val[31:0] = is_mmio_addr ? mmio_read_data : sram_dcache_read_val;
+    assign dcache_read_val[31:0]  = is_mmio_addr ? mmio_read_data : sram_dcache_read_val;
     assign dcache_read_val[63:32] = 32'd0;
-    assign dcache_valid          = is_mmio_addr ? mmio_resp_valid : sram_dcache_valid;
-    assign dcache_stall          = is_mmio_addr ? 1'b0 : sram_dcache_stall;
+    assign dcache_valid           = is_mmio_addr ? mmio_resp_valid : sram_dcache_valid;
+    assign dcache_stall           = is_mmio_addr ? 1'b0 : sram_dcache_stall;
 
     // 1. Modular 5-Stage CPU Pipeline Core
     garuda_cpu_pipeline_top #(
@@ -93,6 +93,7 @@ module garuda_semesta_chip_top #(
     ) u_cpu (
         .clk(clk),
         .rst_n(rst_n),
+        .irq_req(chip_irq_to_cpu),
         .icache_addr(icache_addr),
         .icache_req_valid(icache_req_valid),
         .icache_inst_data(icache_inst_data),
