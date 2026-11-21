@@ -1,0 +1,9 @@
+=========================================================================
+GARUDA SEMESTA V12.5 — BRANCH & JUMP ENGINE VERIFICATION TESTBENCH
+Architect & Author: Anggit Prasetyo Mituhu
+=========================================================================
+
+[BRANCH/JUMP TEST] Reset Released. Testing BEQ & JMP Control Engine...
+WARNING: /workspace/tests/cpu/tb_garuda_v125_branch_jump.v:68: unknown format $display<% >.
+BRANCH_JUMP_ASSERTION_PASS: BEQ & JMP CONTROL ENGINE 100<% >VERIFIED!
+
