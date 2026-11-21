@@ -1,5 +1,5 @@
 // =========================================================================
-// GARUDA SEMESTA — MODULAR 5-STAGE PIPELINE CPU TOP-LEVEL (v12.4.6-R3)
+// GARUDA SEMESTA — MODULAR 5-STAGE PIPELINE CPU TOP-LEVEL (v12.4.6-R3.1)
 // Author & Chief System Architect: Anggit Prasetyo Mituhu
 // Copyright (c) 2026 Anggit Prasetyo Mituhu. All rights reserved.
 // Licensed under the Apache License, Version 2.0
@@ -7,7 +7,7 @@
 // Synthesizable 5-Stage Pipeline CPU Core Top-Level:
 // - IF (Instruction Fetch), ID (Instruction Decode), EX (Execute), MEM (Memory), WB (Writeback)
 // - Integrated PC, Instruction Decoder, 32x64-bit RegFile, 64-bit ALU
-// - Load-Use Data Hazard stall & WB forwarding for hardware LOAD instructions
+// - Load-Use Data Hazard stall & bubble insertion fix for hardware LOAD instructions
 // =========================================================================
 
 `timescale 1ns / 1ps
@@ -80,14 +80,16 @@ module garuda_cpu_pipeline_top #(
     reg                  halt_decoded_latched;
     reg                  dcache_done;
 
-    // Load-Use Hazard Detection
+    // Load-Use Hazard Detection (LOAD in EX stage writing to dec_rs1 or dec_rs2)
     wire load_use_hazard = (id_ex_mem_read && (id_ex_rd == dec_rs1 || id_ex_rd == dec_rs2) && id_ex_rd != 5'd0);
 
     // 1. Program Counter & Pipeline Control Logic
     wire halted_sig = halt_retires_latched || (mem_wb_opcode == 4'hF);
     wire dec_halt_sig = halt_decoded_latched || (dec_opcode == 4'hF) || (id_ex_opcode == 4'hF) || (ex_mem_opcode == 4'hF) || halted_sig;
 
-    wire stall_backend = dcache_stall || load_use_hazard || halted_sig;
+    // stall_backend holds EX/MEM/WB on cache stalls or halt, but NOT on load_use_hazard so bubble insertion can run
+    wire stall_backend = dcache_stall || halted_sig;
+    // stall_pc holds PC and IF/ID in ID stage during load-use hazard bubble insertion
     wire stall_pc = icache_stall || dcache_stall || load_use_hazard || dec_halt_sig;
 
     wire branch_taken = 1'b0;
@@ -99,7 +101,7 @@ module garuda_cpu_pipeline_top #(
             halt_decoded_latched <= 1'b0;
             dcache_done          <= 1'b0;
         end else begin
-            if (dec_opcode == 4'hF) begin
+            if (dec_opcode == 4'hF && !load_use_hazard && !dcache_stall) begin
                 halt_decoded_latched <= 1'b1;
             end
             if (mem_wb_opcode == 4'hF) begin
@@ -128,12 +130,12 @@ module garuda_cpu_pipeline_top #(
     assign icache_addr = current_pc;
     assign icache_req_valid = rst_n && !stall_pc;
 
-    // 2. Instruction Fetch to Decode Pipeline Register (Retains valid instruction)
+    // 2. Instruction Fetch to Decode Pipeline Register (Retains valid instruction during load-use stall_pc)
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             if_id_pc   <= 32'h8000_0000;
             if_id_inst <= 64'h0;
-        end else if (!stall_backend && icache_valid) begin
+        end else if (!stall_pc && icache_valid) begin
             if_id_pc   <= current_pc;
             if_id_inst <= icache_inst_data;
         end
@@ -209,11 +211,21 @@ module garuda_cpu_pipeline_top #(
             id_ex_illegal_inst <= 1'b0;
         end else if (!stall_backend) begin
             if (load_use_hazard) begin
-                // Bubble insertion on load-use hazard
+                // Inject NOP bubble into EX stage while ID stage freezes on stall_pc
+                id_ex_pc        <= if_id_pc;
                 id_ex_opcode    <= 4'h0;
+                id_ex_alu_op    <= 4'h0;
+                id_ex_alu_src_imm <= 1'b0;
                 id_ex_reg_write <= 1'b0;
                 id_ex_mem_read  <= 1'b0;
                 id_ex_mem_write <= 1'b0;
+                id_ex_rs1       <= 5'd0;
+                id_ex_rs2       <= 5'd0;
+                id_ex_rd        <= 5'd0;
+                id_ex_rs1_val   <= 64'd0;
+                id_ex_rs2_val   <= 64'd0;
+                id_ex_imm       <= 32'd0;
+                id_ex_illegal_inst <= 1'b0;
             end else begin
                 id_ex_pc        <= if_id_pc;
                 id_ex_opcode    <= dec_opcode;

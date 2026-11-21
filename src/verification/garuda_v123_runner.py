@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-GARUDA SEMESTA V12.3 — INDEPENDENT RTL PROOF & MASTER RUNNER
+GARUDA SEMESTA V12.3-R1 — INDEPENDENT RTL PROOF & MASTER RUNNER
 Author & Chief System Architect: Anggit Prasetyo Mituhu
 Copyright (c) 2026 Anggit Prasetyo Mituhu. All rights reserved.
 Licensed under the Apache License, Version 2.0
@@ -30,7 +30,7 @@ if PROJECT_DIR not in sys.path:
 
 from src.verification.garuda_compiler_pipeline import run_garuda_compiler_pipeline
 
-logging.basicConfig(level=logging.INFO, format="[GARUDA V12.3 RUNNER] %(levelname)s: %(message)s")
+logging.basicConfig(level=logging.INFO, format="[GARUDA V12.3-R1 RUNNER] %(levelname)s: %(message)s")
 
 BUILD_DIR = os.path.join(PROJECT_DIR, "build")
 V123_ARTIFACTS_DIR = os.path.join(PROJECT_DIR, "artifacts", "v12.3")
@@ -52,17 +52,32 @@ class GarudaV123Runner:
         self.verilator_path = shutil.which("verilator")
         self.yosys_path = shutil.which("yosys")
 
+    def log(self, msg, level="info"):
+        if level == "info":
+            logging.info(msg)
+        elif level == "warning":
+            logging.warning(msg)
+        elif level == "error":
+            logging.error(msg)
+        sys.stdout.flush()
+
     def run_single_testbench(self, tb_name, tb_file, rtl_files, pass_marker):
+        self.log(f"Compiling testbench '{tb_name}'...")
         out_vvp = os.path.join(BUILD_DIR, f"{tb_name}.vvp")
         cmd_c = [self.iverilog_path, "-g2012", "-Wall", "-s", tb_name, "-o", out_vvp] + rtl_files + [tb_file]
         res_c = subprocess.run(cmd_c, capture_output=True, text=True, cwd=PROJECT_DIR)
 
         if res_c.returncode != 0:
-            logging.error(f"[{tb_name}] Compilation FAILED:\n{res_c.stderr}")
+            self.log(f"[{tb_name}] Compilation FAILED:\n{res_c.stderr}", level="error")
             return False, res_c.stderr
 
+        self.log(f"Simulating '{tb_name}' via VVP...")
         cmd_s = [self.vvp_path, out_vvp]
-        res_s = subprocess.run(cmd_s, capture_output=True, text=True, timeout=180, cwd=PROJECT_DIR)
+        try:
+            res_s = subprocess.run(cmd_s, capture_output=True, text=True, timeout=300, cwd=PROJECT_DIR)
+        except subprocess.TimeoutExpired:
+            self.log(f"[{tb_name}] TIMEOUT after 180s!", level="error")
+            return False, "TIMEOUT"
 
         log_path = os.path.join(LOGS_DIR, f"{tb_name}.log")
         with open(log_path, "w", encoding="utf-8") as f:
@@ -70,13 +85,14 @@ class GarudaV123Runner:
 
         passed = (res_s.returncode == 0 and pass_marker in res_s.stdout)
         if passed:
-            logging.info(f"[{tb_name}] PASSED: Found marker '{pass_marker}'")
+            self.log(f"[{tb_name}] PASSED: Found marker '{pass_marker}'")
         else:
-            logging.error(f"[{tb_name}] FAILED: Missing marker '{pass_marker}' or returncode={res_s.returncode}")
+            self.log(f"[{tb_name}] FAILED: Missing marker '{pass_marker}' or returncode={res_s.returncode}", level="error")
 
         return passed, res_s.stdout
 
     def run_negative_exception_test(self, rtl_files):
+        self.log("[STAGE 7/8] Executing Negative Exception Test Case (Opcode 0xE)...")
         tb_file = os.path.join(PROJECT_DIR, "tests", "rtl", "cpu", "tb_illegal_instruction_v123.v")
 
         invalid_hex_lines = ["00000000", "E0000000", "00000000", "F0000000"]
@@ -96,15 +112,16 @@ class GarudaV123Runner:
     def run_full_v123_pipeline(self):
         start_t = time.time()
         print("=========================================================================")
-        print("GARUDA SEMESTA V12.3 — INDEPENDENT RTL PROOF & MASTER RUNNER")
+        print("GARUDA SEMESTA V12.3-R1 — INDEPENDENT RTL PROOF & MASTER RUNNER")
         print("Architect & Author: Anggit Prasetyo Mituhu")
         print("=========================================================================\n")
+        sys.stdout.flush()
 
         # STAGE 1: Compiler Pipeline
-        logging.info("[STAGE 1/8] Compiling Target Assembly Program via garuda_compiler.py...")
+        self.log("[STAGE 1/8] Compiling Target Assembly Program via garuda_compiler.py...")
         ok_compiler, hex_sha256, inst_count = run_garuda_compiler_pipeline()
         if not ok_compiler:
-            logging.error("Compiler pipeline failed!")
+            self.log("Compiler pipeline failed!", level="error")
             return False
 
         rtl_files = [
@@ -143,7 +160,7 @@ class GarudaV123Runner:
 
         report_json = {
             "project": "GARUDA SEMESTA",
-            "milestone": "GARUDA SEMESTA V12.3 — INDEPENDENT RTL PROOF",
+            "milestone": "GARUDA SEMESTA V12.3-R1 — INDEPENDENT RTL PROOF",
             "timestamp_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ"),
             "host_environment": sys.platform,
             "overall_status": overall_status,
@@ -172,8 +189,9 @@ class GarudaV123Runner:
             json.dump(report_json, f, indent=2)
 
         print("\n=========================================================================")
-        print(f" GARUDA V12.3 RUNNER STATUS: {overall_status} (Exit Code: {exit_code})")
+        print(f" GARUDA V12.3-R1 RUNNER STATUS: {overall_status} (Exit Code: {exit_code})")
         print("=========================================================================\n")
+        sys.stdout.flush()
 
         return exit_code == 0
 
