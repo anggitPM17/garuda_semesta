@@ -1,0 +1,29 @@
+{
+  "project": "GARUDA SEMESTA",
+  "milestone": "GARUDA SEMESTA V12.3-R2 \u2014 EXECUTION INTEGRITY & TRANSACTION VALIDATION",
+  "timestamp_utc": "2026-11-21T09:17:29Z",
+  "host_environment": "linux",
+  "overall_status": "FAIL",
+  "exit_code": 1,
+  "testbenches": {
+    "tb_garuda_vertical_slice_v24_6": "FAIL",
+    "tb_cpu_load_store_v123": "FAIL",
+    "tb_cpu_arithmetic_v123": "FAIL",
+    "tb_dma_readback_v123": "FAIL",
+    "tb_illegal_instruction_v123": "FAIL"
+  },
+  "assertions_verified": [
+    "r1 == 150",
+    "r2 == 350",
+    "r3 == 500",
+    "SRAM[0x80000100] == 500 (STORE)",
+    "r4 == 500 (LOADED from SRAM)",
+    "r5 == 650 (r4 + r1)",
+    "CPU STORE Transaction Count >= 1",
+    "CPU LOAD Transaction Count >= 1",
+    "Physical SRAM Array Word main_sram[64] == 500",
+    "DMA Readback SRAM[0x80000100] == 500",
+    "Illegal Opcode 0xE -> illegal_instruction exception"
+  ],
+  "duration_seconds": 911.077
+}

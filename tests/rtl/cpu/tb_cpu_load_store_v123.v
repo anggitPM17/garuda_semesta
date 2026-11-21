@@ -1,14 +1,15 @@
 // =========================================================================
-// GARUDA SEMESTA V12.3-R2 — INDEPENDENT CPU LOAD/STORE & TRANSACTION TESTBENCH
+// GARUDA SEMESTA V12.3-R2.1 — CPU LOAD/STORE TRANSACTION ACCEPTANCE TESTBENCH
 // Author & Chief System Architect: Anggit Prasetyo Mituhu
 // Copyright (c) 2026 Anggit Prasetyo Mituhu. All rights reserved.
 // Licensed under the Apache License, Version 2.0
 //
-// Strict Hardware Testbench verifying CPU STORE & LOAD transactions:
-// - Monitors CPU D-Cache Memory Interface (req_valid, req_write_en, req_addr, req_write_data)
-// - Verifies STORE transaction to SRAM address 0x80000100
-// - Verifies LOAD transaction returning 500 into r4
-// - Verifies physical SRAM array storage (main_sram[64] == 500)
+// Strict Hardware Testbench verifying ACCEPTED CPU STORE & LOAD transactions:
+// - Monitors CPU D-Cache Memory Interface (req_valid, req_write_en, req_addr, stall)
+// - Asserts EXACTLY 1 accepted STORE transaction (0x80000100)
+// - Asserts EXACTLY 1 accepted LOAD transaction (0x80000100)
+// - Verifies physical SRAM array mapping: main_sram[(0x80000100 - 0x80000000)/4] = main_sram[64] == 500
+// - Verifies CPU register state: r3=500, r4=500, r5=650
 // =========================================================================
 
 `timescale 1ns / 1ps
@@ -24,8 +25,8 @@ module tb_cpu_load_store_v123;
     wire        parity_error_detected;
 
     integer cycle_counter = 0;
-    integer store_tx_count = 0;
-    integer load_tx_count = 0;
+    integer store_accepted_count = 0;
+    integer load_accepted_count = 0;
 
     always #5 clk = ~clk;
 
@@ -49,16 +50,22 @@ module tb_cpu_load_store_v123;
         .parity_error_detected(parity_error_detected)
     );
 
-    // Monitor CPU D-Cache Memory Transactions
+    // Monitor Accepted CPU D-Cache Memory Transactions (when stall is 0)
     always @(posedge clk) begin
         if (rst_n) begin
-            if (u_dut.u_memory_subsystem.u_dcache.req_valid && u_dut.u_memory_subsystem.u_dcache.req_write_en && (u_dut.u_memory_subsystem.u_dcache.req_addr == 32'h8000_0100)) begin
-                store_tx_count <= store_tx_count + 1;
-                $display("[RTL TRANSACTION LOG] STORE Transaction Detected: Address=0x%h, Data=%d", u_dut.u_memory_subsystem.u_dcache.req_addr, u_dut.u_memory_subsystem.u_dcache.req_write_data);
+            if (u_dut.u_memory_subsystem.u_dcache.req_valid &&
+                u_dut.u_memory_subsystem.u_dcache.req_write_en &&
+                !u_dut.u_memory_subsystem.u_dcache.stall &&
+                (u_dut.u_memory_subsystem.u_dcache.req_addr == 32'h8000_0100)) begin
+                store_accepted_count <= store_accepted_count + 1;
+                $display("[RTL TRANSACTION ACCEPTED] STORE Accepted: Address=0x%h, Data=%d", u_dut.u_memory_subsystem.u_dcache.req_addr, u_dut.u_memory_subsystem.u_dcache.req_write_data);
             end
-            if (u_dut.u_memory_subsystem.u_dcache.req_valid && !u_dut.u_memory_subsystem.u_dcache.req_write_en && (u_dut.u_memory_subsystem.u_dcache.req_addr == 32'h8000_0100)) begin
-                load_tx_count <= load_tx_count + 1;
-                $display("[RTL TRANSACTION LOG] LOAD Transaction Detected: Address=0x%h", u_dut.u_memory_subsystem.u_dcache.req_addr);
+            if (u_dut.u_memory_subsystem.u_dcache.req_valid &&
+                !u_dut.u_memory_subsystem.u_dcache.req_write_en &&
+                !u_dut.u_memory_subsystem.u_dcache.stall &&
+                (u_dut.u_memory_subsystem.u_dcache.req_addr == 32'h8000_0100)) begin
+                load_accepted_count <= load_accepted_count + 1;
+                $display("[RTL TRANSACTION ACCEPTED] LOAD Accepted: Address=0x%h", u_dut.u_memory_subsystem.u_dcache.req_addr);
             end
         end
     end
@@ -74,7 +81,7 @@ module tb_cpu_load_store_v123;
 
     initial begin
         $display("=========================================================================");
-        $display("GARUDA SEMESTA V12.3-R2 — CPU LOAD/STORE TRANSACTION TESTBENCH");
+        $display("GARUDA SEMESTA V12.3-R2.1 — CPU LOAD/STORE TRANSACTION ACCEPTANCE TESTBENCH");
         $display("Architect & Author: Anggit Prasetyo Mituhu");
         $display("=========================================================================\n");
 
@@ -84,22 +91,22 @@ module tb_cpu_load_store_v123;
 
         wait(pipeline_halted == 1'b1);
 
-        $display("[LOAD/STORE TEST] CPU Halted. Checking Transactions, RegFile, and Physical SRAM...");
-        $display("  STORE Transactions Captured = %d", store_tx_count);
-        $display("  LOAD Transactions Captured  = %d", load_tx_count);
+        $display("[LOAD/STORE TEST] CPU Halted. Verifying Transaction Acceptance, RegFile, and SRAM Address Mapping...");
+        $display("  Accepted STORE Transactions = %d (Expected 1)", store_accepted_count);
+        $display("  Accepted LOAD Transactions  = %d (Expected 1)", load_accepted_count);
         $display("  r3 (STORE val) = %d", u_dut.u_cpu.u_regfile.registers[3]);
         $display("  r4 (LOADED val) = %d", u_dut.u_cpu.u_regfile.registers[4]);
-        $display("  Physical SRAM[0x80000100] Array Word = %d", u_dut.u_memory_subsystem.u_mem_controller.main_sram[64]);
+        $display("  Physical SRAM[0x80000100] Mapping Array Word main_sram[64] = %d", u_dut.u_memory_subsystem.u_mem_controller.main_sram[64]);
 
-        if (store_tx_count >= 1 &&
-            load_tx_count >= 1 &&
+        if (store_accepted_count === 1 &&
+            load_accepted_count === 1 &&
             u_dut.u_memory_subsystem.u_mem_controller.main_sram[64] === 32'd500 &&
             u_dut.u_cpu.u_regfile.registers[3] === 64'd500 &&
             u_dut.u_cpu.u_regfile.registers[4] === 64'd500) begin
-            $display("LOAD_STORE_ASSERTION_PASS: CPU STORE AND LOAD VERIFIED IN HARDWARE RTL");
+            $display("LOAD_STORE_ASSERTION_PASS: CPU STORE AND LOAD TRANSACTIONS ACCEPTED & VERIFIED IN HARDWARE RTL");
             $finish;
         end else begin
-            $display("FAIL: LOAD/STORE TRANSACTION OR SRAM MISMATCH");
+            $display("FAIL: LOAD/STORE TRANSACTION ACCEPTANCE OR SRAM MISMATCH");
             $fatal(1, "Mismatch");
         end
     end

@@ -37,14 +37,14 @@ jobs:
 
       - name: Execute Independent RTL Testbenches & Master Integration Suite
         run: |
-          python3 -u src/verification/garuda_v123_runner.py
+          python3 -u src/verification/garuda_v123_r2_runner.py
 
       - name: Upload Verification Evidence Artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: garuda-v123-verification-evidence
+          name: garuda-v123-r2-verification-evidence
           path: |
-            artifacts/v12.3/
+            artifacts/v12.3-r2/
             artifacts/v2.4.6/compiler/
             build/
