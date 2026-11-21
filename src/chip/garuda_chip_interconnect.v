@@ -1,16 +1,16 @@
 // =========================================================================
-// GARUDA SEMESTA — CHIP SYSTEM INTERCONNECT & ADDRESS DECODER (v0.1)
+// GARUDA SEMESTA — CHIP SYSTEM INTERCONNECT & ADDRESS DECODER (v0.3.2)
 // Author & Chief System Architect: Anggit Prasetyo Mituhu
 // Copyright (c) 2026 Anggit Prasetyo Mituhu. All rights reserved.
 // Licensed under the Apache License, Version 2.0
 //
 // Synthesizable Chip Interconnect & Address Decoder:
 // Routes Master transactions (Memory Subsystem / Arbiter) to Slaves:
-// - SRAM Main Memory:           0x8000_0000 - 0x8001_FFFF (128 KB)
-// - DMA Engine MMIO:            0x4000_0000 - 0x4000_003F
+// - SRAM Main Memory:           0x8000_0000 - 0x8000_FFFF (64 KB)
 // - Interrupt Controller MMIO:  0x4000_1000 - 0x4000_101F
 // - Timer MMIO:                 0x4000_2000 - 0x4000_201F
 // - UART MMIO:                  0x4000_3000 - 0x4000_301F
+// - Unmapped Addresses: Returns 0xDEADBEEF fault response without SRAM access
 // =========================================================================
 
 `timescale 1ns / 1ps
@@ -22,7 +22,7 @@ module garuda_chip_interconnect #(
     input  wire                  clk,
     input  wire                  rst_n,
 
-    // Master Interface (From Memory Arbiter)
+    // Master Interface (From CPU / Memory Arbiter)
     input  wire [ADDR_WIDTH-1:0] m_addr,
     input  wire [DATA_WIDTH-1:0] m_write_data,
     input  wire [3:0]            m_byte_enable,
@@ -65,11 +65,12 @@ module garuda_chip_interconnect #(
     input  wire                  s3_resp_valid
 );
 
-    // Address Decoding
-    wire is_sram  = (m_addr >= 32'h8000_0000) && (m_addr < 32'h8002_0000);
-    wire is_intc  = (m_addr >= 32'h4000_1000) && (m_addr < 32'h4000_1020);
-    wire is_timer = (m_addr >= 32'h4000_2000) && (m_addr < 32'h4000_2020);
-    wire is_uart  = (m_addr >= 32'h4000_3000) && (m_addr < 32'h4000_3020);
+    // Address Decoding (Main SRAM capped to 64 KB 0x8000_0000 - 0x8000_FFFF)
+    wire is_sram  = (m_addr >= 32'h8000_0000) && (m_addr <= 32'h8000_FFFF);
+    wire is_intc  = (m_addr >= 32'h4000_1000) && (m_addr <= 32'h4000_101F);
+    wire is_timer = (m_addr >= 32'h4000_2000) && (m_addr <= 32'h4000_201F);
+    wire is_uart  = (m_addr >= 32'h4000_3000) && (m_addr <= 32'h4000_301F);
+    wire is_unmapped = m_req_valid && !(is_sram || is_intc || is_timer || is_uart);
 
     reg [1:0] latched_active_slave;
 
@@ -101,7 +102,7 @@ module garuda_chip_interconnect #(
             else if (is_intc)  s1_req_valid = 1'b1;
             else if (is_timer) s2_req_valid = 1'b1;
             else if (is_uart)  s3_req_valid = 1'b1;
-            else               s0_req_valid = 1'b1; // Default to SRAM
+            // No default SRAM routing for unmapped addresses!
         end
     end
 
@@ -116,26 +117,31 @@ module garuda_chip_interconnect #(
         end
     end
 
-    // Response Routing
+    // Response Routing & Unmapped Address Fault Handling
     always @(*) begin
-        case (latched_active_slave)
-            2'b00: begin
-                m_read_data  = s0_read_data;
-                m_resp_valid = s0_resp_valid;
-            end
-            2'b01: begin
-                m_read_data  = s1_read_data;
-                m_resp_valid = s1_resp_valid;
-            end
-            2'b10: begin
-                m_read_data  = s2_read_data;
-                m_resp_valid = s2_resp_valid;
-            end
-            2'b11: begin
-                m_read_data  = s3_read_data;
-                m_resp_valid = s3_resp_valid;
-            end
-        endcase
+        if (is_unmapped) begin
+            m_read_data  = 32'hDEAD_BEEF;
+            m_resp_valid = 1'b1; // Immediate fault response
+        end else begin
+            case (latched_active_slave)
+                2'b00: begin
+                    m_read_data  = s0_read_data;
+                    m_resp_valid = s0_resp_valid;
+                end
+                2'b01: begin
+                    m_read_data  = s1_read_data;
+                    m_resp_valid = s1_resp_valid;
+                end
+                2'b10: begin
+                    m_read_data  = s2_read_data;
+                    m_resp_valid = s2_resp_valid;
+                end
+                2'b11: begin
+                    m_read_data  = s3_read_data;
+                    m_resp_valid = s3_resp_valid;
+                end
+            endcase
+        end
     end
 
 endmodule
