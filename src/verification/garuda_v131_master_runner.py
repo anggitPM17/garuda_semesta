@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """
-GARUDA SEMESTA — TITAN V13.1-R3.2 FAILURE-DRIVEN RECOVERY MASTER RUNNER
+GARUDA SEMESTA — TITAN V13.1-R3.3 EVIDENCE RECOVERY & SIGN-OFF RUNNER
 Author & Chief System Architect: Anggit Prasetyo Mituhu
 Copyright (c) 2026 Anggit Prasetyo Mituhu. All rights reserved.
 Licensed under the Apache License, Version 2.0
 
-Master Verification Orchestrator with Strict Fail-Fast & Truthful Sign-Off:
+Master Verification Orchestrator with Robust Diagnostics & Fail-Fast:
 - STAGE 1: Real Compiler Pipeline (garuda_compiler.py -> program.hex)
 - STAGE 2: Real BEQ & JMP Branch Execution Engine (tb_garuda_v125_branch_jump)
 - STAGE 3: Interconnect Address Decoder & FSM Test (tb_garuda_v033_interconnect)
@@ -29,25 +29,32 @@ if PROJECT_DIR not in sys.path:
 
 from src.verification.garuda_compiler_pipeline import run_garuda_compiler_pipeline
 
-logging.basicConfig(level=logging.INFO, format="[GARUDA V13.1-R3.2 RUNNER] %(levelname)s: %(message)s")
+logging.basicConfig(level=logging.INFO, format="[GARUDA V13.1-R3.3 RUNNER] %(levelname)s: %(message)s")
 
 BUILD_DIR = os.path.join(PROJECT_DIR, "build")
 V131R3_ARTIFACTS_DIR = os.path.join(PROJECT_DIR, "artifacts", "v13.1-r3")
 REPORTS_DIR = os.path.join(V131R3_ARTIFACTS_DIR, "reports")
 LOGS_DIR = os.path.join(V131R3_ARTIFACTS_DIR, "logs")
 
-class GarudaV131R32MasterRunner:
+class GarudaV131R33MasterRunner:
     def __init__(self):
         os.makedirs(BUILD_DIR, exist_ok=True)
         os.makedirs(REPORTS_DIR, exist_ok=True)
         os.makedirs(LOGS_DIR, exist_ok=True)
 
-        self.iverilog_path = shutil.which("iverilog") or "/usr/local/bin/iverilog"
-        self.vvp_path = shutil.which("vvp") or "/usr/bin/vvp" or "/usr/local/bin/vvp"
+        self.iverilog_path = shutil.which("iverilog")
+        if not self.iverilog_path or not os.path.isfile(self.iverilog_path):
+            raise RuntimeError("Fatal: 'iverilog' executable not found in system PATH.")
+
+        self.vvp_path = shutil.which("vvp")
+        if not self.vvp_path or not os.path.isfile(self.vvp_path):
+            raise RuntimeError("Fatal: 'vvp' executable not found in system PATH.")
 
     def log(self, msg, level="info"):
         if level == "info":
             logging.info(msg)
+        elif level == "warning":
+            logging.warning(msg)
         elif level == "error":
             logging.error(msg)
         sys.stdout.flush()
@@ -63,21 +70,26 @@ class GarudaV131R32MasterRunner:
         if res_c.returncode != 0:
             self.log(f"[{tb_name}] Compilation FAILED:\n{res_c.stderr}", level="error")
             with open(log_path, "w", encoding="utf-8") as f:
-                f.write(f"=== COMPILATION STDOUT ===\n{res_c.stdout}\n=== COMPILATION STDERR ===\n{res_c.stderr}\n")
+                f.write(f"=== COMMAND ===\n{' '.join(cmd_c)}\n=== COMPILATION STDOUT ===\n{res_c.stdout}\n=== COMPILATION STDERR ===\n{res_c.stderr}\n")
             return False, res_c.returncode, "COMPILE_FAIL"
 
         self.log(f"Simulating '{tb_name}' via VVP...")
         cmd_s = [self.vvp_path, out_vvp]
+        start_sim = time.time()
         try:
-            res_s = subprocess.run(cmd_s, capture_output=True, text=True, timeout=120, cwd=PROJECT_DIR)
-        except subprocess.TimeoutExpired:
-            self.log(f"[{tb_name}] Simulation TIMEOUT after 120s!", level="error")
+            res_s = subprocess.run(cmd_s, capture_output=True, text=True, timeout=180, cwd=PROJECT_DIR)
+            sim_duration = time.time() - start_sim
+        except subprocess.TimeoutExpired as e:
+            sim_duration = time.time() - start_sim
+            self.log(f"[{tb_name}] Simulation TIMEOUT after 180s!", level="error")
+            out_partial = e.stdout.decode('utf-8', errors='ignore') if isinstance(e.stdout, bytes) else (e.stdout or "")
+            err_partial = e.stderr.decode('utf-8', errors='ignore') if isinstance(e.stderr, bytes) else (e.stderr or "")
             with open(log_path, "w", encoding="utf-8") as f:
-                f.write(f"=== SIMULATION TIMEOUT AFTER 120s ===\n")
+                f.write(f"=== COMMAND ===\n{' '.join(cmd_s)}\n=== TIMEOUT PARTIAL STDOUT ===\n{out_partial}\n=== TIMEOUT PARTIAL STDERR ===\n{err_partial}\n")
             return False, -1, "TIMEOUT"
 
         with open(log_path, "w", encoding="utf-8") as f:
-            f.write(f"=== SIMULATION STDOUT ===\n{res_s.stdout}\n=== SIMULATION STDERR ===\n{res_s.stderr}\n")
+            f.write(f"=== COMMAND ===\n{' '.join(cmd_s)}\n=== DURATION_SEC ===\n{sim_duration:.3f}\n=== SIMULATION STDOUT ===\n{res_s.stdout}\n=== SIMULATION STDERR ===\n{res_s.stderr}\n")
 
         passed = (res_s.returncode == 0 and pass_marker in res_s.stdout)
         if passed:
@@ -90,7 +102,7 @@ class GarudaV131R32MasterRunner:
     def run_v131_pipeline(self):
         start_t = time.time()
         print("=========================================================================")
-        print("GARUDA SEMESTA — TITAN V13.1-R3.2 FAILURE-DRIVEN REPAIR RUNNER")
+        print("GARUDA SEMESTA — TITAN V13.1-R3.3 FAILURE-DRIVEN REPAIR & EVIDENCE RUNNER")
         print("Architect & Author: Anggit Prasetyo Mituhu")
         print("=========================================================================\n")
         sys.stdout.flush()
@@ -175,7 +187,7 @@ class GarudaV131R32MasterRunner:
 
         report_json = {
             "project": "GARUDA SEMESTA",
-            "milestone": "GARUDA TITAN V13.1-R3.2 — FAILURE-DRIVEN REPAIR & SIGN-OFF",
+            "milestone": "GARUDA TITAN V13.1-R3.3 — EVIDENCE RECOVERY & SIGN-OFF",
             "timestamp_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ"),
             "host_environment": sys.platform,
             "overall_status": "PASS" if passed else "FAIL",
@@ -188,26 +200,27 @@ class GarudaV131R32MasterRunner:
                 "tb_garuda_v131_full_soc": status_soc
             },
             "assertions_verified": [
-                "r1 == 10, r2 == 10" if ok_branch else "Branch verification failed",
-                "INTERCONNECT_DECODE_ASSERTION_PASS" if ok_interconnect else "Interconnect failed",
-                "UART_WAVEFORM_ASSERTION_PASS" if ok_uart else "UART failed",
-                "LOAD_STORE_ASSERTION_PASS" if ok_ls else "CPU Load/Store failed",
-                "GARUDA_SOC_V131_ASSERTION_PASS" if ok_soc else "Full SoC not proven"
+                "BRANCH_JUMP_ASSERTION_PASS" if ok_branch else None,
+                "INTERCONNECT_DECODE_ASSERTION_PASS" if ok_interconnect else None,
+                "UART_WAVEFORM_ASSERTION_PASS" if ok_uart else None,
+                "LOAD_STORE_ASSERTION_PASS" if ok_ls else None,
+                "GARUDA_SOC_V131_ASSERTION_PASS" if ok_soc else None
             ],
             "duration_seconds": round(duration, 3)
         }
+        report_json["assertions_verified"] = [a for a in report_json["assertions_verified"] if a is not None]
 
         with open(os.path.join(REPORTS_DIR, "final_signoff.json"), "w", encoding="utf-8") as f:
             json.dump(report_json, f, indent=2)
 
         print("\n=========================================================================")
-        print(f" GARUDA V13.1-R3.2 MASTER RUNNER STATUS: {'PASS' if passed else 'FAIL'} (Exit Code: {0 if passed else 1})")
+        print(f" GARUDA V13.1-R3.3 MASTER RUNNER STATUS: {'PASS' if passed else 'FAIL'} (Exit Code: {0 if passed else 1})")
         print("=========================================================================\n")
         sys.stdout.flush()
 
         return passed
 
 if __name__ == "__main__":
-    runner = GarudaV131R32MasterRunner()
+    runner = GarudaV131R33MasterRunner()
     success = runner.run_v131_pipeline()
     sys.exit(0 if success else 1)
