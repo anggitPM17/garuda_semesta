@@ -1,5 +1,5 @@
 // =========================================================================
-// GARUDA SEMESTA — CHIP SYSTEM-ON-CHIP TOP-LEVEL MODULE (v0.1)
+// GARUDA SEMESTA — CHIP SYSTEM-ON-CHIP TOP-LEVEL MODULE (v0.2)
 // Author & Chief System Architect: Anggit Prasetyo Mituhu
 // Copyright (c) 2026 Anggit Prasetyo Mituhu. All rights reserved.
 // Licensed under the Apache License, Version 2.0
@@ -7,10 +7,10 @@
 // Synthesizable GARUDA SEMESTA Chip System-on-Chip Entry Point:
 // - Integrates 5-Stage CPU Core Pipeline (garuda_cpu_pipeline_top)
 // - Integrates Memory Subsystem Top (garuda_memory_subsystem_top)
-// - Integrates Chip System Interconnect & Address Decoder (garuda_chip_interconnect)
-// - Integrates Native Interrupt Controller (garuda_interrupt_controller)
-// - Integrates Hardware MMIO Timer Peripheral (garuda_timer)
-// - Integrates Hardware MMIO UART Peripheral (garuda_uart)
+// - Integrates Active System Interconnect (garuda_chip_interconnect)
+// - Integrates Active MMIO Interrupt Controller (garuda_interrupt_controller)
+// - Integrates Active MMIO Timer Peripheral (garuda_timer)
+// - Integrates Active MMIO UART Peripheral (garuda_uart)
 // - Integrates Main SRAM Controller (garuda_memory_controller)
 // =========================================================================
 
@@ -61,6 +61,14 @@ module garuda_semesta_chip_top #(
     wire [DATA_WIDTH-1:0] dcache_read_val;
     wire                  dcache_valid;
     wire                  dcache_stall;
+
+    // Interconnect & MMIO Wires
+    wire [ADDR_WIDTH-1:0] intc_addr, timer_addr, uart_addr;
+    wire [31:0]           intc_wdata, timer_wdata, uart_wdata;
+    wire                  intc_wen, timer_wen, uart_wen;
+    wire                  intc_req, timer_req, uart_req;
+    wire [31:0]           intc_rdata, timer_rdata, uart_rdata;
+    wire                  intc_rvalid, timer_rvalid, uart_rvalid;
 
     // 1. Modular 5-Stage CPU Pipeline Core
     garuda_cpu_pipeline_top #(
@@ -125,7 +133,56 @@ module garuda_semesta_chip_top #(
     assign dcache_read_val[63:32] = 32'd0;
     assign ext_dma_read_val[63:32] = 32'd0;
 
-    // 3. Interrupt Controller
+    // 3. Active Interconnect Routing & Address Decoder
+    garuda_chip_interconnect #(
+        .ADDR_WIDTH(32),
+        .DATA_WIDTH(32)
+    ) u_interconnect (
+        .clk(clk),
+        .rst_n(rst_n),
+        .m_addr(dcache_addr),
+        .m_write_data(dcache_write_val[31:0]),
+        .m_byte_enable(dcache_byte_en),
+        .m_write_en(dcache_write_en),
+        .m_req_valid(dcache_req_valid && (dcache_addr < 32'h8000_0000)),
+        .m_read_data(),
+        .m_resp_valid(),
+
+        // SRAM Slave (handled via memory subsystem top)
+        .s0_addr(),
+        .s0_write_data(),
+        .s0_byte_enable(),
+        .s0_write_en(),
+        .s0_req_valid(),
+        .s0_read_data(32'd0),
+        .s0_resp_valid(1'b0),
+
+        // Interrupt Controller Slave
+        .s1_addr(intc_addr),
+        .s1_write_data(intc_wdata),
+        .s1_write_en(intc_wen),
+        .s1_req_valid(intc_req),
+        .s1_read_data(intc_rdata),
+        .s1_resp_valid(intc_rvalid),
+
+        // Timer Slave
+        .s2_addr(timer_addr),
+        .s2_write_data(timer_wdata),
+        .s2_write_en(timer_wen),
+        .s2_req_valid(timer_req),
+        .s2_read_data(timer_rdata),
+        .s2_resp_valid(timer_rvalid),
+
+        // UART Slave
+        .s3_addr(uart_addr),
+        .s3_write_data(uart_wdata),
+        .s3_write_en(uart_wen),
+        .s3_req_valid(uart_req),
+        .s3_read_data(uart_rdata),
+        .s3_resp_valid(uart_rvalid)
+    );
+
+    // 4. Interrupt Controller
     wire timer_irq_sig, uart_tx_irq_sig;
     wire [7:0] combined_irq_inputs = external_irq_inputs | {6'd0, uart_tx_irq_sig, timer_irq_sig};
 
@@ -135,46 +192,46 @@ module garuda_semesta_chip_top #(
     ) u_intc (
         .clk(clk),
         .rst_n(rst_n),
-        .req_addr(32'h4000_1000),
-        .req_write_data(32'd0),
-        .req_write_en(1'b0),
-        .req_valid(1'b0),
-        .resp_read_data(),
-        .resp_valid(),
+        .req_addr(intc_addr),
+        .req_write_data(intc_wdata),
+        .req_write_en(intc_wen),
+        .req_valid(intc_req),
+        .resp_read_data(intc_rdata),
+        .resp_valid(intc_rvalid),
         .irq_inputs(combined_irq_inputs),
         .irq_to_cpu(chip_irq_to_cpu),
         .active_irq_vector()
     );
 
-    // 4. Timer Peripheral
+    // 5. Timer Peripheral
     garuda_timer #(
         .ADDR_WIDTH(32),
         .DATA_WIDTH(32)
     ) u_timer (
         .clk(clk),
         .rst_n(rst_n),
-        .req_addr(32'h4000_2000),
-        .req_write_data(32'd0),
-        .req_write_en(1'b0),
-        .req_valid(1'b0),
-        .resp_read_data(),
-        .resp_valid(),
+        .req_addr(timer_addr),
+        .req_write_data(timer_wdata),
+        .req_write_en(timer_wen),
+        .req_valid(timer_req),
+        .resp_read_data(timer_rdata),
+        .resp_valid(timer_rvalid),
         .timer_irq(timer_irq_sig)
     );
 
-    // 5. UART Peripheral
+    // 6. UART Peripheral
     garuda_uart #(
         .ADDR_WIDTH(32),
         .DATA_WIDTH(32)
     ) u_uart (
         .clk(clk),
         .rst_n(rst_n),
-        .req_addr(32'h4000_3000),
-        .req_write_data(32'd0),
-        .req_write_en(1'b0),
-        .req_valid(1'b0),
-        .resp_read_data(),
-        .resp_valid(),
+        .req_addr(uart_addr),
+        .req_write_data(uart_wdata),
+        .req_write_en(uart_wen),
+        .req_valid(uart_req),
+        .resp_read_data(uart_rdata),
+        .resp_valid(uart_rvalid),
         .uart_tx(uart_tx),
         .uart_rx(uart_rx),
         .uart_tx_irq(uart_tx_irq_sig)
