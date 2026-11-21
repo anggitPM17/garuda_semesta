@@ -1,5 +1,5 @@
 // =========================================================================
-// GARUDA SEMESTA — MODULAR 5-STAGE PIPELINE CPU TOP-LEVEL (v12.4.6-R3.1)
+// GARUDA SEMESTA — MODULAR 5-STAGE PIPELINE CPU TOP-LEVEL (v12.4.6-R3.2)
 // Author & Chief System Architect: Anggit Prasetyo Mituhu
 // Copyright (c) 2026 Anggit Prasetyo Mituhu. All rights reserved.
 // Licensed under the Apache License, Version 2.0
@@ -7,7 +7,7 @@
 // Synthesizable 5-Stage Pipeline CPU Core Top-Level:
 // - IF (Instruction Fetch), ID (Instruction Decode), EX (Execute), MEM (Memory), WB (Writeback)
 // - Integrated PC, Instruction Decoder, 32x64-bit RegFile, 64-bit ALU
-// - Load-Use Data Hazard stall & bubble insertion fix for hardware LOAD instructions
+// - Load-Use Data Hazard stall, MEM-stage dcache_read_val forwarding, & WB forwarding
 // =========================================================================
 
 `timescale 1ns / 1ps
@@ -185,10 +185,12 @@ module garuda_cpu_pipeline_top #(
 
     // Forwarding logic for RS1 and RS2 at ID stage
     wire [DATA_WIDTH-1:0] fwd_rs1_val = (id_ex_reg_write  && !id_ex_mem_read && id_ex_rd == dec_rs1 && dec_rs1 != 0) ? alu_result :
+                                        (ex_mem_reg_write && ex_mem_mem_read  && ex_mem_rd == dec_rs1 && dec_rs1 != 0) ? dcache_read_val :
                                         (ex_mem_reg_write && !ex_mem_mem_read && ex_mem_rd == dec_rs1 && dec_rs1 != 0) ? ex_mem_alu_res :
                                         (mem_wb_reg_write && mem_wb_rd == dec_rs1 && dec_rs1 != 0) ? mem_wb_final_val : rf_rs1_val;
 
     wire [DATA_WIDTH-1:0] fwd_rs2_val = (id_ex_reg_write  && !id_ex_mem_read && id_ex_rd == dec_rs2 && dec_rs2 != 0) ? alu_result :
+                                        (ex_mem_reg_write && ex_mem_mem_read  && ex_mem_rd == dec_rs2 && dec_rs2 != 0) ? dcache_read_val :
                                         (ex_mem_reg_write && !ex_mem_mem_read && ex_mem_rd == dec_rs2 && dec_rs2 != 0) ? ex_mem_alu_res :
                                         (mem_wb_reg_write && mem_wb_rd == dec_rs2 && dec_rs2 != 0) ? mem_wb_final_val : rf_rs2_val;
 
