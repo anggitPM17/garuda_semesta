@@ -1,5 +1,5 @@
 // =========================================================================
-// GARUDA SEMESTA — CHIP SYSTEM-ON-CHIP TOP-LEVEL MODULE (v0.2)
+// GARUDA SEMESTA — CHIP SYSTEM-ON-CHIP TOP-LEVEL MODULE (v0.3)
 // Author & Chief System Architect: Anggit Prasetyo Mituhu
 // Copyright (c) 2026 Anggit Prasetyo Mituhu. All rights reserved.
 // Licensed under the Apache License, Version 2.0
@@ -157,7 +157,7 @@ module garuda_semesta_chip_top #(
         .s0_read_data(32'd0),
         .s0_resp_valid(1'b0),
 
-        // Interrupt Controller Slave
+        // Interrupt Controller Slave (0x4000_1000)
         .s1_addr(intc_addr),
         .s1_write_data(intc_wdata),
         .s1_write_en(intc_wen),
@@ -165,7 +165,7 @@ module garuda_semesta_chip_top #(
         .s1_read_data(intc_rdata),
         .s1_resp_valid(intc_rvalid),
 
-        // Timer Slave
+        // Timer Slave (0x4000_2000)
         .s2_addr(timer_addr),
         .s2_write_data(timer_wdata),
         .s2_write_en(timer_wen),
@@ -173,7 +173,7 @@ module garuda_semesta_chip_top #(
         .s2_read_data(timer_rdata),
         .s2_resp_valid(timer_rvalid),
 
-        // UART Slave
+        // UART Slave (0x4000_3000)
         .s3_addr(uart_addr),
         .s3_write_data(uart_wdata),
         .s3_write_en(uart_wen),
