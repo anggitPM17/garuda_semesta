@@ -1,5 +1,5 @@
 // =========================================================================
-// GARUDA SEMESTA — CHIP SYSTEM-ON-CHIP TOP-LEVEL MODULE (v0.3)
+// GARUDA SEMESTA — CHIP SYSTEM-ON-CHIP TOP-LEVEL MODULE (v0.3.2)
 // Author & Chief System Architect: Anggit Prasetyo Mituhu
 // Copyright (c) 2026 Anggit Prasetyo Mituhu. All rights reserved.
 // Licensed under the Apache License, Version 2.0
@@ -7,7 +7,7 @@
 // Synthesizable GARUDA SEMESTA Chip System-on-Chip Entry Point:
 // - Integrates 5-Stage CPU Core Pipeline (garuda_cpu_pipeline_top)
 // - Integrates Memory Subsystem Top (garuda_memory_subsystem_top)
-// - Integrates Active System Interconnect (garuda_chip_interconnect)
+// - Integrates Active System Interconnect & MMIO MUX (garuda_chip_interconnect)
 // - Integrates Active MMIO Interrupt Controller (garuda_interrupt_controller)
 // - Integrates Active MMIO Timer Peripheral (garuda_timer)
 // - Integrates Active MMIO UART Peripheral (garuda_uart)
@@ -62,13 +62,29 @@ module garuda_semesta_chip_top #(
     wire                  dcache_valid;
     wire                  dcache_stall;
 
-    // Interconnect & MMIO Wires
+    // Memory Subsystem Wires
+    wire [31:0] sram_dcache_read_val;
+    wire        sram_dcache_valid;
+    wire        sram_dcache_stall;
+
+    // MMIO Interconnect Wires
+    wire [31:0] mmio_read_data;
+    wire        mmio_resp_valid;
     wire [ADDR_WIDTH-1:0] intc_addr, timer_addr, uart_addr;
     wire [31:0]           intc_wdata, timer_wdata, uart_wdata;
     wire                  intc_wen, timer_wen, uart_wen;
     wire                  intc_req, timer_req, uart_req;
     wire [31:0]           intc_rdata, timer_rdata, uart_rdata;
     wire                  intc_rvalid, timer_rvalid, uart_rvalid;
+
+    // Address Decoding: SRAM >= 0x8000_0000, MMIO < 0x8000_0000
+    wire is_mmio_addr = (dcache_addr < 32'h8000_0000);
+
+    // Muxing MMIO Read Data & Valid Response back into CPU D-Cache Interface
+    assign dcache_read_val[31:0] = is_mmio_addr ? mmio_read_data : sram_dcache_read_val;
+    assign dcache_read_val[63:32] = 32'd0;
+    assign dcache_valid          = is_mmio_addr ? mmio_resp_valid : sram_dcache_valid;
+    assign dcache_stall          = is_mmio_addr ? 1'b0 : sram_dcache_stall;
 
     // 1. Modular 5-Stage CPU Pipeline Core
     garuda_cpu_pipeline_top #(
@@ -95,7 +111,7 @@ module garuda_semesta_chip_top #(
         .illegal_instruction(illegal_instruction)
     );
 
-    // 2. Memory Subsystem Top
+    // 2. Memory Subsystem Top (SRAM Transactions >= 0x8000_0000)
     garuda_memory_subsystem_top #(
         .ADDR_WIDTH(32),
         .DATA_WIDTH(32)
@@ -112,11 +128,11 @@ module garuda_semesta_chip_top #(
         .cpu_data_write_val(dcache_write_val[31:0]),
         .cpu_data_byte_en(dcache_byte_en),
         .cpu_data_write_en(dcache_write_en),
-        .cpu_data_req_valid(dcache_req_valid),
-        .cpu_data_read_val(dcache_read_val[31:0]),
-        .cpu_data_hit(dcache_valid),
-        .cpu_data_valid(dcache_valid),
-        .cpu_data_stall(dcache_stall),
+        .cpu_data_req_valid(dcache_req_valid && !is_mmio_addr),
+        .cpu_data_read_val(sram_dcache_read_val),
+        .cpu_data_hit(sram_dcache_valid),
+        .cpu_data_valid(sram_dcache_valid),
+        .cpu_data_stall(sram_dcache_stall),
         .gpu_dma_addr(ext_dma_addr),
         .gpu_dma_write_val(ext_dma_write_val[31:0]),
         .gpu_dma_byte_en(ext_dma_byte_en),
@@ -130,10 +146,9 @@ module garuda_semesta_chip_top #(
         .subsystem_parity_error(parity_error_detected)
     );
 
-    assign dcache_read_val[63:32] = 32'd0;
     assign ext_dma_read_val[63:32] = 32'd0;
 
-    // 3. Active Interconnect Routing & Address Decoder
+    // 3. Active Interconnect Routing & Address Decoder (MMIO Transactions < 0x8000_0000)
     garuda_chip_interconnect #(
         .ADDR_WIDTH(32),
         .DATA_WIDTH(32)
@@ -144,9 +159,9 @@ module garuda_semesta_chip_top #(
         .m_write_data(dcache_write_val[31:0]),
         .m_byte_enable(dcache_byte_en),
         .m_write_en(dcache_write_en),
-        .m_req_valid(dcache_req_valid && (dcache_addr < 32'h8000_0000)),
-        .m_read_data(),
-        .m_resp_valid(),
+        .m_req_valid(dcache_req_valid && is_mmio_addr),
+        .m_read_data(mmio_read_data),
+        .m_resp_valid(mmio_resp_valid),
 
         // SRAM Slave (handled via memory subsystem top)
         .s0_addr(),
