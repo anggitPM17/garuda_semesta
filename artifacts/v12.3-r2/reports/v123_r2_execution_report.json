@@ -1,7 +1,7 @@
 {
   "project": "GARUDA SEMESTA",
   "milestone": "GARUDA SEMESTA V12.3-R2 \u2014 EXECUTION INTEGRITY & TRANSACTION VALIDATION",
-  "timestamp_utc": "2026-11-21T09:34:45Z",
+  "timestamp_utc": "2026-11-21T14:08:47Z",
   "host_environment": "linux",
   "overall_status": "FAIL",
   "exit_code": 1,
@@ -25,5 +25,5 @@
     "DMA Readback SRAM[0x80000100] == 500",
     "Illegal Opcode 0xE -> illegal_instruction exception"
   ],
-  "duration_seconds": 919.644
+  "duration_seconds": 910.387
 }

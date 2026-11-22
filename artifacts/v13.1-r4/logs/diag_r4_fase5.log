@@ -1,0 +1,47 @@
+Compile returncode: 0
+VVP exit code: 0
+VVP stdout:
+ WARNING: src/memory/garuda_memory_controller.v:51: $readmemh(program.hex): Not enough words in the file for the requested range [0:16383].
+=========================================================================
+GARUDA SEMESTA V12.3-R2.2 — CPU LOAD/STORE DIAGNOSTIC TESTBENCH
+Architect & Author: Anggit Prasetyo Mituhu
+=========================================================================
+
+[CYC 0] rst_n=0 pc=xxxxxxxx if_id_pc=80000000 if_id_inst=0000000000000000 stall_pc=0 icache_stall=0 icache_valid=0 halted=0 branch_taken=0 branch_tgt=80000000 id_ex_pc=80000000 id_ex_opcode=0 mem_wb_opcode=0 dec_illegal=0
+[CYC 1] rst_n=0 pc=xxxxxxxx if_id_pc=80000000 if_id_inst=0000000000000000 stall_pc=0 icache_stall=0 icache_valid=0 halted=0 branch_taken=0 branch_tgt=80000000 id_ex_pc=80000000 id_ex_opcode=0 mem_wb_opcode=0 dec_illegal=0
+[CYC 2] rst_n=1 pc=xxxxxxxx if_id_pc=80000000 if_id_inst=0000000000000000 stall_pc=0 icache_stall=0 icache_valid=0 halted=0 branch_taken=0 branch_tgt=80000000 id_ex_pc=80000000 id_ex_opcode=0 mem_wb_opcode=0 dec_illegal=0
+[CYC 3] rst_n=1 pc=xxxxxxxx if_id_pc=80000000 if_id_inst=0000000000000000 stall_pc=x icache_stall=x icache_valid=0 halted=0 branch_taken=0 branch_tgt=80000000 id_ex_pc=80000000 id_ex_opcode=0 mem_wb_opcode=0 dec_illegal=0
+[CYC 4] rst_n=1 pc=xxxxxxxx if_id_pc=80000000 if_id_inst=0000000000000000 stall_pc=x icache_stall=x icache_valid=0 halted=0 branch_taken=0 branch_tgt=80000000 id_ex_pc=80000000 id_ex_opcode=0 mem_wb_opcode=0 dec_illegal=0
+[CYC 5] rst_n=1 pc=xxxxxxxx if_id_pc=80000000 if_id_inst=0000000000000000 stall_pc=1 icache_stall=1 icache_valid=0 halted=0 branch_taken=0 branch_tgt=80000000 id_ex_pc=80000000 id_ex_opcode=0 mem_wb_opcode=0 dec_illegal=0
+[CYC 6] rst_n=1 pc=xxxxxxxx if_id_pc=80000000 if_id_inst=0000000000000000 stall_pc=1 icache_stall=1 icache_valid=0 halted=0 branch_taken=0 branch_tgt=80000000 id_ex_pc=80000000 id_ex_opcode=0 mem_wb_opcode=0 dec_illegal=0
+[CYC 7] rst_n=1 pc=xxxxxxxx if_id_pc=80000000 if_id_inst=0000000000000000 stall_pc=1 icache_stall=1 icache_valid=0 halted=0 branch_taken=0 branch_tgt=80000000 id_ex_pc=80000000 id_ex_opcode=0 mem_wb_opcode=0 dec_illegal=0
+[CYC 8] rst_n=1 pc=xxxxxxxx if_id_pc=80000000 if_id_inst=0000000000000000 stall_pc=1 icache_stall=1 icache_valid=0 halted=0 branch_taken=0 branch_tgt=80000000 id_ex_pc=80000000 id_ex_opcode=0 mem_wb_opcode=0 dec_illegal=0
+[CYC 9] rst_n=1 pc=xxxxxxxx if_id_pc=80000000 if_id_inst=0000000000000000 stall_pc=1 icache_stall=1 icache_valid=0 halted=0 branch_taken=0 branch_tgt=80000000 id_ex_pc=80000000 id_ex_opcode=0 mem_wb_opcode=0 dec_illegal=0
+[CYC 10] rst_n=1 pc=xxxxxxxx if_id_pc=80000000 if_id_inst=0000000000000000 stall_pc=1 icache_stall=1 icache_valid=0 halted=0 branch_taken=0 branch_tgt=80000000 id_ex_pc=80000000 id_ex_opcode=0 mem_wb_opcode=0 dec_illegal=0
+[CYC 11] rst_n=1 pc=xxxxxxxx if_id_pc=80000000 if_id_inst=0000000000000000 stall_pc=1 icache_stall=1 icache_valid=0 halted=0 branch_taken=0 branch_tgt=80000000 id_ex_pc=80000000 id_ex_opcode=0 mem_wb_opcode=0 dec_illegal=0
+[CYC 12] rst_n=1 pc=xxxxxxxx if_id_pc=80000000 if_id_inst=0000000000000000 stall_pc=1 icache_stall=1 icache_valid=0 halted=0 branch_taken=0 branch_tgt=80000000 id_ex_pc=80000000 id_ex_opcode=0 mem_wb_opcode=0 dec_illegal=0
+[CYC 13] rst_n=1 pc=xxxxxxxx if_id_pc=80000000 if_id_inst=0000000000000000 stall_pc=1 icache_stall=1 icache_valid=0 halted=0 branch_taken=0 branch_tgt=80000000 id_ex_pc=80000000 id_ex_opcode=0 mem_wb_opcode=0 dec_illegal=0
+[CYC 14] rst_n=1 pc=xxxxxxxx if_id_pc=80000000 if_id_inst=0000000000000000 stall_pc=1 icache_stall=1 icache_valid=0 halted=0 branch_taken=0 branch_tgt=80000000 id_ex_pc=80000000 id_ex_opcode=0 mem_wb_opcode=0 dec_illegal=0
+[CYC 15] rst_n=1 pc=xxxxxxxx if_id_pc=80000000 if_id_inst=0000000000000000 stall_pc=1 icache_stall=1 icache_valid=0 halted=0 branch_taken=0 branch_tgt=80000000 id_ex_pc=80000000 id_ex_opcode=0 mem_wb_opcode=0 dec_illegal=0
+[CYC 16] rst_n=1 pc=xxxxxxxx if_id_pc=80000000 if_id_inst=0000000000000000 stall_pc=1 icache_stall=1 icache_valid=0 halted=0 branch_taken=0 branch_tgt=80000000 id_ex_pc=80000000 id_ex_opcode=0 mem_wb_opcode=0 dec_illegal=0
+[CYC 17] rst_n=1 pc=xxxxxxxx if_id_pc=80000000 if_id_inst=0000000000000000 stall_pc=1 icache_stall=1 icache_valid=0 halted=0 branch_taken=0 branch_tgt=80000000 id_ex_pc=80000000 id_ex_opcode=0 mem_wb_opcode=0 dec_illegal=0
+[CYC 18] rst_n=1 pc=xxxxxxxx if_id_pc=80000000 if_id_inst=0000000000000000 stall_pc=1 icache_stall=1 icache_valid=0 halted=0 branch_taken=0 branch_tgt=80000000 id_ex_pc=80000000 id_ex_opcode=0 mem_wb_opcode=0 dec_illegal=0
+[CYC 19] rst_n=1 pc=xxxxxxxx if_id_pc=80000000 if_id_inst=0000000000000000 stall_pc=1 icache_stall=1 icache_valid=0 halted=0 branch_taken=0 branch_tgt=80000000 id_ex_pc=80000000 id_ex_opcode=0 mem_wb_opcode=0 dec_illegal=0
+[CYC 20] rst_n=1 pc=xxxxxxxx if_id_pc=80000000 if_id_inst=0000000000000000 stall_pc=1 icache_stall=1 icache_valid=0 halted=0 branch_taken=0 branch_tgt=80000000 id_ex_pc=80000000 id_ex_opcode=0 mem_wb_opcode=0 dec_illegal=0
+[CYC 21] rst_n=1 pc=xxxxxxxx if_id_pc=80000000 if_id_inst=0000000000000000 stall_pc=1 icache_stall=1 icache_valid=0 halted=0 branch_taken=0 branch_tgt=80000000 id_ex_pc=80000000 id_ex_opcode=0 mem_wb_opcode=0 dec_illegal=0
+[CYC 22] rst_n=1 pc=xxxxxxxx if_id_pc=80000000 if_id_inst=0000000000000000 stall_pc=1 icache_stall=1 icache_valid=0 halted=0 branch_taken=0 branch_tgt=80000000 id_ex_pc=80000000 id_ex_opcode=0 mem_wb_opcode=0 dec_illegal=0
+[CYC 23] rst_n=1 pc=xxxxxxxx if_id_pc=80000000 if_id_inst=0000000000000000 stall_pc=1 icache_stall=1 icache_valid=0 halted=0 branch_taken=0 branch_tgt=80000000 id_ex_pc=80000000 id_ex_opcode=0 mem_wb_opcode=0 dec_illegal=0
+[CYC 24] rst_n=1 pc=xxxxxxxx if_id_pc=80000000 if_id_inst=0000000000000000 stall_pc=1 icache_stall=1 icache_valid=0 halted=0 branch_taken=0 branch_tgt=80000000 id_ex_pc=80000000 id_ex_opcode=0 mem_wb_opcode=0 dec_illegal=0
+[CYC 25] rst_n=1 pc=xxxxxxxx if_id_pc=80000000 if_id_inst=0000000000000000 stall_pc=1 icache_stall=1 icache_valid=0 halted=0 branch_taken=0 branch_tgt=80000000 id_ex_pc=80000000 id_ex_opcode=0 mem_wb_opcode=0 dec_illegal=0
+[CYC 26] rst_n=1 pc=xxxxxxxx if_id_pc=80000000 if_id_inst=0000000000000000 stall_pc=1 icache_stall=1 icache_valid=0 halted=0 branch_taken=0 branch_tgt=80000000 id_ex_pc=80000000 id_ex_opcode=0 mem_wb_opcode=0 dec_illegal=0
+[CYC 27] rst_n=1 pc=xxxxxxxx if_id_pc=80000000 if_id_inst=0000000000000000 stall_pc=1 icache_stall=1 icache_valid=0 halted=0 branch_taken=0 branch_tgt=80000000 id_ex_pc=80000000 id_ex_opcode=0 mem_wb_opcode=0 dec_illegal=0
+[CYC 28] rst_n=1 pc=xxxxxxxx if_id_pc=80000000 if_id_inst=0000000000000000 stall_pc=1 icache_stall=1 icache_valid=0 halted=0 branch_taken=0 branch_tgt=80000000 id_ex_pc=80000000 id_ex_opcode=0 mem_wb_opcode=0 dec_illegal=0
+[CYC 29] rst_n=1 pc=xxxxxxxx if_id_pc=80000000 if_id_inst=0000000000000000 stall_pc=1 icache_stall=1 icache_valid=0 halted=0 branch_taken=0 branch_tgt=80000000 id_ex_pc=80000000 id_ex_opcode=0 mem_wb_opcode=0 dec_illegal=0
+
+[TB] 30 cycles completed.
+[TB] Final: pc=0xxxxxxxxx halted=0 if_id_inst=0x0000000000000000 icache_valid=0 icache_stall=1
+[TB] store_accepted=0 load_accepted=0 mem_ctrl_store=0 mem_ctrl_load=0
+tests/rtl/cpu/tb_cpu_load_store_v123.v:154: $finish called at 315000 (1ps)
+
+VVP stderr:
+ 

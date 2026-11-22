@@ -1,7 +1,7 @@
 {
   "project": "GARUDA SEMESTA",
   "milestone": "GARUDA TITAN V13.1 \u2014 FAST TRACK HARDWARE EXECUTION",
-  "timestamp_utc": "2026-11-21T12:52:05Z",
+  "timestamp_utc": "2026-11-21T14:16:54Z",
   "host_environment": "linux",
   "overall_status": "FAIL",
   "exit_code": 1,
@@ -26,5 +26,5 @@
     "Single-Outstanding Interconnect Transaction FSM Routing & Error Fault (0xDEADBEEF)",
     "Synthesizable Single-Driver UART Serial TX FSM Engine (0x41 'A')"
   ],
-  "duration_seconds": 245.166
+  "duration_seconds": 258.612
 }

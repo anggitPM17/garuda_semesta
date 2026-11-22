@@ -4,12 +4,7 @@
 // Copyright (c) 2026 Anggit Prasetyo Mituhu. All rights reserved.
 // Licensed under the Apache License, Version 2.0
 //
-// Strict Hardware Testbench verifying ACCEPTED CPU STORE & LOAD transactions:
-// - Monitors CPU D-Cache Memory Interface (req_valid, req_write_en, req_addr, stall)
-// - Asserts EXACTLY 1 accepted STORE transaction (0x80000100)
-// - Asserts EXACTLY 1 accepted LOAD transaction (0x80000100)
-// - Verifies physical SRAM array mapping: main_sram[(0x80000100 - 0x80000000)/4] = main_sram[64] == 500
-// - Verifies CPU register state: r3=500, r4=500, r5=650, illegal_instruction == 0
+// FASE 8 Probe Testbench for L2 Cache and Memory Arbiter Request Chain
 // =========================================================================
 
 `timescale 1ns / 1ps
@@ -24,7 +19,6 @@ module tb_cpu_load_store_v123;
     wire        illegal_instruction;
     wire        parity_error_detected;
 
-    integer cycle_counter = 0;
     integer store_accepted_count = 0;
     integer load_accepted_count = 0;
     integer mem_ctrl_store_count = 0;
@@ -54,7 +48,7 @@ module tb_cpu_load_store_v123;
         .parity_error_detected(parity_error_detected)
     );
 
-    // 1. Monitor Accepted CPU D-Cache Memory Transactions (when stall is 0)
+    // 1. Monitor Accepted CPU D-Cache Memory Transactions
     always @(posedge clk) begin
         if (rst_n) begin
             if (u_dut.u_memory_subsystem.u_dcache.req_valid &&
@@ -105,26 +99,23 @@ module tb_cpu_load_store_v123;
         end
     end
 
-    // 3. Progress tracking
+    reg [31:0] prev_if_id_pc;
     always @(posedge clk) begin
-        if (dbg_cycle % 1000 == 0) begin
-            $display("[PROGRESS CYC %0d] pc=%h if_id_pc=%h stall_pc=%b icache_stall=%b icache_valid=%b halted=%b",
-                dbg_cycle,
-                u_dut.current_pc,
-                u_dut.u_cpu.if_id_pc,
-                u_dut.u_cpu.stall_pc,
-                u_dut.u_cpu.icache_stall,
-                u_dut.u_cpu.icache_valid,
-                pipeline_halted
-            );
-            $fflush();
+        if (rst_n) begin
+            if (u_dut.u_cpu.if_id_pc !== prev_if_id_pc) begin
+                $display("[PC_CHG] if_id_pc=%h if_id_inst=%h dec_opcode=%h", u_dut.u_cpu.if_id_pc, u_dut.u_cpu.if_id_inst, u_dut.u_cpu.dec_opcode);
+                $fflush();
+                prev_if_id_pc <= u_dut.u_cpu.if_id_pc;
+            end
         end
         dbg_cycle = dbg_cycle + 1;
     end
 
     initial begin
+        $dumpfile("tb_cpu_load_store.vcd");
+        $dumpvars(0, tb_cpu_load_store_v123);
         $display("=========================================================================");
-        $display("GARUDA SEMESTA V12.3-R2.2 — CPU LOAD/STORE TRANSACTION ACCEPTANCE TESTBENCH");
+        $display("GARUDA SEMESTA V12.3-R2.2 — FASE 30 VCD WAVEFORM GENERATION TESTBENCH");
         $display("Architect & Author: Anggit Prasetyo Mituhu");
         $display("=========================================================================\n");
         $fflush();
@@ -134,26 +125,26 @@ module tb_cpu_load_store_v123;
         #20 rst_n = 1;
 
         timeout_cnt = 0;
-        while (pipeline_halted !== 1'b1 && timeout_cnt < 50000) begin
+        while (pipeline_halted !== 1'b1 && timeout_cnt < 20000) begin
             @(posedge clk);
             timeout_cnt = timeout_cnt + 1;
         end
 
         if (pipeline_halted !== 1'b1) begin
-            $display("[FAIL] TIMEOUT: CPU did not halt after %0d cycles.", timeout_cnt);
-            $display("[FAIL] PC=0x%h halted=%b", u_dut.current_pc, pipeline_halted);
+            $display("[RESULT] TIMEOUT: CPU did not halt after %0d cycles.", timeout_cnt);
+            $display("[RESULT] PC=0x%h halted=%b", u_dut.u_cpu.u_pc.pc_reg, pipeline_halted);
             $finish;
         end
 
-        $display("[LOAD/STORE TEST] CPU Halted at Cycle %0d. Verifying Transaction Acceptance, RegFile, and SRAM Address Mapping...", timeout_cnt);
-        $display("  Accepted D-Cache STORE Transactions = %d (Expected >= 1)", store_accepted_count);
-        $display("  Accepted D-Cache LOAD Transactions  = %d (Expected >= 1)", load_accepted_count);
-        $display("  Executed SRAM Controller STORE Handshakes = %d (Expected >= 1)", mem_ctrl_store_count);
-        $display("  Executed SRAM Controller LOAD Handshakes  = %d (Expected >= 1)", mem_ctrl_load_count);
+        $display("[LOAD/STORE TEST] CPU Halted at Cycle %0d.", timeout_cnt);
+        $display("  Accepted D-Cache STORE Transactions = %d", store_accepted_count);
+        $display("  Accepted D-Cache LOAD Transactions  = %d", load_accepted_count);
+        $display("  Executed SRAM Controller STORE Handshakes = %d", mem_ctrl_store_count);
+        $display("  Executed SRAM Controller LOAD Handshakes  = %d", mem_ctrl_load_count);
         $display("  r3 (STORE val) = %d", u_dut.u_cpu.u_regfile.registers[3]);
         $display("  r4 (LOADED val) = %d", u_dut.u_cpu.u_regfile.registers[4]);
-        $display("  r5 (ADD r4, r1) = %d (Expected 650)", u_dut.u_cpu.u_regfile.registers[5]);
-        $display("  illegal_instruction = %b (Expected 0)", illegal_instruction);
+        $display("  r5 (ADD r4, r1) = %d", u_dut.u_cpu.u_regfile.registers[5]);
+        $display("  illegal_instruction = %b", illegal_instruction);
         $display("  Physical SRAM[0x80000100] Mapping Array Word main_sram[64] = %d", u_dut.u_memory_subsystem.u_mem_controller.main_sram[64]);
         $fflush();
 

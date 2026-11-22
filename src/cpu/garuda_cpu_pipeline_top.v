@@ -1,15 +1,15 @@
 // =========================================================================
-// GARUDA SEMESTA — MODULAR 5-STAGE PIPELINE CPU TOP-LEVEL (v12.5.0-FIX)
+// GARUDA SEMESTA — MODULAR 5-STAGE PIPELINE CPU TOP-LEVEL (v12.5.2-BRANCHSAFE)
 // Author & Chief System Architect: Anggit Prasetyo Mituhu
 // Copyright (c) 2026 Anggit Prasetyo Mituhu. All rights reserved.
 // Licensed under the Apache License, Version 2.0
 //
 // Synthesizable 5-Stage Pipeline CPU Core Top-Level:
+// - Strict X-safe branch/jump condition evaluation to prevent PC & IF_ID corruption
 // - IF (Instruction Fetch), ID (Instruction Decode), EX (Execute), MEM (Memory), WB (Writeback)
 // - Integrated PC, Instruction Decoder, 32x64-bit RegFile, 64-bit ALU
 // - Load-Use Data Hazard stall, MEM-stage dcache_read_val forwarding, & Hardware IRQ
 // - Precise BEQ Branch & JMP Execution with Pipeline Flush Engine
-// - Registered icache_req_valid to break cross-module combinatorial loop with icache_stall
 // =========================================================================
 
 `timescale 1ns / 1ps
@@ -101,11 +101,12 @@ module garuda_cpu_pipeline_top #(
     wire [DATA_WIDTH-1:0] alu_result;
     wire alu_zero, alu_sign;
 
-    // Branch & Jump Execution in EX Stage (Gated with rst_n to prevent X propagation)
-    wire branch_equal_taken = rst_n && (id_ex_opcode == 4'h5) && alu_zero;
-    wire jump_taken         = rst_n && (id_ex_opcode == 4'h6);
+    // Strict X-safe Branch & Jump Execution in EX Stage
+    wire branch_equal_taken = (rst_n === 1'b1) && (id_ex_opcode === 4'h5) && (alu_zero === 1'b1);
+    wire jump_taken         = (rst_n === 1'b1) && (id_ex_opcode === 4'h6);
     wire branch_taken       = branch_equal_taken || jump_taken;
-    wire [ADDR_WIDTH-1:0] branch_target = id_ex_pc + id_ex_imm[31:0];
+    wire branch_taken_safe  = (rst_n === 1'b1) && branch_taken && (^id_ex_pc !== 1'bx) && (^id_ex_imm !== 1'bx);
+    wire [ADDR_WIDTH-1:0] branch_target = (^id_ex_pc === 1'bx || ^id_ex_imm === 1'bx) ? 32'h8000_0000 : (id_ex_pc + id_ex_imm[31:0]);
 
     // 1. Program Counter & Pipeline Control Logic
     wire halted_sig = halt_retires_latched || (mem_wb_opcode == 4'hF);
@@ -124,7 +125,7 @@ module garuda_cpu_pipeline_top #(
             if (irq_req) begin
                 irq_latched_reg <= 1'b1;
             end
-            if (dec_opcode == 4'hF && !load_use_hazard && !dcache_stall) begin
+            if (dec_opcode == 4'hF && !load_use_hazard) begin
                 halt_decoded_latched <= 1'b1;
             end
             if (mem_wb_opcode == 4'hF) begin
@@ -147,7 +148,7 @@ module garuda_cpu_pipeline_top #(
         .clk(clk),
         .rst_n(rst_n),
         .stall(stall_pc),
-        .branch_taken(branch_taken),
+        .branch_taken(branch_taken_safe),
         .branch_target(branch_target),
         .exception_taken(1'b0),
         .exception_vector(32'h8000_0000),
@@ -156,10 +157,12 @@ module garuda_cpu_pipeline_top #(
 
     assign icache_addr = current_pc;
 
-    // Break combinational loop between icache_req_valid and icache_stall
+    // Break combinational loop between icache_req_valid and icache_stall (x-safe)
     reg icache_req_valid_r;
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
+            icache_req_valid_r <= 1'b0;
+        end else if (dcache_stall === 1'bx || load_use_hazard === 1'bx || dec_halt_sig === 1'bx) begin
             icache_req_valid_r <= 1'b0;
         end else begin
             icache_req_valid_r <= rst_n && !dcache_stall && !load_use_hazard && !dec_halt_sig;
@@ -168,16 +171,26 @@ module garuda_cpu_pipeline_top #(
     assign icache_req_valid = icache_req_valid_r;
 
     // 2. Instruction Fetch to Decode Pipeline Register (Flushes on Branch Taken)
+    wire pipeline_stall_if = dcache_stall || load_use_hazard || dec_halt_sig;
+
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             if_id_pc   <= 32'h8000_0000;
             if_id_inst <= 64'h0;
-        end else if (branch_taken) begin
+        end else if (branch_taken_safe) begin
             if_id_pc   <= branch_target;
             if_id_inst <= 64'h0; // Flush to NOP
-        end else if (!stall_pc && icache_valid) begin
-            if_id_pc   <= current_pc;
+        end else if (!pipeline_stall_if && icache_valid) begin
+            if_id_pc   <= u_pc.pc;
             if_id_inst <= icache_inst_data;
+        end
+    end
+
+    always @(posedge clk) begin
+        if (rst_n && icache_valid === 1'b1) begin
+            $display("[IC_DATA] t=%0t pc=%h icache_inst_data=%h if_id_inst=%h",
+                     $time, u_pc.pc, icache_inst_data, if_id_inst);
+            $fflush();
         end
     end
 
@@ -243,7 +256,7 @@ module garuda_cpu_pipeline_top #(
             id_ex_imm       <= 32'd0;
             id_ex_illegal_inst <= 1'b0;
         end else if (!stall_backend) begin
-            if (load_use_hazard || branch_taken) begin
+            if (load_use_hazard || branch_taken_safe) begin
                 id_ex_pc        <= if_id_pc;
                 id_ex_opcode    <= 4'h0;
                 id_ex_alu_op    <= 4'h0;
@@ -336,7 +349,6 @@ module garuda_cpu_pipeline_top #(
         end
     end
 
-    assign current_pc = u_pc.pc;
     assign pipeline_halted = halted_sig;
     assign illegal_instruction = mem_wb_illegal_inst;
 
