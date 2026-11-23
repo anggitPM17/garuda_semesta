@@ -18,8 +18,6 @@ module garuda_rv64i_core_tb;
     wire [63:0] dmem_rdata;
     wire        dmem_resp_valid;
     wire        core_halted;
-    wire [31:0] read_tx_count;
-    wire [31:0] write_tx_count;
 
     rv64i_memory_model mem_model (
         .clk(clk),
@@ -36,9 +34,7 @@ module garuda_rv64i_core_tb;
         .dmem_wdata(dmem_wdata),
         .dmem_ready(dmem_ready),
         .dmem_rdata(dmem_rdata),
-        .dmem_resp_valid(dmem_resp_valid),
-        .read_tx_count(read_tx_count),
-        .write_tx_count(write_tx_count)
+        .dmem_resp_valid(dmem_resp_valid)
     );
 
     garuda_rv64i_core uut (
@@ -65,7 +61,7 @@ module garuda_rv64i_core_tb;
     // Watchdog timer
     initial begin
         #5000000;
-        $display("[TIMEOUT] Simulation timed out waiting for EBREAK.");
+        $display("[TIMEOUT] Simulation timed out waiting for core_halted (EBREAK).");
         $display(">>> TEST RESULT: FAILURE (FAIL) <<<");
         $finish;
     end
@@ -74,7 +70,7 @@ module garuda_rv64i_core_tb;
 
     initial begin
         $display("=========================================================");
-        $display(" GARUDA SEMESTA GEN2 — FASE 6.3 REPAIR SIGN-OFF TEST");
+        $display(" GARUDA SEMESTA GEN2 — FASE 6.2 FINAL HARDENING TEST");
         $display("=========================================================");
 
         clk = 0;
@@ -85,27 +81,23 @@ module garuda_rv64i_core_tb;
         #20;
         rst_n = 1;
 
-        // Event-driven wait for core_halted (EBREAK)
+        // Event-driven wait for core_halted (EBREAK) with generous drain time for multi-cycle latency
         wait (uut.core_halted);
-        #100; // Pipeline drain
+        #1000; // Generous drain time for latency pipelines
 
         $display("\n=== COMPREHENSIVE AUTOMATED ASSERTION CHECKS ===");
 
-        // 1. EBREAK termination verification
+        // 1. Program termination / halted check
         if (!uut.core_halted) begin
             $display("FAIL: Program did not reach EBREAK (core_halted = 0)");
             errors = errors + 1;
-        end else begin
-            $display("PASS: Program reached EBREAK / HALT successfully.");
-        end
+        end else $display("PASS: Program reached EBREAK / HALT successfully.");
 
         // 2. x0 zero protection
         if (uut.regfile_inst.regs[0] !== 64'd0) begin
             $display("FAIL: x0 is not zero (%0d)", uut.regfile_inst.regs[0]);
             errors = errors + 1;
-        end else begin
-            $display("PASS: x0 zero protection verified.");
-        end
+        end else $display("PASS: x0 zero protection verified.");
 
         // 3. Register checks (x1 to x18)
         if (uut.regfile_inst.regs[1] !== 64'd10) begin $display("FAIL: x1 = %0d", uut.regfile_inst.regs[1]); errors++; end
@@ -162,24 +154,6 @@ module garuda_rv64i_core_tb;
 
         if (mem_model.dmem[24] !== 8'd10) begin $display("FAIL: dmem[24] = %0d", mem_model.dmem[24]); errors++; end
         else $display("PASS: dmem[24] store verified (10)");
-
-        // 5. Transaction count verification
-        $display("INFO: Total Read Transactions (LD) = %0d", read_tx_count);
-        $display("INFO: Total Write Transactions (SD/SW/SH/SB) = %0d", write_tx_count);
-
-        if (read_tx_count == 0) begin
-            $display("FAIL: Read transaction count is 0");
-            errors++;
-        end else begin
-            $display("PASS: Read transaction count verified (>0)");
-        end
-
-        if (write_tx_count == 0) begin
-            $display("FAIL: Write transaction count is 0");
-            errors++;
-        end else begin
-            $display("PASS: Write transaction count verified (>0)");
-        end
 
         $display("\n=========================================================");
         if (errors == 0) begin

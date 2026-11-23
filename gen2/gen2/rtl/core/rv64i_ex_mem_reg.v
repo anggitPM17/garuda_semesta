@@ -2,8 +2,6 @@
 module rv64i_ex_mem_reg (
     input  wire        clk,
     input  wire        rst_n,
-    input  wire        stall,
-    input  wire        flush,
     input  wire [63:0] alu_result_in,
     input  wire [63:0] rs2_val_in,
     input  wire [4:0]  rd_in,
@@ -18,14 +16,14 @@ module rv64i_ex_mem_reg (
     output reg         mem_write_out
 );
     always @(posedge clk or negedge rst_n) begin
-        if (!rst_n || flush) begin
+        if (!rst_n) begin
             alu_result_out <= 64'd0;
             rs2_val_out    <= 64'd0;
             rd_out         <= 5'd0;
             reg_write_out  <= 1'b0;
             mem_read_out   <= 1'b0;
             mem_write_out  <= 1'b0;
-        end else if (!stall) begin
+        end else begin
             alu_result_out <= alu_result_in;
             rs2_val_out    <= rs2_val_in;
             rd_out         <= rd_in;
