@@ -1,0 +1,8 @@
+GARUDA SEMESTA GENERATION 2 — SINGLE-HART TOOL VERSIONS
+======================================================
+OpenLane Docker Environment (garuda-goldenway:v1.0)
+- Python: Python 3.11.16
+- Icarus Verilog: Icarus Verilog version 12.0 (stable)
+- VVP: Icarus Verilog runtime version 12.0 (stable)
+- Verilator: Verilator 5.018 2023-10-30 rev UNKNOWN.REV
+- Yosys: Yosys 0.38 (git sha1 543faed9c8c, clang++ 17.0.6 -fPIC -Os)
