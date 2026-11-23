@@ -86,14 +86,30 @@ module garuda_rv64i_core_tb;
 
     integer errors = 0;
 
+    // Backpressure Injection Monitor
+    initial begin
+        tb_resp_ready_mask = 1'b1;
+        #100;
+        // Wait until core enters first store or load transaction
+        wait (dmem_valid && dmem_resp_valid);
+        tb_resp_ready_mask = 1'b0; // Inject backpressure stall for 1 cycle (10ns)
+        #10;
+        if (!dmem_resp_valid) begin
+            $display("FAIL: dmem_resp_valid dropped during response backpressure stall!");
+            errors++;
+        end else begin
+            $display("PASS: Response valid held stable during backpressure stall.");
+        end
+        tb_resp_ready_mask = 1'b1; // Release backpressure
+    end
+
     initial begin
         $display("=========================================================");
-        $display(" GARUDA SEMESTA GEN2 — FASE 6.7 HANDSHAKE REPAIR TEST");
+        $display(" GARUDA SEMESTA GEN2 — FASE 6.7.1 HANDSHAKE REPAIR TEST");
         $display("=========================================================");
 
         clk = 0;
         rst_n = 0;
-        tb_resp_ready_mask = 1;
 
         mem_model.load_hex("reports/single_hart_program.hex");
 

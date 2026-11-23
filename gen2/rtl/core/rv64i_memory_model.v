@@ -24,7 +24,7 @@ module rv64i_memory_model (
     output reg         dmem_ready,
     output reg [63:0]  dmem_rdata,
     output reg         dmem_resp_valid,
-    input  wire        dmem_resp_ready, // Response consumption signal
+    input  wire        dmem_resp_ready, // Explicit response consumption from core
 
     // Verification Scoreboard Counters
     output reg [31:0]  read_tx_count,
@@ -108,7 +108,7 @@ module rv64i_memory_model (
             pending_wdata         <= 64'd0;
         end else begin
             if (LATENCY == 0) begin
-                if (dmem_valid && dmem_ready) begin
+                if (dmem_valid && dmem_ready && dmem_resp_ready) begin
                     resp_tx_count <= resp_tx_count + 1'b1;
                     if (dmem_wen) begin
                         write_tx_count        <= write_tx_count + 1'b1;
@@ -174,34 +174,37 @@ module rv64i_memory_model (
                     end
 
                     STATE_RESPONSE: begin
-                        resp_tx_count <= resp_tx_count + 1'b1;
-                        if (pending_wen) begin
-                            committed_store_count <= committed_store_count + 1'b1;
-                            case (pending_funct3[1:0])
-                                2'b00: if (pending_addr < 16384) dmem[pending_addr] <= pending_wdata[7:0];
-                                2'b01: if (pending_addr < 16383) begin
-                                    dmem[pending_addr]     <= pending_wdata[7:0];
-                                    dmem[pending_addr + 1] <= pending_wdata[15:8];
-                                end
-                                2'b10: if (pending_addr < 16381) begin
-                                    dmem[pending_addr]     <= pending_wdata[7:0];
-                                    dmem[pending_addr + 1] <= pending_wdata[15:8];
-                                    dmem[pending_addr + 2] <= pending_wdata[23:16];
-                                    dmem[pending_addr + 3] <= pending_wdata[31:24];
-                                end
-                                2'b11: if (pending_addr < 16376) begin
-                                    dmem[pending_addr]     <= pending_wdata[7:0];
-                                    dmem[pending_addr + 1] <= pending_wdata[15:8];
-                                    dmem[pending_addr + 2] <= pending_wdata[23:16];
-                                    dmem[pending_addr + 3] <= pending_wdata[31:24];
-                                    dmem[pending_addr + 4] <= pending_wdata[39:32];
-                                    dmem[pending_addr + 5] <= pending_wdata[47:40];
-                                    dmem[pending_addr + 6] <= pending_wdata[55:48];
-                                    dmem[pending_addr + 7] <= pending_wdata[63:56];
-                                end
-                            endcase
+                        // Complete transaction ONLY when core asserts dmem_resp_ready
+                        if (dmem_resp_ready) begin
+                            resp_tx_count <= resp_tx_count + 1'b1;
+                            if (pending_wen) begin
+                                committed_store_count <= committed_store_count + 1'b1;
+                                case (pending_funct3[1:0])
+                                    2'b00: if (pending_addr < 16384) dmem[pending_addr] <= pending_wdata[7:0];
+                                    2'b01: if (pending_addr < 16383) begin
+                                        dmem[pending_addr]     <= pending_wdata[7:0];
+                                        dmem[pending_addr + 1] <= pending_wdata[15:8];
+                                    end
+                                    2'b10: if (pending_addr < 16381) begin
+                                        dmem[pending_addr]     <= pending_wdata[7:0];
+                                        dmem[pending_addr + 1] <= pending_wdata[15:8];
+                                        dmem[pending_addr + 2] <= pending_wdata[23:16];
+                                        dmem[pending_addr + 3] <= pending_wdata[31:24];
+                                    end
+                                    2'b11: if (pending_addr < 16376) begin
+                                        dmem[pending_addr]     <= pending_wdata[7:0];
+                                        dmem[pending_addr + 1] <= pending_wdata[15:8];
+                                        dmem[pending_addr + 2] <= pending_wdata[23:16];
+                                        dmem[pending_addr + 3] <= pending_wdata[31:24];
+                                        dmem[pending_addr + 4] <= pending_wdata[39:32];
+                                        dmem[pending_addr + 5] <= pending_wdata[47:40];
+                                        dmem[pending_addr + 6] <= pending_wdata[55:48];
+                                        dmem[pending_addr + 7] <= pending_wdata[63:56];
+                                    end
+                                endcase
+                            end
+                            dmem_state <= STATE_IDLE;
                         end
-                        dmem_state <= STATE_IDLE;
                     end
 
                     default: dmem_state <= STATE_IDLE;
