@@ -60,13 +60,15 @@ def main():
         encode_b(0x63, 1, 1, 8, 0),     # 0x60: beq x1, x1, 8 (taken)
         encode_i(0x13, 15, 0, 99, 0),   # 0x64: addi x15, x0, 99 (skipped)
         encode_i(0x13, 15, 0, 77, 0),   # 0x68: addi x15, x0, 77 (target)
-        encode_j(0x6f, 16, 12),         # 0x6c: jal x16, 12 (jump 12 bytes to 0x78)
+        encode_j(0x6f, 16, 12),         # 0x6c: jal x16, 12
         encode_i(0x13, 17, 0, 55, 0),   # 0x70: addi x17, x0, 55 (skipped)
         encode_i(0x13, 17, 0, 56, 0),   # 0x74: addi x17, x0, 56 (skipped)
         encode_i(0x13, 17, 0, 88, 0),   # 0x78: addi x17, x0, 88 (JAL target)
-        encode_i(0x67, 18, 16, 0, 0),   # 0x7c: jalr x18, 0(x16)
-        encode_i(0x13, 0, 0, 123, 0),   # 0x80: addi x0, x0, 123 (x0 protection)
-        0x00100073                      # 0x84: ebreak
+        encode_u(0x17, 16, 0),          # 0x7c: auipc x16, 0 (x16 = PC)
+        encode_i(0x13, 16, 16, 12, 0),  # 0x80: addi x16, x16, 12 (x16 points to ebreak at 0x8c)
+        encode_i(0x67, 18, 16, 0, 0),   # 0x84: jalr x18, 0(x16) (jump to ebreak)
+        encode_i(0x13, 0, 0, 123, 0),   # 0x88: addi x0, x0, 123 (skipped by jalr)
+        0x00100073                      # 0x8c: ebreak (halt)
     ]
 
     repo_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

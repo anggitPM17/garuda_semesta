@@ -21,7 +21,7 @@ module garuda_rv64i_core (
     input  wire        dmem_resp_valid,
 
     // Core Status (Halt / Ebreak detected)
-    output reg         core_halted
+    output wire        core_halted
 );
 
     // PC and IF Stage
@@ -30,9 +30,16 @@ module garuda_rv64i_core (
     wire        branch_taken_ex;
     wire [63:0] branch_target_ex;
 
+    assign core_halted = (imem_rdata == 32'h00100073) || (if_id_inst == 32'h00100073);
+
     // Memory handshake stall signals
     wire        imem_stall = imem_valid && (!imem_ready || !imem_resp_valid);
     wire        dmem_stall = ((ex_mem_mem_read || ex_mem_mem_write) && (!dmem_ready || !dmem_resp_valid));
+
+    // Hazard Unit Wires
+    wire        stall_hazard;
+    wire        flush_pipeline;
+    wire        stall_core = imem_stall || dmem_stall || stall_hazard;
 
     assign imem_addr  = pc;
     assign imem_valid = rst_n && !core_halted;
@@ -52,9 +59,7 @@ module garuda_rv64i_core (
 
     wire [63:0] rs1_data_raw, rs2_data_raw;
 
-    // Hazard Unit Wires
-    wire        stall_hazard;
-    wire        flush_pipeline;
+    // Forwarding Wires
     wire [1:0]  forward_a, forward_b;
 
     // ID/EX Pipeline Wires
@@ -92,7 +97,7 @@ module garuda_rv64i_core (
     wire [63:0] wb_data;
     wire        wb_write_en;
 
-    // Forwarding Wires
+    // Forwarding Mux Wires
     wire [63:0] ex_rs1_forwarded = (forward_a == 2'b10) ? ex_mem_alu_result :
                                   (forward_a == 2'b01) ? wb_data : id_ex_rs1_val;
     wire [63:0] ex_rs2_forwarded = (forward_b == 2'b10) ? ex_mem_alu_result :
@@ -130,16 +135,13 @@ module garuda_rv64i_core (
     assign branch_target_ex = target_pc_calc;
     assign flush_pipeline   = branch_taken_ex;
 
-    // PC Update Logic (Stall on hazard or memory handshake wait)
+    // PC Update Logic
     assign next_pc = branch_taken_ex ? branch_target_ex : (pc + 4);
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             pc <= 64'd0;
-            core_halted <= 1'b0;
-        end else if (if_id_inst == 32'h00100073) begin // EBREAK / HALT
-            core_halted <= 1'b1;
-        end else if (!core_halted && !stall_hazard && !imem_stall && !dmem_stall) begin
+        end else if (!core_halted && !stall_core) begin
             pc <= next_pc;
         end
     end
@@ -148,7 +150,7 @@ module garuda_rv64i_core (
     rv64i_if_id_reg if_id_reg (
         .clk(clk),
         .rst_n(rst_n),
-        .stall(stall_hazard || dmem_stall || imem_stall),
+        .stall(stall_core),
         .flush(flush_pipeline || core_halted),
         .pc_in(pc),
         .inst_in(imem_rdata),
@@ -210,11 +212,11 @@ module garuda_rv64i_core (
         .id_ex_rs2(id_ex_rs2)
     );
 
-    // ID/EX Register (Clearing control signals on flush/stall/dmem_stall)
+    // ID/EX Register
     rv64i_id_ex_reg id_ex_reg (
         .clk(clk),
         .rst_n(rst_n),
-        .flush(flush_pipeline || stall_hazard || dmem_stall || core_halted),
+        .flush(flush_pipeline || stall_core || core_halted),
         .pc_in(if_id_pc),
         .rs1_val_in(rs1_data_raw),
         .rs2_val_in(rs2_data_raw),
@@ -224,9 +226,9 @@ module garuda_rv64i_core (
         .rd_in(id_rd),
         .alu_op_in(id_alu_op),
         .alu_src_in(id_alu_src),
-        .reg_write_in(id_reg_write && !flush_pipeline && !stall_hazard && !dmem_stall),
-        .mem_read_in(id_mem_read && !flush_pipeline && !stall_hazard && !dmem_stall),
-        .mem_write_in(id_mem_write && !flush_pipeline && !stall_hazard && !dmem_stall),
+        .reg_write_in(id_reg_write && !flush_pipeline && !stall_core),
+        .mem_read_in(id_mem_read && !flush_pipeline && !stall_core),
+        .mem_write_in(id_mem_write && !flush_pipeline && !stall_core),
         .pc_out(id_ex_pc),
         .rs1_val_out(id_ex_rs1_val),
         .rs2_val_out(id_ex_rs2_val),
@@ -242,7 +244,7 @@ module garuda_rv64i_core (
     );
 
     always @(posedge clk or negedge rst_n) begin
-        if (!rst_n || flush_pipeline || stall_hazard || dmem_stall || core_halted) begin
+        if (!rst_n || flush_pipeline || stall_core || core_halted) begin
             id_ex_branch     <= 1'b0;
             id_ex_jump       <= 1'b0;
             id_ex_mem_to_reg <= 1'b0;
@@ -290,19 +292,18 @@ module garuda_rv64i_core (
         .zero_flag(alu_zero_ex)
     );
 
-    // JAL / JALR link address (PC + 4) written to rd
     assign ex_mem_alu_in = (id_ex_jump) ? (id_ex_pc + 4) : alu_result_ex;
 
     // EX/MEM Register (Hold on dmem_stall)
     rv64i_ex_mem_reg ex_mem_reg (
         .clk(clk),
-        .rst_n(rst_n && !dmem_stall),
+        .rst_n(rst_n),
         .alu_result_in(ex_mem_alu_in),
         .rs2_val_in(ex_rs2_forwarded),
         .rd_in(id_ex_rd),
-        .reg_write_in(id_ex_reg_write && !dmem_stall),
-        .mem_read_in(id_ex_mem_read && !dmem_stall),
-        .mem_write_in(id_ex_mem_write && !dmem_stall),
+        .reg_write_in(id_ex_reg_write),
+        .mem_read_in(id_ex_mem_read),
+        .mem_write_in(id_ex_mem_write),
         .alu_result_out(ex_mem_alu_result),
         .rs2_val_out(ex_mem_rs2_val),
         .rd_out(ex_mem_rd),
@@ -321,9 +322,9 @@ module garuda_rv64i_core (
         end
     end
 
-    // MEM Stage: Load-Store Unit & Data Memory Interface (Propagating funct3 & waiting for dmem_resp_valid)
+    // MEM Stage: Load-Store Unit & Data Memory Interface
     assign dmem_addr   = ex_mem_alu_result;
-    assign dmem_valid  = (ex_mem_mem_read || ex_mem_mem_write) && rst_n && !core_halted;
+    assign dmem_valid  = (ex_mem_mem_read || ex_mem_mem_write) && rst_n;
     assign dmem_wen    = ex_mem_mem_write;
     assign dmem_funct3 = ex_mem_funct3;
     assign dmem_wdata  = ex_mem_rs2_val;
@@ -344,7 +345,7 @@ module garuda_rv64i_core (
         .mem_rdata(dmem_rdata)
     );
 
-    // MEM/WB Register (Only advance when dmem response is valid for loads/stores)
+    // MEM/WB Register (Advance only when dmem response is valid)
     rv64i_mem_wb_reg mem_wb_reg (
         .clk(clk),
         .rst_n(rst_n && (!ex_mem_mem_read || dmem_resp_valid)),
