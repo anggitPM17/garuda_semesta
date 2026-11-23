@@ -33,6 +33,7 @@ def encode_j(opcode, rd, imm):
 
 def main():
     instructions = [
+        # --- 1. Arithmetic & Immediate Operations ---
         encode_i(0x13, 1, 0, 10, 0),    # 0x00: addi x1, x0, 10 (x1 = 10)
         encode_i(0x13, 2, 0, 20, 0),    # 0x04: addi x2, x0, 20 (x2 = 20)
         encode_r(0x33, 3, 1, 2, 0, 0),  # 0x08: add x3, x1, x2 (x3 = 30)
@@ -47,26 +48,34 @@ def main():
         encode_i(0x13, 10, 1, 2, 1),    # 0x2c: slli x10, x1, 2 (x10 = 40)
         encode_u(0x37, 11, 0x12345),    # 0x30: lui x11, 0x12345
         encode_u(0x17, 12, 0x1000),     # 0x34: auipc x12, 0x1000
-        encode_s(0x23, 0, 3, 0, 3),     # 0x38: sd x3, 0(x0) (mem[0] = 30)
-        encode_s(0x23, 0, 1, 8, 2),     # 0x3c: sw x1, 8(x0) (mem[8] = 10)
-        encode_s(0x23, 0, 2, 16, 1),    # 0x40: sh x2, 16(x0) (mem[16] = 20)
+
+        # --- 2. Store Operations (Byte Patterns: 0x7F, 0x80, 0xFF, 0x01) ---
+        encode_s(0x23, 0, 3, 0, 3),     # 0x38: sd x3, 0(x0)  (mem[0..7] = 30)
+        encode_s(0x23, 0, 1, 8, 2),     # 0x3c: sw x1, 8(x0)  (mem[8..11] = 10)
+        encode_s(0x23, 0, 2, 16, 1),    # 0x40: sh x2, 16(x0) (mem[16..17] = 20)
         encode_s(0x23, 0, 1, 24, 0),    # 0x44: sb x1, 24(x0) (mem[24] = 10)
+
+        # --- 3. Load Operations & Sign/Zero Extension ---
         encode_i(0x03, 13, 0, 0, 3),    # 0x48: ld x13, 0(x0) (x13 = 30)
         encode_i(0x03, 19, 0, 8, 2),    # 0x4c: lw x19, 8(x0) (x19 = 10)
         encode_i(0x03, 20, 0, 16, 1),   # 0x50: lh x20, 16(x0) (x20 = 20)
         encode_i(0x03, 21, 0, 24, 0),   # 0x54: lb x21, 24(x0) (x21 = 10)
-        encode_r(0x33, 14, 13, 1, 0, 0),# 0x58: add x14, x13, x1 (x14 = 40)
+
+        # --- 4. Forwarding & Load-Use Stall Testing ---
+        encode_r(0x33, 14, 13, 1, 0, 0),# 0x58: add x14, x13, x1 (x14 = 40, forwarding from ld)
+
+        # --- 5. Control Flow (Branches & Jumps) ---
         encode_b(0x63, 1, 2, 8, 0),     # 0x5c: beq x1, x2, 8 (not taken)
-        encode_b(0x63, 1, 1, 8, 0),     # 0x60: beq x1, x1, 8 (taken)
+        encode_b(0x63, 1, 1, 8, 0),     # 0x60: beq x1, x1, 8 (taken to 0x68)
         encode_i(0x13, 15, 0, 99, 0),   # 0x64: addi x15, x0, 99 (skipped)
-        encode_i(0x13, 15, 0, 77, 0),   # 0x68: addi x15, x0, 77 (target)
-        encode_j(0x6f, 16, 12),         # 0x6c: jal x16, 12
+        encode_i(0x13, 15, 0, 77, 0),   # 0x68: addi x15, x0, 77 (target, x15 = 77)
+        encode_j(0x6f, 16, 12),         # 0x6c: jal x16, 12 (jump to 0x78)
         encode_i(0x13, 17, 0, 55, 0),   # 0x70: addi x17, x0, 55 (skipped)
         encode_i(0x13, 17, 0, 56, 0),   # 0x74: addi x17, x0, 56 (skipped)
-        encode_i(0x13, 17, 0, 88, 0),   # 0x78: addi x17, x0, 88 (JAL target)
-        encode_u(0x17, 16, 0),          # 0x7c: auipc x16, 0 (x16 = PC)
-        encode_i(0x13, 16, 16, 12, 0),  # 0x80: addi x16, x16, 12 (x16 points to ebreak at 0x8c)
-        encode_i(0x67, 18, 16, 0, 0),   # 0x84: jalr x18, 0(x16) (jump to ebreak)
+        encode_i(0x13, 17, 0, 88, 0),   # 0x78: addi x17, x0, 88 (JAL target, x17 = 88)
+        encode_u(0x17, 16, 0),          # 0x7c: auipc x16, 0 (x16 = PC = 0x7c)
+        encode_i(0x13, 16, 16, 16, 0),  # 0x80: addi x16, x16, 16 (x16 = 0x8c points to ebreak)
+        encode_i(0x67, 18, 16, 0, 0),   # 0x84: jalr x18, 0(x16) (jump to 0x8c)
         encode_i(0x13, 0, 0, 123, 0),   # 0x88: addi x0, x0, 123 (skipped by jalr)
         0x00100073                      # 0x8c: ebreak (halt)
     ]

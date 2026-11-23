@@ -1,5 +1,5 @@
 =========================================================
- GARUDA SEMESTA GEN2 — FASE 6.7 HANDSHAKE SIGN-OFF TEST
+ GARUDA SEMESTA GEN2 — FASE 6.7 HANDSHAKE REPAIR TEST
 =========================================================
 WARNING: rtl/core/rv64i_memory_model.v:214: $readmemh(reports/single_hart_program.hex): Not enough words in the file for the requested range [0:1023].
 
@@ -38,5 +38,5 @@ PASS: Zero duplicate transactions verified.
 =========================================================
  >>> ALL ASSERTIONS PASSED — TEST RESULT: SUCCESS (PASS) <<<
 =========================================================
-tb/garuda_rv64i_core_tb.v:223: $finish called at 785000 (1ps)
+tb/garuda_rv64i_core_tb.v:227: $finish called at 775000 (1ps)
 

@@ -17,7 +17,10 @@ module garuda_rv64i_core_tb;
     wire        dmem_ready;
     wire [63:0] dmem_rdata;
     wire        dmem_resp_valid;
-    wire        dmem_resp_ready;
+    wire        dmem_resp_ready_core;
+    reg         tb_resp_ready_mask = 1'b1; // Backpressure Injection Control
+    wire        dmem_resp_ready_effective = dmem_resp_ready_core && tb_resp_ready_mask;
+
     wire        core_halted;
     wire [31:0] read_tx_count;
     wire [31:0] write_tx_count;
@@ -41,7 +44,7 @@ module garuda_rv64i_core_tb;
         .dmem_ready(dmem_ready),
         .dmem_rdata(dmem_rdata),
         .dmem_resp_valid(dmem_resp_valid),
-        .dmem_resp_ready(dmem_resp_ready),
+        .dmem_resp_ready(dmem_resp_ready_effective),
         .read_tx_count(read_tx_count),
         .write_tx_count(write_tx_count),
         .committed_store_count(committed_store_count),
@@ -65,7 +68,7 @@ module garuda_rv64i_core_tb;
         .dmem_ready(dmem_ready),
         .dmem_rdata(dmem_rdata),
         .dmem_resp_valid(dmem_resp_valid),
-        .dmem_resp_ready(dmem_resp_ready),
+        .dmem_resp_ready(dmem_resp_ready_core),
         .core_halted(core_halted)
     );
 
@@ -85,11 +88,12 @@ module garuda_rv64i_core_tb;
 
     initial begin
         $display("=========================================================");
-        $display(" GARUDA SEMESTA GEN2 — FASE 6.7 HANDSHAKE SIGN-OFF TEST");
+        $display(" GARUDA SEMESTA GEN2 — FASE 6.7 HANDSHAKE REPAIR TEST");
         $display("=========================================================");
 
         clk = 0;
         rst_n = 0;
+        tb_resp_ready_mask = 1;
 
         mem_model.load_hex("reports/single_hart_program.hex");
 
