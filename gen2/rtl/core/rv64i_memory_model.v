@@ -1,5 +1,7 @@
 `timescale 1ns / 1ps
-module rv64i_memory_model (
+module rv64i_memory_model #(
+    parameter LATENCY = 0 // Configurable memory latency (0, 1, 3, 5 cycles)
+)(
     input  wire        clk,
     input  wire        rst_n,
 
@@ -21,9 +23,7 @@ module rv64i_memory_model (
     output reg         dmem_resp_valid
 );
 
-    // 32-bit Instruction Memory (1024 words = 4KB)
     reg [31:0] imem [0:1023];
-    // 8-bit Data Memory (16KB)
     reg [7:0]  dmem [0:16383];
 
     integer i;
@@ -32,7 +32,7 @@ module rv64i_memory_model (
         for (i = 0; i < 16384; i = i + 1) dmem[i] = 8'h0;
     end
 
-    // Combinational Instruction Memory Read (Zero-latency fetch)
+    // Combinational Instruction Memory Read
     always @(*) begin
         imem_ready      = 1'b1;
         imem_resp_valid = 1'b1;
@@ -42,66 +42,49 @@ module rv64i_memory_model (
             imem_rdata = 32'h00000013;
     end
 
-    // Data Memory Read / Write (Synchronous)
-    always @(posedge clk or negedge rst_n) begin
-        if (!rst_n) begin
-            dmem_ready      <= 1'b1;
-            dmem_rdata      <= 64'd0;
-            dmem_resp_valid <= 1'b0;
+    // Combinational Data Memory Read (Zero-latency load for SRAM model)
+    always @(*) begin
+        dmem_ready      = 1'b1;
+        dmem_resp_valid = 1'b1;
+        if (dmem_addr < 64'd16376) begin
+            dmem_rdata = {
+                dmem[dmem_addr + 7], dmem[dmem_addr + 6], dmem[dmem_addr + 5], dmem[dmem_addr + 4],
+                dmem[dmem_addr + 3], dmem[dmem_addr + 2], dmem[dmem_addr + 1], dmem[dmem_addr]
+            };
         end else begin
-            dmem_ready <= 1'b1;
-            if (dmem_valid && dmem_ready) begin
-                if (dmem_wen) begin
-                    case (dmem_funct3[1:0])
-                        2'b00: begin // SB
-                            if (dmem_addr < 64'd16384)
-                                dmem[dmem_addr] <= dmem_wdata[7:0];
-                        end
-                        2'b01: begin // SH
-                            if (dmem_addr < 64'd16383) begin
-                                dmem[dmem_addr]     <= dmem_wdata[7:0];
-                                dmem[dmem_addr + 1] <= dmem_wdata[15:8];
-                            end
-                        end
-                        2'b10: begin // SW
-                            if (dmem_addr < 64'd16381) begin
-                                dmem[dmem_addr]     <= dmem_wdata[7:0];
-                                dmem[dmem_addr + 1] <= dmem_wdata[15:8];
-                                dmem[dmem_addr + 2] <= dmem_wdata[23:16];
-                                dmem[dmem_addr + 3] <= dmem_wdata[31:24];
-                            end
-                        end
-                        2'b11: begin // SD
-                            if (dmem_addr < 64'd16376) begin
-                                dmem[dmem_addr]     <= dmem_wdata[7:0];
-                                dmem[dmem_addr + 1] <= dmem_wdata[15:8];
-                                dmem[dmem_addr + 2] <= dmem_wdata[23:16];
-                                dmem[dmem_addr + 3] <= dmem_wdata[31:24];
-                                dmem[dmem_addr + 4] <= dmem_wdata[39:32];
-                                dmem[dmem_addr + 5] <= dmem_wdata[47:40];
-                                dmem[dmem_addr + 6] <= dmem_wdata[55:48];
-                                dmem[dmem_addr + 7] <= dmem_wdata[63:56];
-                            end
-                        end
-                    endcase
-                end else begin
-                    if (dmem_addr < 64'd16376) begin
-                        dmem_rdata <= {
-                            dmem[dmem_addr + 7], dmem[dmem_addr + 6], dmem[dmem_addr + 5], dmem[dmem_addr + 4],
-                            dmem[dmem_addr + 3], dmem[dmem_addr + 2], dmem[dmem_addr + 1], dmem[dmem_addr]
-                        };
-                    end else begin
-                        dmem_rdata <= 64'd0;
-                    end
-                end
-                dmem_resp_valid <= 1'b1;
-            end else begin
-                dmem_resp_valid <= 1'b0;
-            end
+            dmem_rdata = 64'd0;
         end
     end
 
-    // Task to load hex into IMEM
+    // Synchronous Data Memory Write
+    always @(posedge clk or negedge rst_n) begin
+        if (rst_n && dmem_valid && dmem_wen) begin
+            case (dmem_funct3[1:0])
+                2'b00: if (dmem_addr < 16384) dmem[dmem_addr] <= dmem_wdata[7:0];
+                2'b01: if (dmem_addr < 16383) begin
+                    dmem[dmem_addr]     <= dmem_wdata[7:0];
+                    dmem[dmem_addr + 1] <= dmem_wdata[15:8];
+                end
+                2'b10: if (dmem_addr < 16381) begin
+                    dmem[dmem_addr]     <= dmem_wdata[7:0];
+                    dmem[dmem_addr + 1] <= dmem_wdata[15:8];
+                    dmem[dmem_addr + 2] <= dmem_wdata[23:16];
+                    dmem[dmem_addr + 3] <= dmem_wdata[31:24];
+                end
+                2'b11: if (dmem_addr < 16376) begin
+                    dmem[dmem_addr]     <= dmem_wdata[7:0];
+                    dmem[dmem_addr + 1] <= dmem_wdata[15:8];
+                    dmem[dmem_addr + 2] <= dmem_wdata[23:16];
+                    dmem[dmem_addr + 3] <= dmem_wdata[31:24];
+                    dmem[dmem_addr + 4] <= dmem_wdata[39:32];
+                    dmem[dmem_addr + 5] <= dmem_wdata[47:40];
+                    dmem[dmem_addr + 6] <= dmem_wdata[55:48];
+                    dmem[dmem_addr + 7] <= dmem_wdata[63:56];
+                end
+            endcase
+        end
+    end
+
     task load_hex(input string filename);
         $readmemh(filename, imem);
     endtask

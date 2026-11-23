@@ -17,7 +17,8 @@ module rv64i_decode (
     output reg         jump,
     output reg         mem_to_reg,
     output reg         is_lui,
-    output reg         is_auipc
+    output reg         is_auipc,
+    output reg         is_jalr
 );
     assign opcode = inst[6:0];
     assign rd     = inst[11:7];
@@ -27,7 +28,6 @@ module rv64i_decode (
     assign funct7 = inst[31:25];
 
     always @(*) begin
-        // Immediate Generation
         case (opcode)
             7'b0010011, 7'b0000011, 7'b1100111: // I-type
                 imm = {{52{inst[31]}}, inst[31:20]};
@@ -43,7 +43,6 @@ module rv64i_decode (
                 imm = 64'd0;
         endcase
 
-        // Control Signals
         alu_op     = 4'h0;
         alu_src    = 1'b0;
         reg_write  = 1'b0;
@@ -54,17 +53,18 @@ module rv64i_decode (
         mem_to_reg = 1'b0;
         is_lui     = 1'b0;
         is_auipc   = 1'b0;
+        is_jalr    = 1'b0;
 
         case (opcode)
             7'b0110011: begin // R-type
                 reg_write = 1'b1;
                 case (funct3)
-                    3'b000: alu_op = (funct7[5]) ? 4'h1 : 4'h0; // SUB : ADD
+                    3'b000: alu_op = (funct7[5] == 1'b1) ? 4'h1 : 4'h0; // SUB : ADD
                     3'b111: alu_op = 4'h2; // AND
                     3'b110: alu_op = 4'h3; // OR
                     3'b100: alu_op = 4'h4; // XOR
                     3'b001: alu_op = 4'h5; // SLL
-                    3'b101: alu_op = (funct7[5]) ? 4'h7 : 4'h6; // SRA : SRL
+                    3'b101: alu_op = (funct7[5] == 1'b1) ? 4'h7 : 4'h6; // SRA : SRL
                     3'b010: alu_op = 4'h8; // SLT
                     3'b011: alu_op = 4'h9; // SLTU
                     default: alu_op = 4'h0;
@@ -79,7 +79,7 @@ module rv64i_decode (
                     3'b110: alu_op = 4'h3; // ORI
                     3'b100: alu_op = 4'h4; // XORI
                     3'b001: alu_op = 4'h5; // SLLI
-                    3'b101: alu_op = (funct7[5]) ? 4'h7 : 4'h6; // SRAI : SRLI
+                    3'b101: alu_op = (funct7[5] == 1'b1) ? 4'h7 : 4'h6; // SRAI : SRLI
                     3'b010: alu_op = 4'h8; // SLTI
                     3'b011: alu_op = 4'h9; // SLTIU
                     default: alu_op = 4'h0;
@@ -90,26 +90,26 @@ module rv64i_decode (
                 alu_src    = 1'b1;
                 mem_read   = 1'b1;
                 mem_to_reg = 1'b1;
-                alu_op     = 4'h0; // ADD (base + imm)
+                alu_op     = 4'h0; // ADD
             end
             7'b0100011: begin // Store
                 alu_src   = 1'b1;
                 mem_write = 1'b1;
-                alu_op    = 4'h0; // ADD (base + imm)
+                alu_op    = 4'h0; // ADD
             end
             7'b1100011: begin // Branch
                 branch = 1'b1;
-                alu_op = 4'h1; // SUB for comparison
+                alu_op = 4'h1; // SUB
             end
             7'b0110111: begin // LUI
                 reg_write = 1'b1;
                 is_lui    = 1'b1;
-                alu_op    = 4'hA; // Pass imm
+                alu_op    = 4'hA;
             end
             7'b0010111: begin // AUIPC
                 reg_write = 1'b1;
                 is_auipc  = 1'b1;
-                alu_op    = 4'h0; // PC + imm
+                alu_op    = 4'h0;
             end
             7'b1101111: begin // JAL
                 reg_write = 1'b1;
@@ -118,6 +118,7 @@ module rv64i_decode (
             7'b1100111: begin // JALR
                 reg_write = 1'b1;
                 jump      = 1'b1;
+                is_jalr   = 1'b1;
             end
             default: ;
         endcase

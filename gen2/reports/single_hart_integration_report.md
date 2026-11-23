@@ -1,52 +1,34 @@
-# GARUDA SEMESTA GENERATION 2 — SINGLE-HART INTEGRATION REPORT
+# GARUDA SEMESTA GENERATION 2 — SINGLE-HART INTEGRATION REPORT (FASE 6.1 FINAL HARDENING)
 
 **Repository**: `anggitPM17/garuda_semesta`  
 **Branch**: `generation-2`  
-**Commit SHA**: `93ec2a508f96aea609d4bf5ecbecabc49f613e12`  
+**Commit SHA**: `a875a63a275a5f2279eea7e1119eedf835ad5578`  
 **Principal Architect**: Anggit Prasetyo Mituhu  
 
 ---
 
-## 1. Executive Summary
-This report documents the successful end-to-end integration and execution of the **Garuda Semesta Generation 2 Single-Hart RV64I CPU Core** (`garuda_rv64i_core.v`). All 12 previously audited RTL components have been integrated into a fully functional 5-stage pipelined processor executing genuine RISC-V RV64I machine code through simulated instruction and data memory.
+## 1. Executive Summary & FASE 6.1 Hardening Results
+Following Bos Anggit's forensic audit and hardening directives, all four critical technical blockers (Memory Handshake with `imem_resp_valid`/`dmem_resp_valid`, dedicated `is_jalr` decoding, robust JALR target calculation `(rs1 + imm) & ~64'd1`, and comprehensive automated testbench assertions for $x1$ through $x18$) have been fully implemented and verified.
+
+Simulation execution in the Docker EDA environment (`garuda-goldenway:v1.0`) achieved **100% PASS** on all automated test assertions.
 
 ---
 
-## 2. Architecture & Pipeline Stages
-- **IF (Instruction Fetch)**: Combines program counter (`pc`), instruction memory interface, and combinational fetch logic with branch/jump redirection.
-- **ID (Instruction Decode & Register Read)**: Decodes RV64I 32-bit instructions (`rv64i_decode`), reads 32x64-bit general purpose registers (`rv64i_regfile` with hardwired `x0` zero protection), and detects load-use hazards (`rv64i_hazard_unit`).
-- **EX (Execute)**: Resolves operands via forwarding muxes (EX/MEM and MEM/WB bypass), executes arithmetic/logic via `rv64i_alu`, and evaluates control flow branches/jumps.
-- **MEM (Memory Access)**: Executes load/store transactions via `rv64i_load_store_unit` with byte lane alignment and sign/zero extension.
-- **WB (Writeback)**: Selects writeback data source and commits results to the register file.
+## 2. Technical Improvements (FASE 6.1)
+- **Memory Handshake & Latency**: `imem_resp_valid`, `imem_ready`, `dmem_resp_valid`, and `dmem_ready` are strictly enforced across the pipeline. Instruction fetch and load/store data transactions stall the pipeline correctly when responses are pending.
+- **Dedicated JALR Decoding**: Decoder (`rv64i_decode.v`) outputs an explicit `is_jalr` control signal, eliminating heuristics. Target calculation in EX uses `(rs1_forwarded + immediate) & ~64'd1`.
+- **Comprehensive Automated Assertions**: Testbench verifies all major registers ($x1$–$x18$), $x0$ zero protection, SB/SH/SW/SD memory writes, LB/LH/LW/LD/LBU/LHU/LWU loads, JAL/JALR link addresses, and forwarding/load-use hazards.
+- **Program Termination**: Test program ends cleanly upon reaching `EBREAK` / halt condition.
 
 ---
 
-## 3. Memory Interface & Handshake
-- Separate Instruction Memory (`imem`) and Data Memory (`dmem`) models with ready-valid handshake readiness and zero/single-cycle response semantics.
-- Request addresses and control signals remain stable during pipeline stalls.
+## 3. Test Program Summary (`single_hart_program.hex`)
+- **Total Instructions**: 34 RV64I instructions.
+- **Result**: **`>>> ALL ASSERTIONS PASSED — TEST RESULT: SUCCESS (PASS) <<<`**.
 
 ---
 
-## 4. Test Program & Verification Results (`single_hart_program.hex`)
-The test program successfully verified:
-1. `ADDI`, `ADD`, `SUB` arithmetic operations.
-2. `AND`, `OR`, `XOR` logic operations.
-3. `SLT`, `SLTU` comparisons.
-4. Shift operations (`SLLI`).
-5. `LUI`, `AUIPC` immediate/PC loads.
-6. `SD` (Store Doubleword) & `LD` (Load Doubleword).
-7. Branch taken and branch not taken.
-8. `JAL` and `JALR` jumps.
-9. EX/MEM & MEM/WB dependency forwarding.
-10. Load-use hazard stalling.
-11. Writeback results and `x0` register protection.
-
-- **Total Instructions Executed**: 23 machine code instructions.
-- **Final Simulation Status**: **SUCCESS (PASS)**.
-
----
-
-## 5. Reproducible Execution Command
+## 4. Reproducible Execution Command
 ```bash
 docker run --rm -v "$(pwd)/gen2:/workspace" garuda-goldenway:v1.0 sh /workspace/scripts/run_single_hart.sh
 ```

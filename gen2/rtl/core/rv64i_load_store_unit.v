@@ -18,6 +18,7 @@ module rv64i_load_store_unit (
     assign mem_wen  = mem_write;
     assign mem_wdata = store_data;
 
+    // Misalignment check: halfword (addr[0]!=0), word (addr[1:0]!=0), doubleword (addr[2:0]!=0)
     assign misaligned = (funct3[1:0] == 2'b01 && addr[0] != 1'b0) ||
                         (funct3[1:0] == 2'b10 && addr[1:0] != 2'b0) ||
                         (funct3[1:0] == 2'b11 && addr[2:0] != 3'b0);

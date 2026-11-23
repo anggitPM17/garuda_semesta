@@ -57,8 +57,17 @@ module garuda_rv64i_core_tb;
     always #5 clk = ~clk;
 
     initial begin
+        #1500000;
+        $display("[TIMEOUT] Simulation timed out waiting for program completion.");
+        $display(">>> TEST RESULT: FAILURE (FAIL) <<<");
+        $finish;
+    end
+
+    integer errors = 0;
+
+    initial begin
         $display("=========================================================");
-        $display(" GARUDA SEMESTA GEN2 — SINGLE-HART RV64I INTEGRATION TEST");
+        $display(" GARUDA SEMESTA GEN2 — COMPREHENSIVE RV64I INTEGRATION");
         $display("=========================================================");
 
         clk = 0;
@@ -69,42 +78,59 @@ module garuda_rv64i_core_tb;
         #20;
         rst_n = 1;
 
-        #300;
+        #500000;
 
-        $display("\n=== PIPELINE TRACE & FINAL STATE ===");
-        $display("PC = %0h, Inst = %0h", uut.pc, imem_rdata);
-        $display("x1  = %0d", uut.regfile_inst.regs[1]);
-        $display("x2  = %0d", uut.regfile_inst.regs[2]);
-        $display("x3  = %0d", uut.regfile_inst.regs[3]);
-        $display("x4  = %0d", uut.regfile_inst.regs[4]);
-        $display("x5  = %0d", uut.regfile_inst.regs[5]);
-        $display("x6  = %0d", uut.regfile_inst.regs[6]);
-        $display("x7  = %0d", uut.regfile_inst.regs[7]);
-        $display("x8  = %0d", uut.regfile_inst.regs[8]);
-        $display("x9  = %0d", uut.regfile_inst.regs[9]);
-        $display("x10 = %0d", uut.regfile_inst.regs[10]);
-        $display("x11 = %0h", uut.regfile_inst.regs[11]);
-        $display("x12 = %0h", uut.regfile_inst.regs[12]);
-        $display("x13 = %0d", uut.regfile_inst.regs[13]);
-        $display("x14 = %0d", uut.regfile_inst.regs[14]);
-        $display("x15 = %0d", uut.regfile_inst.regs[15]);
+        $display("\n=== COMPREHENSIVE AUTOMATED ASSERTION CHECKS ===");
 
-        if (uut.regfile_inst.regs[3] == 64'd30) begin
-            $display("\n>>> TEST RESULT: SUCCESS (PASS) <<<");
+        if (uut.regfile_inst.regs[0] !== 64'd0) begin
+            $display("ASSERTION FAILED: x0 is not zero (%0d)", uut.regfile_inst.regs[0]);
+            errors = errors + 1;
+        end else $display("PASS: x0 zero protection verified.");
+
+        if (uut.regfile_inst.regs[1] !== 64'd10) begin $display("FAIL: x1 = %0d (expected 10)", uut.regfile_inst.regs[1]); errors++; end
+        else $display("PASS: x1 (ADDI 10) = 10");
+
+        if (uut.regfile_inst.regs[2] !== 64'd20) begin $display("FAIL: x2 = %0d (expected 20)", uut.regfile_inst.regs[2]); errors++; end
+        else $display("PASS: x2 (ADDI 20) = 20");
+
+        if (uut.regfile_inst.regs[3] !== 64'd30) begin $display("FAIL: x3 = %0d (expected 30)", uut.regfile_inst.regs[3]); errors++; end
+        else $display("PASS: x3 (ADD 30) = 30");
+
+        if (uut.regfile_inst.regs[4] !== 64'd10) begin $display("FAIL: x4 = %0d (expected 10)", uut.regfile_inst.regs[4]); errors++; end
+        else $display("PASS: x4 (SUB 10) = 10");
+
+        if (uut.regfile_inst.regs[6] !== 64'd30) begin $display("FAIL: x6 = %0d (expected 30)", uut.regfile_inst.regs[6]); errors++; end
+        else $display("PASS: x6 (OR 30) = 30");
+
+        if (uut.regfile_inst.regs[7] !== 64'd30) begin $display("FAIL: x7 = %0d (expected 30)", uut.regfile_inst.regs[7]); errors++; end
+        else $display("PASS: x7 (XOR 30) = 30");
+
+        if (uut.regfile_inst.regs[8] !== 64'd1) begin $display("FAIL: x8 = %0d (expected 1)", uut.regfile_inst.regs[8]); errors++; end
+        else $display("PASS: x8 (SLT 1) = 1");
+
+        if (uut.regfile_inst.regs[10] !== 64'd40) begin $display("FAIL: x10 = %0d (expected 40)", uut.regfile_inst.regs[10]); errors++; end
+        else $display("PASS: x10 (SLLI 40) = 40");
+
+        if (uut.regfile_inst.regs[13] !== 64'd30) begin $display("FAIL: x13 = %0d (expected 30)", uut.regfile_inst.regs[13]); errors++; end
+        else $display("PASS: x13 (LD 30) = 30");
+
+        if (uut.regfile_inst.regs[14] !== 64'd40) begin $display("FAIL: x14 = %0d (expected 40)", uut.regfile_inst.regs[14]); errors++; end
+        else $display("PASS: x14 (Forwarding x13+x1 = 40) = 40");
+
+        if (uut.regfile_inst.regs[15] !== 64'd77) begin $display("FAIL: x15 = %0d (expected 77)", uut.regfile_inst.regs[15]); errors++; end
+        else $display("PASS: x15 (Branch target 77) = 77");
+
+        if (uut.regfile_inst.regs[17] !== 64'd88) begin $display("FAIL: x17 = %0d (expected 88)", uut.regfile_inst.regs[17]); errors++; end
+        else $display("PASS: x17 (JAL target 88) = 88");
+
+        $display("\n=========================================================");
+        if (errors == 0) begin
+            $display(" >>> ALL ASSERTIONS PASSED — TEST RESULT: SUCCESS (PASS) <<<");
         end else begin
-            $display("\n>>> TEST RESULT: FAILURE (FAIL) <<<");
+            $display(" >>> TOTAL ERRORS: %0d — TEST RESULT: FAILURE (FAIL) <<<", errors);
         end
-
+        $display("=========================================================");
         $finish;
-    end
-
-    // Monitor each cycle
-    always @(posedge clk) begin
-        if (rst_n) begin
-            $display("[T=%0t] PC=%0h | Inst=%0h | ALU_Res=%0h | WB_Data=%0h | x1=%0d, x2=%0d, x3=%0d",
-                $time, uut.pc, imem_rdata, uut.alu_result_ex, uut.wb_data,
-                uut.regfile_inst.regs[1], uut.regfile_inst.regs[2], uut.regfile_inst.regs[3]);
-        end
     end
 
 endmodule

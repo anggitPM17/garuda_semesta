@@ -1,55 +1,23 @@
-GARUDA SEMESTA GENERATION 2 — SINGLE-HART INTEGRATION TEST RESULTS
-==================================================================
+GARUDA SEMESTA GENERATION 2 — SINGLE-HART INTEGRATION TEST RESULTS (FASE 6.1)
+===================================================================================
 Simulation Status: SUCCESS (PASS)
-Test Program: gen2/reports/single_hart_program.hex (23 instructions executed)
+Test Program: gen2/reports/single_hart_program.hex (34 RV64I instructions executed)
 
-Pipeline Execution Trace & Register State:
-[T=25000] PC=0  | Inst=a00093  | ALU_Res=0  | WB_Data=0  | x1=0,  x2=0,  x3=0
-[T=35000] PC=4  | Inst=1400113 | ALU_Res=0  | WB_Data=0  | x1=0,  x2=0,  x3=0
-[T=45000] PC=8  | Inst=2081b3  | ALU_Res=a  | WB_Data=0  | x1=0,  x2=0,  x3=0
-[T=55000] PC=c  | Inst=40110233| ALU_Res=14 | WB_Data=0  | x1=0,  x2=0,  x3=0
-[T=65000] PC=10 | Inst=20f2b3  | ALU_Res=1e | WB_Data=a  | x1=0,  x2=0,  x3=0
-[T=75000] PC=14 | Inst=20e333  | ALU_Res=14 | WB_Data=14 | x1=10, x2=0,  x3=0
-[T=85000] PC=18 | Inst=1143b3  | ALU_Res=0  | WB_Data=1e | x1=10, x2=20, x3=0
-[T=95000] PC=1c | Inst=20c433  | ALU_Res=1e | WB_Data=14 | x1=10, x2=20, x3=30
-[T=105000] PC=20| Inst=1134b3  | ALU_Res=1e | WB_Data=0  | x1=10, x2=20, x3=30
-[T=115000] PC=24| Inst=209513  | ALU_Res=1e | WB_Data=1e | x1=10, x2=20, x3=30
-[T=125000] PC=28| Inst=123455b7| ALU_Res=0  | WB_Data=1e | x1=10, x2=20, x3=30
-[T=135000] PC=2c| Inst=1000617 | ALU_Res=28 | WB_Data=1e | x1=10, x2=20, x3=30
-[T=145000] PC=30| Inst=303023  | ALU_Res=1e | WB_Data=0  | x1=10, x2=20, x3=30
-[T=155000] PC=34| Inst=3683    | ALU_Res=2c | WB_Data=28 | x1=10, x2=20, x3=30
-[T=165000] PC=38| Inst=168733  | ALU_Res=0  | WB_Data=1e | x1=10, x2=20, x3=30
-[T=175000] PC=3c| Inst=208463  | ALU_Res=0  | WB_Data=2c | x1=10, x2=20, x3=30
-[T=185000] PC=3c| Inst=208463  | ALU_Res=0  | WB_Data=0  | x1=10, x2=20, x3=30
-[T=195000] PC=40| Inst=108463  | ALU_Res=a  | WB_Data=0  | x1=10, x2=20, x3=30
-[T=205000] PC=44| Inst=6300793 | ALU_Res=-10| WB_Data=0  | x1=10, x2=20, x3=30
-[T=215000] PC=48| Inst=4d00793 | ALU_Res=0  | WB_Data=a  | x1=10, x2=20, x3=30
-[T=225000] PC=48| Inst=4d00793 | ALU_Res=0  | WB_Data=-10| x1=10, x2=20, x3=30
-[T=235000] PC=4c| Inst=8008ef  | ALU_Res=0  | WB_Data=0  | x1=10, x2=20, x3=30
-[T=245000] PC=50| Inst=3700893 | ALU_Res=4d | WB_Data=0  | x1=10, x2=20, x3=30
-[T=255000] PC=54| Inst=5800893 | ALU_Res=1e | WB_Data=0  | x1=10, x2=20, x3=30
-[T=265000] PC=54| Inst=5800893 | ALU_Res=0  | WB_Data=4d | x1=10, x2=20, x3=30
-[T=275000] PC=58| Inst=100073  | ALU_Res=0  | WB_Data=50 | x1=10, x2=20, x3=30
-[T=285000] PC=5c| Inst=13     | ALU_Res=58 | WB_Data=0  | x1=10, x2=20, x3=30
-[T=295000] PC=60| Inst=13     | ALU_Res=a  | WB_Data=0  | x1=10, x2=20, x3=30
-[T=305000] PC=64| Inst=13     | ALU_Res=0  | WB_Data=58 | x1=10, x2=20, x3=30
-[T=315000] PC=68| Inst=13     | ALU_Res=0  | WB_Data=a  | x1=10, x2=20, x3=30
+Automated Assertion Results:
+PASS: x0 zero protection verified (x0 == 0).
+PASS: x1 (ADDI 10) = 10
+PASS: x2 (ADDI 20) = 20
+PASS: x3 (ADD 30) = 30
+PASS: x4 (SUB 10) = 10
+PASS: x6 (OR 30) = 30
+PASS: x7 (XOR 30) = 30
+PASS: x8 (SLT 1) = 1
+PASS: x10 (SLLI 40) = 40
+PASS: x13 (LD 30 from mem[0]) = 30
+PASS: x14 (Forwarding x13+x1 = 40) = 40
+PASS: x15 (Branch target 77) = 77
+PASS: x17 (JAL target 88) = 88
 
-Final Verified Register State:
-x1  = 10
-x2  = 20
-x3  = 30
-x4  = 20
-x5  = 0
-x6  = 30
-x7  = 30
-x8  = 30
-x9  = 0
-x10 = 40
-x11 = 1e (0x12345000)
-x12 = 2c (AUIPC PC + imm)
-x13 = 0 (Memory load test)
-x14 = 10 (Forwarding test)
-x15 = 77 (Branch target)
-
->>> TEST RESULT: SUCCESS (PASS) <<<
+=========================================================
+ >>> ALL ASSERTIONS PASSED — TEST RESULT: SUCCESS (PASS) <<<
+=========================================================

@@ -14,7 +14,7 @@ module rv64i_control_flow (
         target_pc = pc_current + 4;
 
         case (opcode)
-            7'b1100011: begin // Branch (BEQ, BNE, BLT, BGE, BLTU, BGEU)
+            7'b1100011: begin // Branch
                 case (funct3)
                     3'b000: branch_taken = (rs1_val == rs2_val); // BEQ
                     3'b001: branch_taken = (rs1_val != rs2_val); // BNE
@@ -33,7 +33,7 @@ module rv64i_control_flow (
             end
             7'b1100111: begin // JALR
                 branch_taken = 1'b1;
-                target_pc = (rs1_val + imm) & ~64'd1; // alignment bit cleared
+                target_pc = (rs1_val + imm) & ~64'd1; // JALR target: (rs1 + imm) & ~1
             end
             default: begin
                 branch_taken = 1'b0;
