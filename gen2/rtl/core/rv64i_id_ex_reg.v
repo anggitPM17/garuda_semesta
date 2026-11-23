@@ -2,7 +2,6 @@
 module rv64i_id_ex_reg (
     input  wire        clk,
     input  wire        rst_n,
-    input  wire        stall,
     input  wire        flush,
     input  wire [63:0] pc_in,
     input  wire [63:0] rs1_val_in,
@@ -43,7 +42,7 @@ module rv64i_id_ex_reg (
             reg_write_out <= 1'b0;
             mem_read_out  <= 1'b0;
             mem_write_out <= 1'b0;
-        end else if (!stall) begin
+        end else begin
             pc_out        <= pc_in;
             rs1_val_out   <= rs1_val_in;
             rs2_val_out   <= rs2_val_in;

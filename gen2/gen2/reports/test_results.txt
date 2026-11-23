@@ -1,0 +1,249 @@
+GARUDA SEMESTA GENERATION 2 — TEST RESULTS
+=========================================
+Module: rv64i_alu | Status: PASS
+--- Output ---
+=========================================
+OpenLane Docker Environment
+=========================================
+Python: Python 3.11.16
+OpenROAD: b16bda7e82721d10566ff7e2b68f1ff0be9f9e38 
+Yosys: Yosys 0.38 (git sha1 543faed9c8c, clang++ 17.0.6 -fPIC -Os)
+Icarus Verilog: Icarus Verilog version 12.0 (stable) ()
+KLayout: KLayout 0.29.1
+librelane: 2.4.13
+=========================================
+=== START tb_rv64i_alu_1 ===
+PASS: tb_rv64i_alu_1 all tests passed successfully.
+/workspace/tb/tb_rv64i_alu_1.v:28: $finish called at 30000 (1ps)
+
+
+-----------------------------------------
+
+Module: rv64i_alu_2 | Status: PASS
+--- Output ---
+=========================================
+OpenLane Docker Environment
+=========================================
+Python: Python 3.11.16
+OpenROAD: b16bda7e82721d10566ff7e2b68f1ff0be9f9e38 
+Yosys: Yosys 0.38 (git sha1 543faed9c8c, clang++ 17.0.6 -fPIC -Os)
+Icarus Verilog: Icarus Verilog version 12.0 (stable) ()
+KLayout: KLayout 0.29.1
+librelane: 2.4.13
+=========================================
+=== START tb_rv64i_alu_2 ===
+PASS: tb_rv64i_alu_2 all tests passed successfully.
+/workspace/tb/tb_rv64i_alu_2.v:28: $finish called at 30000 (1ps)
+
+
+-----------------------------------------
+
+Module: rv64i_decode | Status: PASS
+--- Output ---
+=========================================
+OpenLane Docker Environment
+=========================================
+Python: Python 3.11.16
+OpenROAD: b16bda7e82721d10566ff7e2b68f1ff0be9f9e38 
+Yosys: Yosys 0.38 (git sha1 543faed9c8c, clang++ 17.0.6 -fPIC -Os)
+Icarus Verilog: Icarus Verilog version 12.0 (stable) ()
+KLayout: KLayout 0.29.1
+librelane: 2.4.13
+=========================================
+=== START tb_rv64i_decode ===
+PASS: tb_rv64i_decode passed.
+/workspace/tb/tb_rv64i_decode.v:30: $finish called at 10000 (1ps)
+
+
+-----------------------------------------
+
+Module: rv64i_regfile | Status: PASS
+--- Output ---
+=========================================
+OpenLane Docker Environment
+=========================================
+Python: Python 3.11.16
+OpenROAD: b16bda7e82721d10566ff7e2b68f1ff0be9f9e38 
+Yosys: Yosys 0.38 (git sha1 543faed9c8c, clang++ 17.0.6 -fPIC -Os)
+Icarus Verilog: Icarus Verilog version 12.0 (stable) ()
+KLayout: KLayout 0.29.1
+librelane: 2.4.13
+=========================================
+=== START tb_rv64i_regfile ===
+PASS: tb_rv64i_regfile passed.
+/workspace/tb/tb_rv64i_regfile.v:38: $finish called at 52000 (1ps)
+
+
+-----------------------------------------
+
+Module: rv64i_control_flow | Status: PASS
+--- Output ---
+=========================================
+OpenLane Docker Environment
+=========================================
+Python: Python 3.11.16
+OpenROAD: b16bda7e82721d10566ff7e2b68f1ff0be9f9e38 
+Yosys: Yosys 0.38 (git sha1 543faed9c8c, clang++ 17.0.6 -fPIC -Os)
+Icarus Verilog: Icarus Verilog version 12.0 (stable) ()
+KLayout: KLayout 0.29.1
+librelane: 2.4.13
+=========================================
+=== START tb_rv64i_control_flow ===
+PASS: tb_rv64i_control_flow passed.
+/workspace/tb/tb_rv64i_control_flow.v:28: $finish called at 10000 (1ps)
+
+
+-----------------------------------------
+
+Module: rv64i_load_store_unit | Status: PASS
+--- Output ---
+=========================================
+OpenLane Docker Environment
+=========================================
+Python: Python 3.11.16
+OpenROAD: b16bda7e82721d10566ff7e2b68f1ff0be9f9e38 
+Yosys: Yosys 0.38 (git sha1 543faed9c8c, clang++ 17.0.6 -fPIC -Os)
+Icarus Verilog: Icarus Verilog version 12.0 (stable) ()
+KLayout: KLayout 0.29.1
+librelane: 2.4.13
+=========================================
+=== START tb_rv64i_load_store_unit ===
+PASS: tb_rv64i_load_store_unit passed.
+/workspace/tb/tb_rv64i_load_store_unit.v:37: $finish called at 20000 (1ps)
+
+
+-----------------------------------------
+
+Module: rv64i_hazard_unit | Status: PASS
+--- Output ---
+=========================================
+OpenLane Docker Environment
+=========================================
+Python: Python 3.11.16
+OpenROAD: b16bda7e82721d10566ff7e2b68f1ff0be9f9e38 
+Yosys: Yosys 0.38 (git sha1 543faed9c8c, clang++ 17.0.6 -fPIC -Os)
+Icarus Verilog: Icarus Verilog version 12.0 (stable) ()
+KLayout: KLayout 0.29.1
+librelane: 2.4.13
+=========================================
+=== START tb_rv64i_hazard_unit ===
+PASS: tb_rv64i_hazard_unit passed.
+/workspace/tb/tb_rv64i_hazard_unit.v:35: $finish called at 10000 (1ps)
+
+
+-----------------------------------------
+
+Module: rv64i_if_id_reg | Status: PASS
+--- Output ---
+=========================================
+OpenLane Docker Environment
+=========================================
+Python: Python 3.11.16
+OpenROAD: b16bda7e82721d10566ff7e2b68f1ff0be9f9e38 
+Yosys: Yosys 0.38 (git sha1 543faed9c8c, clang++ 17.0.6 -fPIC -Os)
+Icarus Verilog: Icarus Verilog version 12.0 (stable) ()
+KLayout: KLayout 0.29.1
+librelane: 2.4.13
+=========================================
+=== START tb_rv64i_if_id_reg ===
+PASS: tb_rv64i_if_id_reg passed.
+/workspace/tb/tb_rv64i_if_id_reg.v:21: $finish called at 22000 (1ps)
+
+
+-----------------------------------------
+
+Module: rv64i_id_ex_reg | Status: PASS
+--- Output ---
+=========================================
+OpenLane Docker Environment
+=========================================
+Python: Python 3.11.16
+OpenROAD: b16bda7e82721d10566ff7e2b68f1ff0be9f9e38 
+Yosys: Yosys 0.38 (git sha1 543faed9c8c, clang++ 17.0.6 -fPIC -Os)
+Icarus Verilog: Icarus Verilog version 12.0 (stable) ()
+KLayout: KLayout 0.29.1
+librelane: 2.4.13
+=========================================
+=== START tb_rv64i_id_ex_reg ===
+PASS: tb_rv64i_id_ex_reg passed.
+/workspace/tb/tb_rv64i_id_ex_reg.v:33: $finish called at 22000 (1ps)
+
+
+-----------------------------------------
+
+Module: rv64i_ex_mem_reg | Status: PASS
+--- Output ---
+=========================================
+OpenLane Docker Environment
+=========================================
+Python: Python 3.11.16
+OpenROAD: b16bda7e82721d10566ff7e2b68f1ff0be9f9e38 
+Yosys: Yosys 0.38 (git sha1 543faed9c8c, clang++ 17.0.6 -fPIC -Os)
+Icarus Verilog: Icarus Verilog version 12.0 (stable) ()
+KLayout: KLayout 0.29.1
+librelane: 2.4.13
+=========================================
+=== START tb_rv64i_ex_mem_reg ===
+PASS: tb_rv64i_ex_mem_reg passed.
+/workspace/tb/tb_rv64i_ex_mem_reg.v:25: $finish called at 22000 (1ps)
+
+
+-----------------------------------------
+
+Module: rv64i_mem_wb_reg | Status: PASS
+--- Output ---
+=========================================
+OpenLane Docker Environment
+=========================================
+Python: Python 3.11.16
+OpenROAD: b16bda7e82721d10566ff7e2b68f1ff0be9f9e38 
+Yosys: Yosys 0.38 (git sha1 543faed9c8c, clang++ 17.0.6 -fPIC -Os)
+Icarus Verilog: Icarus Verilog version 12.0 (stable) ()
+KLayout: KLayout 0.29.1
+librelane: 2.4.13
+=========================================
+=== START tb_rv64i_mem_wb_reg ===
+PASS: tb_rv64i_mem_wb_reg passed.
+/workspace/tb/tb_rv64i_mem_wb_reg.v:25: $finish called at 22000 (1ps)
+
+
+-----------------------------------------
+
+Module: rv64i_system_decode | Status: PASS
+--- Output ---
+=========================================
+OpenLane Docker Environment
+=========================================
+Python: Python 3.11.16
+OpenROAD: b16bda7e82721d10566ff7e2b68f1ff0be9f9e38 
+Yosys: Yosys 0.38 (git sha1 543faed9c8c, clang++ 17.0.6 -fPIC -Os)
+Icarus Verilog: Icarus Verilog version 12.0 (stable) ()
+KLayout: KLayout 0.29.1
+librelane: 2.4.13
+=========================================
+=== START tb_rv64i_system_decode ===
+PASS: tb_rv64i_system_decode passed.
+/workspace/tb/tb_rv64i_system_decode.v:15: $finish called at 10000 (1ps)
+
+
+-----------------------------------------
+
+Module: rv64i_writeback | Status: PASS
+--- Output ---
+=========================================
+OpenLane Docker Environment
+=========================================
+Python: Python 3.11.16
+OpenROAD: b16bda7e82721d10566ff7e2b68f1ff0be9f9e38 
+Yosys: Yosys 0.38 (git sha1 543faed9c8c, clang++ 17.0.6 -fPIC -Os)
+Icarus Verilog: Icarus Verilog version 12.0 (stable) ()
+KLayout: KLayout 0.29.1
+librelane: 2.4.13
+=========================================
+=== START tb_rv64i_writeback ===
+PASS: tb_rv64i_writeback passed.
+/workspace/tb/tb_rv64i_writeback.v:26: $finish called at 20000 (1ps)
+
+
+-----------------------------------------
+
