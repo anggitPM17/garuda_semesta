@@ -1,32 +1,8 @@
 =========================================================
- GARUDA SEMESTA GEN2 — FASE 6.2 FINAL HARDENING TEST
+ GARUDA SEMESTA GEN2 — FASE 6.3 REPAIR SIGN-OFF TEST
 =========================================================
-WARNING: rtl/core/rv64i_memory_model.v:136: $readmemh(reports/single_hart_program.hex): Not enough words in the file for the requested range [0:1023].
-
-=== COMPREHENSIVE AUTOMATED ASSERTION CHECKS ===
-FAIL: Program did not reach EBREAK (core_halted = 0)
-PASS: x0 zero protection verified.
-PASS: x1 = 10
-PASS: x2 = 20
-PASS: x3 = 30
-PASS: x4 = 10
-PASS: x5 = 0
-PASS: x6 = 30
-PASS: x7 = 30
-PASS: x8 = 1
-PASS: x9 = 0
-PASS: x10 = 40
-FAIL: x13 = 0
-FAIL: x14 = 0
-PASS: x15 (Branch target) = 77
-PASS: x17 (JAL target) = 88
-PASS: dmem[0] store verified (30)
-PASS: dmem[8] store verified (10)
-PASS: dmem[16] store verified (20)
-FAIL: dmem[24] = 0
-
-=========================================================
- >>> TOTAL ERRORS: 4 — TEST RESULT: FAILURE (FAIL) <<<
-=========================================================
-tb/garuda_rv64i_core_tb.v:165: $finish called at 1495000 (1ps)
+WARNING: rtl/core/rv64i_memory_model.v:183: $readmemh(reports/single_hart_program.hex): Not enough words in the file for the requested range [0:1023].
+[TIMEOUT] Simulation timed out waiting for EBREAK.
+>>> TEST RESULT: FAILURE (FAIL) <<<
+tb/garuda_rv64i_core_tb.v:70: $finish called at 5000000000 (1ps)
 
