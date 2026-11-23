@@ -1,10 +1,10 @@
 
-rtl/core/rv64i_memory_model.v:63: warning: @* is sensitive to all 1024 words in array 'imem'.
-rtl/core/rv64i_memory_model.v:83: warning: @* is sensitive to all 16384 words in array 'dmem'.
-rtl/core/rv64i_memory_model.v:83: warning: @* is sensitive to all 16384 words in array 'dmem'.
-rtl/core/rv64i_memory_model.v:83: warning: @* is sensitive to all 16384 words in array 'dmem'.
-rtl/core/rv64i_memory_model.v:83: warning: @* is sensitive to all 16384 words in array 'dmem'.
-rtl/core/rv64i_memory_model.v:84: warning: @* is sensitive to all 16384 words in array 'dmem'.
-rtl/core/rv64i_memory_model.v:84: warning: @* is sensitive to all 16384 words in array 'dmem'.
-rtl/core/rv64i_memory_model.v:84: warning: @* is sensitive to all 16384 words in array 'dmem'.
-rtl/core/rv64i_memory_model.v:84: warning: @* is sensitive to all 16384 words in array 'dmem'.
+rtl/core/rv64i_memory_model.v:66: warning: @* is sensitive to all 1024 words in array 'imem'.
+rtl/core/rv64i_memory_model.v:86: warning: @* is sensitive to all 16384 words in array 'dmem'.
+rtl/core/rv64i_memory_model.v:86: warning: @* is sensitive to all 16384 words in array 'dmem'.
+rtl/core/rv64i_memory_model.v:86: warning: @* is sensitive to all 16384 words in array 'dmem'.
+rtl/core/rv64i_memory_model.v:86: warning: @* is sensitive to all 16384 words in array 'dmem'.
+rtl/core/rv64i_memory_model.v:87: warning: @* is sensitive to all 16384 words in array 'dmem'.
+rtl/core/rv64i_memory_model.v:87: warning: @* is sensitive to all 16384 words in array 'dmem'.
+rtl/core/rv64i_memory_model.v:87: warning: @* is sensitive to all 16384 words in array 'dmem'.
+rtl/core/rv64i_memory_model.v:87: warning: @* is sensitive to all 16384 words in array 'dmem'.

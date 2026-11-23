@@ -24,11 +24,14 @@ module rv64i_memory_model (
     output reg         dmem_ready,
     output reg [63:0]  dmem_rdata,
     output reg         dmem_resp_valid,
+    input  wire        dmem_resp_ready, // Response consumption signal
 
-    // Transaction Counters for Verification
+    // Verification Scoreboard Counters
     output reg [31:0]  read_tx_count,
     output reg [31:0]  write_tx_count,
-    output reg [31:0]  resp_tx_count
+    output reg [31:0]  committed_store_count,
+    output reg [31:0]  resp_tx_count,
+    output reg [31:0]  duplicate_tx_count
 );
 
     localparam LATENCY = `MEM_LATENCY;
@@ -92,21 +95,24 @@ module rv64i_memory_model (
     // Sequential Transaction FSM and Single-Store Commit
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            dmem_state     <= STATE_IDLE;
-            dmem_timer     <= 4'd0;
-            read_tx_count  <= 32'd0;
-            write_tx_count <= 32'd0;
-            resp_tx_count  <= 32'd0;
-            pending_addr   <= 64'd0;
-            pending_wen    <= 1'b0;
-            pending_funct3 <= 3'b0;
-            pending_wdata  <= 64'd0;
+            dmem_state            <= STATE_IDLE;
+            dmem_timer            <= 4'd0;
+            read_tx_count         <= 32'd0;
+            write_tx_count        <= 32'd0;
+            committed_store_count <= 32'd0;
+            resp_tx_count         <= 32'd0;
+            duplicate_tx_count    <= 32'd0;
+            pending_addr          <= 64'd0;
+            pending_wen           <= 1'b0;
+            pending_funct3        <= 3'b0;
+            pending_wdata         <= 64'd0;
         end else begin
             if (LATENCY == 0) begin
                 if (dmem_valid && dmem_ready) begin
                     resp_tx_count <= resp_tx_count + 1'b1;
                     if (dmem_wen) begin
-                        write_tx_count <= write_tx_count + 1'b1;
+                        write_tx_count        <= write_tx_count + 1'b1;
+                        committed_store_count <= committed_store_count + 1'b1;
                         case (dmem_funct3[1:0])
                             2'b00: if (dmem_addr < 16384) dmem[dmem_addr] <= dmem_wdata[7:0];
                             2'b01: if (dmem_addr < 16383) begin
@@ -135,7 +141,7 @@ module rv64i_memory_model (
                     end
                 end
             end else begin
-                // Multi-cycle LATENCY > 0
+                // Multi-cycle LATENCY > 0 FSM
                 case (dmem_state)
                     STATE_IDLE: begin
                         if (dmem_valid && dmem_ready) begin
@@ -152,33 +158,7 @@ module rv64i_memory_model (
                                 read_tx_count  <= read_tx_count + 1'b1;
 
                             if (LATENCY == 1) begin
-                                dmem_state    <= STATE_RESPONSE;
-                                resp_tx_count <= resp_tx_count + 1'b1;
-                                if (dmem_wen) begin
-                                    case (dmem_funct3[1:0])
-                                        2'b00: if (dmem_addr < 16384) dmem[dmem_addr] <= dmem_wdata[7:0];
-                                        2'b01: if (dmem_addr < 16383) begin
-                                            dmem[dmem_addr]     <= dmem_wdata[7:0];
-                                            dmem[dmem_addr + 1] <= dmem_wdata[15:8];
-                                        end
-                                        2'b10: if (dmem_addr < 16381) begin
-                                            dmem[dmem_addr]     <= dmem_wdata[7:0];
-                                            dmem[dmem_addr + 1] <= dmem_wdata[15:8];
-                                            dmem[dmem_addr + 2] <= dmem_wdata[23:16];
-                                            dmem[dmem_addr + 3] <= dmem_wdata[31:24];
-                                        end
-                                        2'b11: if (dmem_addr < 16376) begin
-                                            dmem[dmem_addr]     <= dmem_wdata[7:0];
-                                            dmem[dmem_addr + 1] <= dmem_wdata[15:8];
-                                            dmem[dmem_addr + 2] <= dmem_wdata[23:16];
-                                            dmem[dmem_addr + 3] <= dmem_wdata[31:24];
-                                            dmem[dmem_addr + 4] <= dmem_wdata[39:32];
-                                            dmem[dmem_addr + 5] <= dmem_wdata[47:40];
-                                            dmem[dmem_addr + 6] <= dmem_wdata[55:48];
-                                            dmem[dmem_addr + 7] <= dmem_wdata[63:56];
-                                        end
-                                    endcase
-                                end
+                                dmem_state <= STATE_RESPONSE;
                             end else begin
                                 dmem_state <= STATE_WAIT;
                             end
@@ -187,40 +167,40 @@ module rv64i_memory_model (
 
                     STATE_WAIT: begin
                         if (dmem_timer >= LATENCY[3:0] - 2'd2) begin
-                            dmem_state    <= STATE_RESPONSE;
-                            resp_tx_count <= resp_tx_count + 1'b1;
-
-                            if (pending_wen) begin
-                                case (pending_funct3[1:0])
-                                    2'b00: if (pending_addr < 16384) dmem[pending_addr] <= pending_wdata[7:0];
-                                    2'b01: if (pending_addr < 16383) begin
-                                        dmem[pending_addr]     <= pending_wdata[7:0];
-                                        dmem[pending_addr + 1] <= pending_wdata[15:8];
-                                    end
-                                    2'b10: if (pending_addr < 16381) begin
-                                        dmem[pending_addr]     <= pending_wdata[7:0];
-                                        dmem[pending_addr + 1] <= pending_wdata[15:8];
-                                        dmem[pending_addr + 2] <= pending_wdata[23:16];
-                                        dmem[pending_addr + 3] <= pending_wdata[31:24];
-                                    end
-                                    2'b11: if (pending_addr < 16376) begin
-                                        dmem[pending_addr]     <= pending_wdata[7:0];
-                                        dmem[pending_addr + 1] <= pending_wdata[15:8];
-                                        dmem[pending_addr + 2] <= pending_wdata[23:16];
-                                        dmem[pending_addr + 3] <= pending_wdata[31:24];
-                                        dmem[pending_addr + 4] <= pending_wdata[39:32];
-                                        dmem[pending_addr + 5] <= pending_wdata[47:40];
-                                        dmem[pending_addr + 6] <= pending_wdata[55:48];
-                                        dmem[pending_addr + 7] <= pending_wdata[63:56];
-                                    end
-                                endcase
-                            end
+                            dmem_state <= STATE_RESPONSE;
                         end else begin
                             dmem_timer <= dmem_timer + 1'b1;
                         end
                     end
 
                     STATE_RESPONSE: begin
+                        resp_tx_count <= resp_tx_count + 1'b1;
+                        if (pending_wen) begin
+                            committed_store_count <= committed_store_count + 1'b1;
+                            case (pending_funct3[1:0])
+                                2'b00: if (pending_addr < 16384) dmem[pending_addr] <= pending_wdata[7:0];
+                                2'b01: if (pending_addr < 16383) begin
+                                    dmem[pending_addr]     <= pending_wdata[7:0];
+                                    dmem[pending_addr + 1] <= pending_wdata[15:8];
+                                end
+                                2'b10: if (pending_addr < 16381) begin
+                                    dmem[pending_addr]     <= pending_wdata[7:0];
+                                    dmem[pending_addr + 1] <= pending_wdata[15:8];
+                                    dmem[pending_addr + 2] <= pending_wdata[23:16];
+                                    dmem[pending_addr + 3] <= pending_wdata[31:24];
+                                end
+                                2'b11: if (pending_addr < 16376) begin
+                                    dmem[pending_addr]     <= pending_wdata[7:0];
+                                    dmem[pending_addr + 1] <= pending_wdata[15:8];
+                                    dmem[pending_addr + 2] <= pending_wdata[23:16];
+                                    dmem[pending_addr + 3] <= pending_wdata[31:24];
+                                    dmem[pending_addr + 4] <= pending_wdata[39:32];
+                                    dmem[pending_addr + 5] <= pending_wdata[47:40];
+                                    dmem[pending_addr + 6] <= pending_wdata[55:48];
+                                    dmem[pending_addr + 7] <= pending_wdata[63:56];
+                                end
+                            endcase
+                        end
                         dmem_state <= STATE_IDLE;
                     end
 

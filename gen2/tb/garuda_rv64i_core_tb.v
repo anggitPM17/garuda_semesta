@@ -17,10 +17,13 @@ module garuda_rv64i_core_tb;
     wire        dmem_ready;
     wire [63:0] dmem_rdata;
     wire        dmem_resp_valid;
+    wire        dmem_resp_ready;
     wire        core_halted;
     wire [31:0] read_tx_count;
     wire [31:0] write_tx_count;
+    wire [31:0] committed_store_count;
     wire [31:0] resp_tx_count;
+    wire [31:0] duplicate_tx_count;
 
     rv64i_memory_model mem_model (
         .clk(clk),
@@ -38,9 +41,12 @@ module garuda_rv64i_core_tb;
         .dmem_ready(dmem_ready),
         .dmem_rdata(dmem_rdata),
         .dmem_resp_valid(dmem_resp_valid),
+        .dmem_resp_ready(dmem_resp_ready),
         .read_tx_count(read_tx_count),
         .write_tx_count(write_tx_count),
-        .resp_tx_count(resp_tx_count)
+        .committed_store_count(committed_store_count),
+        .resp_tx_count(resp_tx_count),
+        .duplicate_tx_count(duplicate_tx_count)
     );
 
     garuda_rv64i_core uut (
@@ -59,6 +65,7 @@ module garuda_rv64i_core_tb;
         .dmem_ready(dmem_ready),
         .dmem_rdata(dmem_rdata),
         .dmem_resp_valid(dmem_resp_valid),
+        .dmem_resp_ready(dmem_resp_ready),
         .core_halted(core_halted)
     );
 
@@ -78,7 +85,7 @@ module garuda_rv64i_core_tb;
 
     initial begin
         $display("=========================================================");
-        $display(" GARUDA SEMESTA GEN2 — FASE 6.5 CANONICAL SIGN-OFF TEST");
+        $display(" GARUDA SEMESTA GEN2 — FASE 6.7 HANDSHAKE SIGN-OFF TEST");
         $display("=========================================================");
 
         clk = 0;
@@ -170,7 +177,9 @@ module garuda_rv64i_core_tb;
         // 5. Transaction accounting assertions
         $display("INFO: Read Accepted Transactions (LD)  = %0d", read_tx_count);
         $display("INFO: Write Accepted Transactions (ST) = %0d", write_tx_count);
+        $display("INFO: Committed Store Count            = %0d", committed_store_count);
         $display("INFO: Total Responses Issued           = %0d", resp_tx_count);
+        $display("INFO: Duplicate Transactions           = %0d", duplicate_tx_count);
 
         if (read_tx_count !== 32'd4) begin
             $display("FAIL: Read transaction count mismatch (%0d, expected 4)", read_tx_count);
@@ -186,11 +195,25 @@ module garuda_rv64i_core_tb;
             $display("PASS: Write transaction count verified (4)");
         end
 
+        if (committed_store_count !== write_tx_count) begin
+            $display("FAIL: Committed store count mismatch (%0d vs write_tx=%0d)", committed_store_count, write_tx_count);
+            errors++;
+        end else begin
+            $display("PASS: Committed store count matches write transaction count (%0d)", committed_store_count);
+        end
+
         if (resp_tx_count !== (read_tx_count + write_tx_count)) begin
             $display("FAIL: Response count mismatch (resp=%0d vs req=%0d)", resp_tx_count, read_tx_count + write_tx_count);
             errors++;
         end else begin
             $display("PASS: Response count matches accepted requests exactly (%0d)", resp_tx_count);
+        end
+
+        if (duplicate_tx_count !== 32'd0) begin
+            $display("FAIL: Duplicate transaction count is %0d (expected 0)", duplicate_tx_count);
+            errors++;
+        end else begin
+            $display("PASS: Zero duplicate transactions verified.");
         end
 
         $display("\n=========================================================");
