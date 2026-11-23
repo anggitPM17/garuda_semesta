@@ -1,8 +1,106 @@
 =========================================================
  GARUDA SEMESTA GEN2 — FASE 6.3 REPAIR SIGN-OFF TEST
 =========================================================
-WARNING: rtl/core/rv64i_memory_model.v:183: $readmemh(reports/single_hart_program.hex): Not enough words in the file for the requested range [0:1023].
-[TIMEOUT] Simulation timed out waiting for EBREAK.
+WARNING: rtl/core/rv64i_memory_model.v:239: $readmemh(reports/single_hart_program.hex): Not enough words in the file for the requested range [0:1023].
+[TB TRACE] T=25000 | PC=0 | Inst=a00093 | core_halted=0 | dmem_valid=0 | dmem_resp=0 | state=0
+[TB TRACE] T=35000 | PC=4 | Inst=2081b3 | core_halted=0 | dmem_valid=0 | dmem_resp=0 | state=0
+[TB TRACE] T=45000 | PC=8 | Inst=13 | core_halted=0 | dmem_valid=0 | dmem_resp=0 | state=0
+[TB TRACE] T=55000 | PC=c | Inst=13 | core_halted=0 | dmem_valid=0 | dmem_resp=0 | state=0
+[TB TRACE] T=65000 | PC=10 | Inst=40110233 | core_halted=0 | dmem_valid=0 | dmem_resp=0 | state=0
+[TB TRACE] T=75000 | PC=14 | Inst=20f2b3 | core_halted=0 | dmem_valid=0 | dmem_resp=0 | state=0
+[TB TRACE] T=85000 | PC=18 | Inst=20e333 | core_halted=0 | dmem_valid=0 | dmem_resp=0 | state=0
+[TB TRACE] T=95000 | PC=1c | Inst=1143b3 | core_halted=0 | dmem_valid=0 | dmem_resp=0 | state=0
+[TB TRACE] T=105000 | PC=20 | Inst=20a433 | core_halted=0 | dmem_valid=0 | dmem_resp=0 | state=0
+[TB TRACE] T=115000 | PC=24 | Inst=1134b3 | core_halted=0 | dmem_valid=0 | dmem_resp=0 | state=0
+[TB TRACE] T=125000 | PC=28 | Inst=209513 | core_halted=0 | dmem_valid=0 | dmem_resp=0 | state=0
+[TB TRACE] T=135000 | PC=2c | Inst=123455b7 | core_halted=0 | dmem_valid=0 | dmem_resp=0 | state=0
+[TB TRACE] T=145000 | PC=30 | Inst=1000617 | core_halted=0 | dmem_valid=0 | dmem_resp=0 | state=0
+[TB TRACE] T=155000 | PC=34 | Inst=303023 | core_halted=0 | dmem_valid=0 | dmem_resp=0 | state=0
+[TB TRACE] T=165000 | PC=38 | Inst=102423 | core_halted=0 | dmem_valid=0 | dmem_resp=0 | state=0
+[TB TRACE] T=175000 | PC=3c | Inst=201823 | core_halted=0 | dmem_valid=0 | dmem_resp=0 | state=0
+[TB TRACE] T=185000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=0 | state=0
+[TB TRACE] T=195000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=0 | state=1
+[TB TRACE] T=205000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=0 | state=1
+[TB TRACE] T=215000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=0 | state=1
+[TB TRACE] T=225000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=0 | state=1
+[TB TRACE] T=235000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=1 | state=10
+[TB TRACE] T=245000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=0 | state=0
+[TB TRACE] T=255000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=0 | state=1
+[TB TRACE] T=265000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=0 | state=1
+[TB TRACE] T=275000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=0 | state=1
+[TB TRACE] T=285000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=0 | state=1
+[TB TRACE] T=295000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=1 | state=10
+[TB TRACE] T=305000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=0 | state=0
+[TB TRACE] T=315000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=0 | state=1
+[TB TRACE] T=325000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=0 | state=1
+[TB TRACE] T=335000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=0 | state=1
+[TB TRACE] T=345000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=0 | state=1
+[TB TRACE] T=355000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=1 | state=10
+[TB TRACE] T=365000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=0 | state=0
+[TB TRACE] T=375000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=0 | state=1
+[TB TRACE] T=385000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=0 | state=1
+[TB TRACE] T=395000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=0 | state=1
+[TB TRACE] T=405000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=0 | state=1
+[TB TRACE] T=415000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=1 | state=10
+[TB TRACE] T=425000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=0 | state=0
+[TB TRACE] T=435000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=0 | state=1
+[TB TRACE] T=445000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=0 | state=1
+[TB TRACE] T=455000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=0 | state=1
+[TB TRACE] T=465000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=0 | state=1
+[TB TRACE] T=475000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=1 | state=10
+[TB TRACE] T=485000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=0 | state=0
+[TB TRACE] T=495000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=0 | state=1
+[TB TRACE] T=505000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=0 | state=1
+[TB TRACE] T=515000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=0 | state=1
+[TB TRACE] T=525000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=0 | state=1
+[TB TRACE] T=535000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=1 | state=10
+[TB TRACE] T=545000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=0 | state=0
+[TB TRACE] T=555000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=0 | state=1
+[TB TRACE] T=565000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=0 | state=1
+[TB TRACE] T=575000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=0 | state=1
+[TB TRACE] T=585000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=0 | state=1
+[TB TRACE] T=595000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=1 | state=10
+[TB TRACE] T=605000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=0 | state=0
+[TB TRACE] T=615000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=0 | state=1
+[TB TRACE] T=625000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=0 | state=1
+[TB TRACE] T=635000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=0 | state=1
+[TB TRACE] T=645000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=0 | state=1
+[TB TRACE] T=655000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=1 | state=10
+[TB TRACE] T=665000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=0 | state=0
+[TB TRACE] T=675000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=0 | state=1
+[TB TRACE] T=685000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=0 | state=1
+[TB TRACE] T=695000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=0 | state=1
+[TB TRACE] T=705000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=0 | state=1
+[TB TRACE] T=715000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=1 | state=10
+[TB TRACE] T=725000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=0 | state=0
+[TB TRACE] T=735000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=0 | state=1
+[TB TRACE] T=745000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=0 | state=1
+[TB TRACE] T=755000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=0 | state=1
+[TB TRACE] T=765000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=0 | state=1
+[TB TRACE] T=775000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=1 | state=10
+[TB TRACE] T=785000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=0 | state=0
+[TB TRACE] T=795000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=0 | state=1
+[TB TRACE] T=805000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=0 | state=1
+[TB TRACE] T=815000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=0 | state=1
+[TB TRACE] T=825000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=0 | state=1
+[TB TRACE] T=835000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=1 | state=10
+[TB TRACE] T=845000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=0 | state=0
+[TB TRACE] T=855000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=0 | state=1
+[TB TRACE] T=865000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=0 | state=1
+[TB TRACE] T=875000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=0 | state=1
+[TB TRACE] T=885000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=0 | state=1
+[TB TRACE] T=895000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=1 | state=10
+[TB TRACE] T=905000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=0 | state=0
+[TB TRACE] T=915000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=0 | state=1
+[TB TRACE] T=925000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=0 | state=1
+[TB TRACE] T=935000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=0 | state=1
+[TB TRACE] T=945000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=0 | state=1
+[TB TRACE] T=955000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=1 | state=10
+[TB TRACE] T=965000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=0 | state=0
+[TB TRACE] T=975000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=0 | state=1
+[TB TRACE] T=985000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=0 | state=1
+[TB TRACE] T=995000 | PC=40 | Inst=100c23 | core_halted=0 | dmem_valid=1 | dmem_resp=0 | state=1
+[TIMEOUT] Simulation timed out waiting for core_halted (EBREAK).
 >>> TEST RESULT: FAILURE (FAIL) <<<
-tb/garuda_rv64i_core_tb.v:70: $finish called at 5000000000 (1ps)
+tb/garuda_rv64i_core_tb.v:79: $finish called at 500000000 (1ps)
 

@@ -20,6 +20,7 @@ module garuda_rv64i_core_tb;
     wire        core_halted;
     wire [31:0] read_tx_count;
     wire [31:0] write_tx_count;
+    wire [31:0] resp_tx_count;
 
     rv64i_memory_model mem_model (
         .clk(clk),
@@ -38,7 +39,8 @@ module garuda_rv64i_core_tb;
         .dmem_rdata(dmem_rdata),
         .dmem_resp_valid(dmem_resp_valid),
         .read_tx_count(read_tx_count),
-        .write_tx_count(write_tx_count)
+        .write_tx_count(write_tx_count),
+        .resp_tx_count(resp_tx_count)
     );
 
     garuda_rv64i_core uut (
@@ -62,19 +64,21 @@ module garuda_rv64i_core_tb;
 
     always #5 clk = ~clk;
 
-    // Watchdog timer
+    // Watchdog timer with $fatal to guarantee non-zero exit code on failure
     initial begin
         #5000000;
-        $display("[TIMEOUT] Simulation timed out waiting for EBREAK.");
+        $display("\n=========================================================");
+        $display("[FATAL TIMEOUT] Simulation timed out waiting for EBREAK.");
         $display(">>> TEST RESULT: FAILURE (FAIL) <<<");
-        $finish;
+        $display("=========================================================");
+        $fatal(1, "WATCHDOG TIMEOUT — Core failed to reach EBREAK");
     end
 
     integer errors = 0;
 
     initial begin
         $display("=========================================================");
-        $display(" GARUDA SEMESTA GEN2 — FASE 6.3 REPAIR SIGN-OFF TEST");
+        $display(" GARUDA SEMESTA GEN2 — FASE 6.5 CANONICAL SIGN-OFF TEST");
         $display("=========================================================");
 
         clk = 0;
@@ -85,9 +89,9 @@ module garuda_rv64i_core_tb;
         #20;
         rst_n = 1;
 
-        // Event-driven wait for core_halted (EBREAK)
+        // Event-driven wait for core_halted (EBREAK reaching WB stage)
         wait (uut.core_halted);
-        #100; // Pipeline drain
+        #100; // Allow full pipeline drain
 
         $display("\n=== COMPREHENSIVE AUTOMATED ASSERTION CHECKS ===");
 
@@ -163,32 +167,42 @@ module garuda_rv64i_core_tb;
         if (mem_model.dmem[24] !== 8'd10) begin $display("FAIL: dmem[24] = %0d", mem_model.dmem[24]); errors++; end
         else $display("PASS: dmem[24] store verified (10)");
 
-        // 5. Transaction count verification
-        $display("INFO: Total Read Transactions (LD) = %0d", read_tx_count);
-        $display("INFO: Total Write Transactions (SD/SW/SH/SB) = %0d", write_tx_count);
+        // 5. Transaction accounting assertions
+        $display("INFO: Read Accepted Transactions (LD)  = %0d", read_tx_count);
+        $display("INFO: Write Accepted Transactions (ST) = %0d", write_tx_count);
+        $display("INFO: Total Responses Issued           = %0d", resp_tx_count);
 
-        if (read_tx_count == 0) begin
-            $display("FAIL: Read transaction count is 0");
+        if (read_tx_count !== 32'd4) begin
+            $display("FAIL: Read transaction count mismatch (%0d, expected 4)", read_tx_count);
             errors++;
         end else begin
-            $display("PASS: Read transaction count verified (>0)");
+            $display("PASS: Read transaction count verified (4)");
         end
 
-        if (write_tx_count == 0) begin
-            $display("FAIL: Write transaction count is 0");
+        if (write_tx_count !== 32'd4) begin
+            $display("FAIL: Write transaction count mismatch (%0d, expected 4)", write_tx_count);
             errors++;
         end else begin
-            $display("PASS: Write transaction count verified (>0)");
+            $display("PASS: Write transaction count verified (4)");
+        end
+
+        if (resp_tx_count !== (read_tx_count + write_tx_count)) begin
+            $display("FAIL: Response count mismatch (resp=%0d vs req=%0d)", resp_tx_count, read_tx_count + write_tx_count);
+            errors++;
+        end else begin
+            $display("PASS: Response count matches accepted requests exactly (%0d)", resp_tx_count);
         end
 
         $display("\n=========================================================");
         if (errors == 0) begin
             $display(" >>> ALL ASSERTIONS PASSED — TEST RESULT: SUCCESS (PASS) <<<");
+            $display("=========================================================");
+            $finish;
         end else begin
             $display(" >>> TOTAL ERRORS: %0d — TEST RESULT: FAILURE (FAIL) <<<", errors);
+            $display("=========================================================");
+            $fatal(1, "ASSERTION FAILURE IN TESTBENCH");
         end
-        $display("=========================================================");
-        $finish;
     end
 
 endmodule
