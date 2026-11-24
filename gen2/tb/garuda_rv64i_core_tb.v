@@ -4,6 +4,10 @@
   `define BACKPRESSURE_CYCLES 0
 `endif
 
+`ifndef MEM_LATENCY
+  `define MEM_LATENCY 0
+`endif
+
 module garuda_rv64i_core_tb;
     reg clk;
     reg rst_n;
@@ -111,25 +115,69 @@ module garuda_rv64i_core_tb;
     integer tb_completed_count = 0;
     integer tb_outstanding_count = 0;
     integer tb_duplicate_response_count = 0;
+    integer tb_protocol_violation_count = 0;
+    integer tb_max_outstanding_count = 0;
+
+    // ============================================================
+    // INDEPENDENT REQUEST/RESPONSE TRANSACTION SCOREBOARD
+    // Mode-aware response provenance and outstanding tracking.
+    // ============================================================
 
     always @(posedge clk) begin
         if (!rst_n) begin
-            tb_accepted_count          = 0;
-            tb_completed_count         = 0;
-            tb_outstanding_count       = 0;
-            tb_duplicate_response_count = 0;
+            tb_accepted_count             = 0;
+            tb_completed_count            = 0;
+            tb_outstanding_count          = 0;
+            tb_duplicate_response_count   = 0;
+            tb_protocol_violation_count   = 0;
+            tb_max_outstanding_count      = 0;
         end else begin
 
-            // Detect response without a corresponding outstanding
-            // request. Simultaneous request/response is legal for
-            // zero-latency memory.
-            if (tb_response_accept &&
-                (tb_outstanding_count == 0) &&
-                !tb_request_accept) begin
+            // ----------------------------------------------------
+            // 1. Detect unsolicited or duplicate responses.
+            //
+            // Same-cycle request + response is legal ONLY for
+            // zero-latency atomic request/response mode.
+            // ----------------------------------------------------
 
-                tb_duplicate_response_count =
-                    tb_duplicate_response_count + 1;
+            if (tb_response_accept &&
+                (tb_outstanding_count == 0)) begin
+
+                if (!((`MEM_LATENCY == 0) && tb_request_accept)) begin
+                    tb_duplicate_response_count =
+                        tb_duplicate_response_count + 1;
+
+                    tb_protocol_violation_count =
+                        tb_protocol_violation_count + 1;
+
+                    $display(
+                        "FAIL: Unsolicited response at T=%0t",
+                        $time
+                    );
+                end
             end
+
+            // ----------------------------------------------------
+            // 2. A non-zero-latency memory must not accept a new
+            // request while an earlier request is outstanding.
+            // ----------------------------------------------------
+
+            if ((`MEM_LATENCY != 0) &&
+                tb_request_accept &&
+                (tb_outstanding_count != 0)) begin
+
+                tb_protocol_violation_count =
+                    tb_protocol_violation_count + 1;
+
+                $display(
+                    "FAIL: Multiple outstanding requests at T=%0t",
+                    $time
+                );
+            end
+
+            // ----------------------------------------------------
+            // 3. Count accepted requests and consumed responses.
+            // ----------------------------------------------------
 
             if (tb_request_accept)
                 tb_accepted_count = tb_accepted_count + 1;
@@ -137,17 +185,47 @@ module garuda_rv64i_core_tb;
             if (tb_response_accept)
                 tb_completed_count = tb_completed_count + 1;
 
-            // Account for simultaneous request and response.
+            // ----------------------------------------------------
+            // 4. Update outstanding transaction count.
+            // ----------------------------------------------------
+
             tb_outstanding_count =
                 tb_outstanding_count +
                 (tb_request_accept ? 1 : 0) -
                 (tb_response_accept ? 1 : 0);
 
             if (tb_outstanding_count < 0) begin
+
                 tb_duplicate_response_count =
                     tb_duplicate_response_count + 1;
 
+                tb_protocol_violation_count =
+                    tb_protocol_violation_count + 1;
+
+                $display(
+                    "FAIL: Outstanding transaction count underflow at T=%0t",
+                    $time
+                );
+
                 tb_outstanding_count = 0;
+            end
+
+            // ----------------------------------------------------
+            // 5. Record maximum outstanding transaction depth.
+            // ----------------------------------------------------
+
+            if (tb_outstanding_count > tb_max_outstanding_count)
+                tb_max_outstanding_count = tb_outstanding_count;
+
+            if (tb_outstanding_count > 1) begin
+
+                tb_protocol_violation_count =
+                    tb_protocol_violation_count + 1;
+
+                $display(
+                    "FAIL: More than one outstanding transaction at T=%0t",
+                    $time
+                );
             end
         end
     end
@@ -374,6 +452,27 @@ module garuda_rv64i_core_tb;
             errors++;
         end else begin
             $display("PASS: No duplicate or unsolicited responses detected.");
+        end
+
+        // 7. Protocol violation verification
+        $display("INFO: TB Protocol Violations       = %0d",
+                 tb_protocol_violation_count);
+
+        $display("INFO: TB Maximum Outstanding       = %0d",
+                 tb_max_outstanding_count);
+
+        if (tb_protocol_violation_count !== 0) begin
+            $display("FAIL: Memory protocol violations detected.");
+            errors++;
+        end else begin
+            $display("PASS: No memory protocol violations.");
+        end
+
+        if (tb_max_outstanding_count > 1) begin
+            $display("FAIL: More than one outstanding transaction detected.");
+            errors++;
+        end else begin
+            $display("PASS: Outstanding transaction depth is valid.");
         end
 
         $display("\n=========================================================");

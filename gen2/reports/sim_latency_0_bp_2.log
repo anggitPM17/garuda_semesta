@@ -44,8 +44,12 @@ INFO: TB Duplicate Responses     = 0
 PASS: Independent request/response counts match.
 PASS: No outstanding transactions remain.
 PASS: No duplicate or unsolicited responses detected.
+INFO: TB Protocol Violations       = 0
+INFO: TB Maximum Outstanding       = 0
+PASS: No memory protocol violations.
+PASS: Outstanding transaction depth is valid.
 
 =========================================================
  >>> ALL ASSERTIONS PASSED — TEST RESULT: SUCCESS (PASS) <<<
 =========================================================
-tb/garuda_rv64i_core_tb.v:383: $finish called at 625000 (1ps)
+tb/garuda_rv64i_core_tb.v:482: $finish called at 625000 (1ps)
