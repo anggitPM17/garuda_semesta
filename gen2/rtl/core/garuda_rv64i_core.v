@@ -34,17 +34,20 @@ module garuda_rv64i_core (
 
     // ============================================================
     // DATA MEMORY RESPONSE HANDSHAKE
-    // Loop-free unified ready/valid response-consumption handshake
+    // Unified ready/valid response-consumption handshake
     // ============================================================
 
-    // Core readiness to consume response in MEM stage
-    assign dmem_resp_ready = (ex_mem_mem_read || ex_mem_mem_write);
+    assign dmem_resp_ready =
+        (ex_mem_mem_read || ex_mem_mem_write) &&
+        dmem_resp_ready_in;
 
-    // Handshake completion condition (incorporating external backpressure dmem_resp_ready_in)
-    wire response_fire = dmem_resp_valid && dmem_resp_ready_in;
+    wire response_fire =
+        dmem_resp_valid &&
+        dmem_resp_ready;
 
-    // Memory transaction remains in EX/MEM until response is consumed.
-    wire dmem_stall = (ex_mem_mem_read || ex_mem_mem_write) && !response_fire;
+    wire dmem_stall =
+        (ex_mem_mem_read || ex_mem_mem_write) &&
+        !response_fire;
 
     // Memory handshake stall signals
     wire imem_stall = imem_valid && (!imem_ready || !imem_resp_valid);
