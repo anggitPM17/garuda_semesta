@@ -1,0 +1,5 @@
+[FAULT INJECTION] Injecting unstable address payload during stall...
+FAIL: Payload stability violation at T=120000!
+FATAL: /workspace/tests/fixtures/fixture_neg_1_unstable_payload.v:13: PAYLOAD STABILITY VIOLATION DETECTED DURING BACKPRESSURE STALL
+       Time: 120000  Scope: fixture_neg_1_unstable_payload
+

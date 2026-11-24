@@ -1,0 +1,4 @@
+[FAULT INJECTION] Triggering $fatal in simulator fixture...
+FATAL: /workspace/tests/fixtures/fixture_neg_5_nonzero_exit.v:11: DELIBERATE SIMULATOR FATAL EXIT
+       Time: 50000  Scope: fixture_neg_5_nonzero_exit
+

@@ -1,0 +1,5 @@
+[FAULT INJECTION] Suppressing memory response to test watchdog timeout...
+[FATAL TIMEOUT] Simulation timed out waiting for EBREAK.
+FATAL: /workspace/tests/fixtures/fixture_neg_3_missing_response.v:13: WATCHDOG TIMEOUT — Core failed to reach EBREAK
+       Time: 120000  Scope: fixture_neg_3_missing_response
+

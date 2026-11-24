@@ -47,9 +47,9 @@ def main():
     gen_script = os.path.join(repo_dir, "tests", "programs", "generate_program.py")
     res = subprocess.run([sys.executable, gen_script], capture_output=True, text=True)
     if res.returncode != 0:
-        print(f"Error generating program: {res.stderr}")
+        print(f"Error generating program: {res.stderr}", flush=True)
         sys.exit(1)
-    print(res.stdout)
+    print(res.stdout, flush=True)
 
     sources = [
         "rtl/core/rv64i_alu.v",
@@ -76,9 +76,9 @@ def main():
     for lat in LATENCIES:
         for bp in BACKPRESSURES:
             config_id = f"LATENCY={lat}_BP={bp}"
-            print(f"\n=========================================")
-            print(f"Running Garuda RV64I Simulation ({config_id})")
-            print(f"=========================================")
+            print(f"\n=========================================", flush=True)
+            print(f"Running Garuda RV64I Simulation ({config_id})", flush=True)
+            print(f"=========================================", flush=True)
 
             vvp_out = os.path.join(reports_dir, f"garuda_rv64i_lat_{lat}_bp_{bp}.vvp")
             compile_log = os.path.join(reports_dir, f"compile_latency_{lat}_bp_{bp}.log")
@@ -101,7 +101,7 @@ def main():
                 f.write(c_res.stdout + "\n" + c_res.stderr)
 
             if c_res.returncode != 0:
-                print(f"Compilation FAILED for {config_id}:\n{c_res.stderr}")
+                print(f"Compilation FAILED for {config_id}:\n{c_res.stderr}", flush=True)
                 all_passed = False
                 results[config_id] = "FAIL (Compilation)"
                 json_results.append({
@@ -111,9 +111,9 @@ def main():
                 continue
 
             sim_res = subprocess.run(["vvp", vvp_out], cwd=repo_dir, capture_output=True, text=True)
-            print(sim_res.stdout)
+            print(sim_res.stdout, flush=True)
             if sim_res.stderr:
-                print(sim_res.stderr)
+                print(sim_res.stderr, flush=True)
 
             with open(sim_log, "w", encoding="utf-8") as f:
                 f.write(sim_res.stdout + "\n" + sim_res.stderr)
@@ -134,7 +134,7 @@ def main():
             )
 
             if passed_checks:
-                print(f"Simulation PASSED for {config_id}")
+                print(f"Simulation PASSED for {config_id}", flush=True)
                 results[config_id] = "PASS"
                 json_results.append({
                     "config_id": config_id, "latency": lat, "backpressure": bp,
@@ -148,7 +148,7 @@ def main():
                     "result": "PASS"
                 })
             else:
-                print(f"Simulation FAILED for {config_id}")
+                print(f"Simulation FAILED for {config_id}", flush=True)
                 results[config_id] = "FAIL"
                 all_passed = False
                 json_results.append({
@@ -163,18 +163,18 @@ def main():
     with open(json_path, "w", encoding="utf-8") as f:
         json.dump(json_results, f, indent=2)
 
-    print("\n=========================================")
-    print("      MULTI-LATENCY x BACKPRESSURE MATRIX")
-    print("=========================================")
+    print("\n=========================================", flush=True)
+    print("      MULTI-LATENCY x BACKPRESSURE MATRIX", flush=True)
+    print("=========================================", flush=True)
     for config_id, status in results.items():
-        print(f"  {config_id:<20}: {status}")
-    print("=========================================")
+        print(f"  {config_id:<20}: {status}", flush=True)
+    print("=========================================", flush=True)
 
     if all_passed:
-        print(f"\n>>> ALL {len(results)}/20 CONFIGURATIONS PASSED — SUCCESS <<<")
+        print(f"\n>>> ALL {len(results)}/20 CONFIGURATIONS PASSED — SUCCESS <<<", flush=True)
         sys.exit(0)
     else:
-        print("\n>>> REGRESSION MATRIX FAILED — NON-ZERO EXIT <<<")
+        print("\n>>> REGRESSION MATRIX FAILED — NON-ZERO EXIT <<<", flush=True)
         sys.exit(1)
 
 if __name__ == "__main__":

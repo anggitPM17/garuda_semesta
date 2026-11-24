@@ -1,0 +1,5 @@
+[FAULT INJECTION] Injecting duplicate store commit event...
+FAIL: Committed store count mismatch (5 vs write_tx=4)
+FATAL: /workspace/tests/fixtures/fixture_neg_2_duplicate_store.v:13: DUPLICATE STORE COMMIT DETECTED BY SCOREBOARD
+       Time: 120000  Scope: fixture_neg_2_duplicate_store
+
