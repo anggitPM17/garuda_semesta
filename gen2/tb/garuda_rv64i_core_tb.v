@@ -96,6 +96,62 @@ module garuda_rv64i_core_tb;
     integer payload_stability_violations = 0;
     integer bp_count = `BACKPRESSURE_CYCLES;
 
+    // ============================================================
+    // INDEPENDENT REQUEST/RESPONSE TRANSACTION SCOREBOARD
+    // Does not trust memory-model duplicate_tx_count.
+    // ============================================================
+
+    wire tb_request_accept =
+        dmem_valid && dmem_ready;
+
+    wire tb_response_accept =
+        dmem_resp_valid && dmem_resp_ready_core;
+
+    integer tb_accepted_count = 0;
+    integer tb_completed_count = 0;
+    integer tb_outstanding_count = 0;
+    integer tb_duplicate_response_count = 0;
+
+    always @(posedge clk) begin
+        if (!rst_n) begin
+            tb_accepted_count          = 0;
+            tb_completed_count         = 0;
+            tb_outstanding_count       = 0;
+            tb_duplicate_response_count = 0;
+        end else begin
+
+            // Detect response without a corresponding outstanding
+            // request. Simultaneous request/response is legal for
+            // zero-latency memory.
+            if (tb_response_accept &&
+                (tb_outstanding_count == 0) &&
+                !tb_request_accept) begin
+
+                tb_duplicate_response_count =
+                    tb_duplicate_response_count + 1;
+            end
+
+            if (tb_request_accept)
+                tb_accepted_count = tb_accepted_count + 1;
+
+            if (tb_response_accept)
+                tb_completed_count = tb_completed_count + 1;
+
+            // Account for simultaneous request and response.
+            tb_outstanding_count =
+                tb_outstanding_count +
+                (tb_request_accept ? 1 : 0) -
+                (tb_response_accept ? 1 : 0);
+
+            if (tb_outstanding_count < 0) begin
+                tb_duplicate_response_count =
+                    tb_duplicate_response_count + 1;
+
+                tb_outstanding_count = 0;
+            end
+        end
+    end
+
     // Payload Stability & Per-Transaction Backpressure Monitor
     reg [63:0] latched_addr;
     reg        latched_wen;
@@ -275,6 +331,37 @@ module garuda_rv64i_core_tb;
             errors++;
         end else begin
             $display("PASS: Zero payload stability violations verified.");
+        end
+
+        // 6. Independent transaction scoreboard verification
+        $display("INFO: TB Accepted Requests       = %0d",
+                 tb_accepted_count);
+        $display("INFO: TB Completed Responses    = %0d",
+                 tb_completed_count);
+        $display("INFO: TB Outstanding Requests   = %0d",
+                 tb_outstanding_count);
+        $display("INFO: TB Duplicate Responses     = %0d",
+                 tb_duplicate_response_count);
+
+        if (tb_accepted_count !== tb_completed_count) begin
+            $display("FAIL: Independent request/response count mismatch.");
+            errors++;
+        end else begin
+            $display("PASS: Independent request/response counts match.");
+        end
+
+        if (tb_outstanding_count !== 0) begin
+            $display("FAIL: Outstanding transactions remain.");
+            errors++;
+        end else begin
+            $display("PASS: No outstanding transactions remain.");
+        end
+
+        if (tb_duplicate_response_count !== 0) begin
+            $display("FAIL: Duplicate or unsolicited response detected.");
+            errors++;
+        end else begin
+            $display("PASS: No duplicate or unsolicited responses detected.");
         end
 
         $display("\n=========================================================");
