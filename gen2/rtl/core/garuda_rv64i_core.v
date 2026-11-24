@@ -20,7 +20,7 @@ module garuda_rv64i_core (
     input  wire [63:0] dmem_rdata,
     input  wire        dmem_resp_valid,
     input  wire        dmem_resp_ready_in, // External response readiness input (backpressure)
-    output wire        dmem_resp_ready,    // Response consumption handshake to memory model
+    output wire        dmem_resp_ready,    // Core response readiness output to memory model
 
     // Core Status (Halt / Ebreak detected)
     output reg         core_halted
@@ -32,13 +32,22 @@ module garuda_rv64i_core (
     wire        branch_taken_ex;
     wire [63:0] branch_target_ex;
 
-    // Data Memory Handshake & Response Consumption (Loop-Free Unification)
+    // ============================================================
+    // DATA MEMORY RESPONSE HANDSHAKE
+    // Loop-free unified ready/valid response-consumption handshake
+    // ============================================================
+
+    // Core readiness to consume response in MEM stage
     assign dmem_resp_ready = (ex_mem_mem_read || ex_mem_mem_write);
-    wire response_fire     = dmem_resp_valid && dmem_resp_ready_in;
+
+    // Handshake completion condition (incorporating external backpressure dmem_resp_ready_in)
+    wire response_fire = dmem_resp_valid && dmem_resp_ready_in;
+
+    // Memory transaction remains in EX/MEM until response is consumed.
+    wire dmem_stall = (ex_mem_mem_read || ex_mem_mem_write) && !response_fire;
 
     // Memory handshake stall signals
     wire imem_stall = imem_valid && (!imem_ready || !imem_resp_valid);
-    wire dmem_stall = (ex_mem_mem_read || ex_mem_mem_write) && !response_fire;
 
     // Hazard Unit Wires
     wire        stall_hazard;

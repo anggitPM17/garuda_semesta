@@ -11,9 +11,9 @@ module rv64i_memory_model (
     // Instruction Memory Port
     input  wire [63:0] imem_addr,
     input  wire        imem_valid,
-    output reg         imem_ready,
-    output reg [31:0]  imem_rdata,
-    output reg         imem_resp_valid,
+    output wire        imem_ready,
+    output wire [31:0] imem_rdata,
+    output wire        imem_resp_valid,
 
     // Data Memory Port
     input  wire [63:0] dmem_addr,
@@ -21,9 +21,9 @@ module rv64i_memory_model (
     input  wire        dmem_wen,
     input  wire [2:0]  dmem_funct3,
     input  wire [63:0] dmem_wdata,
-    output reg         dmem_ready,
-    output reg [63:0]  dmem_rdata,
-    output reg         dmem_resp_valid,
+    output wire        dmem_ready,
+    output wire [63:0] dmem_rdata,
+    output wire        dmem_resp_valid,
     input  wire        dmem_resp_ready, // Explicit response consumption from core
 
     // Verification Scoreboard Counters
@@ -58,40 +58,26 @@ module rv64i_memory_model (
     reg [63:0] pending_wdata;
     reg        tx_committed; // Exactly-once commit protection register for LATENCY=0
 
-    // Explicit Sensitivity List: Avoid array sensitivity overhead in Icarus Verilog
-    always @(imem_addr or imem_valid or dmem_addr or dmem_valid or dmem_state or pending_addr or tx_committed) begin
-        imem_ready      = 1'b1;
-        imem_resp_valid = imem_valid; // Single driver for IMEM
-
-        if (imem_addr[11:2] < 1024)
-            imem_rdata = imem[imem_addr[11:2]];
-        else
-            imem_rdata = 32'h00000013;
-
-        dmem_ready = (LATENCY == 0) ? !tx_committed : (dmem_state == STATE_IDLE);
-
-        if (LATENCY == 0) begin
-            dmem_resp_valid = dmem_valid && !tx_committed;
-            if (dmem_addr < 64'd16376) begin
-                dmem_rdata = {
-                    dmem[dmem_addr + 7], dmem[dmem_addr + 6], dmem[dmem_addr + 5], dmem[dmem_addr + 4],
-                    dmem[dmem_addr + 3], dmem[dmem_addr + 2], dmem[dmem_addr + 1], dmem[dmem_addr]
-                };
-            end else begin
-                dmem_rdata = 64'd0;
-            end
+    // Combinational Read Helper Functions (Clean, loop-free, crash-proof)
+    function [63:0] read_dmem_word(input [63:0] addr);
+        if (addr < 64'd16376) begin
+            read_dmem_word = {
+                dmem[addr + 7], dmem[addr + 6], dmem[addr + 5], dmem[addr + 4],
+                dmem[addr + 3], dmem[addr + 2], dmem[addr + 1], dmem[addr]
+            };
         end else begin
-            dmem_resp_valid = (dmem_state == STATE_RESPONSE);
-            if (pending_addr < 64'd16376) begin
-                dmem_rdata = {
-                    dmem[pending_addr + 7], dmem[pending_addr + 6], dmem[pending_addr + 5], dmem[pending_addr + 4],
-                    dmem[pending_addr + 3], dmem[pending_addr + 2], dmem[pending_addr + 1], dmem[pending_addr]
-                };
-            end else begin
-                dmem_rdata = 64'd0;
-            end
+            read_dmem_word = 64'd0;
         end
-    end
+    endfunction
+
+    // Continuous Assignments for Memory Ports (Prevents Icarus Verilog array sensitivity crash)
+    assign imem_ready      = 1'b1;
+    assign imem_resp_valid = imem_valid;
+    assign imem_rdata      = (imem_addr[11:2] < 1024) ? imem[imem_addr[11:2]] : 32'h00000013;
+
+    assign dmem_ready      = (LATENCY == 0) ? !tx_committed : (dmem_state == STATE_IDLE);
+    assign dmem_resp_valid = (LATENCY == 0) ? (dmem_valid && !tx_committed) : (dmem_state == STATE_RESPONSE);
+    assign dmem_rdata      = (LATENCY == 0) ? read_dmem_word(dmem_addr) : read_dmem_word(pending_addr);
 
     // Sequential Transaction FSM and Single-Store Commit
     always @(posedge clk or negedge rst_n) begin
