@@ -2,6 +2,7 @@
 import os
 import subprocess
 import sys
+import json
 
 LATENCIES = [0, 1, 3, 5]
 BACKPRESSURES = [0, 1, 2, 4, 8]
@@ -39,6 +40,7 @@ def main():
 
     all_passed = True
     results = {}
+    json_results = []
 
     for lat in LATENCIES:
         for bp in BACKPRESSURES:
@@ -50,6 +52,10 @@ def main():
             vvp_out = os.path.join(reports_dir, f"garuda_rv64i_lat_{lat}_bp_{bp}.vvp")
             compile_log = os.path.join(reports_dir, f"compile_latency_{lat}_bp_{bp}.log")
             sim_log = os.path.join(reports_dir, f"sim_latency_{lat}_bp_{bp}.log")
+
+            # Remove stale logs
+            if os.path.exists(compile_log): os.remove(compile_log)
+            if os.path.exists(sim_log): os.remove(sim_log)
 
             compile_cmd = [
                 "iverilog", "-g2012", "-Wall",
@@ -67,6 +73,10 @@ def main():
                 print(f"Compilation FAILED for {config_id}:\n{c_res.stderr}")
                 all_passed = False
                 results[config_id] = "FAIL (Compilation)"
+                json_results.append({
+                    "config_id": config_id, "latency": lat, "backpressure": bp,
+                    "compile_exit": c_res.returncode, "sim_exit": -1, "result": "FAIL"
+                })
                 continue
 
             sim_res = subprocess.run(["vvp", vvp_out], cwd=repo_dir, capture_output=True, text=True)
@@ -77,13 +87,40 @@ def main():
             with open(sim_log, "w", encoding="utf-8") as f:
                 f.write(sim_res.stdout + "\n" + sim_res.stderr)
 
-            if sim_res.returncode == 0 and "SUCCESS (PASS)" in sim_res.stdout and "FAILURE" not in sim_res.stdout:
+            passed_checks = (
+                sim_res.returncode == 0 and
+                "SUCCESS (PASS)" in sim_res.stdout and
+                "FAILURE" not in sim_res.stdout and
+                "Read Accepted Transactions (LD)  = 4" in sim_res.stdout and
+                "Write Accepted Transactions (ST) = 4" in sim_res.stdout and
+                "Committed Store Count            = 4" in sim_res.stdout and
+                "Total Responses Issued           = 8" in sim_res.stdout and
+                "Duplicate Transactions           = 0" in sim_res.stdout and
+                "Payload Stability Violations    = 0" in sim_res.stdout
+            )
+
+            if passed_checks:
                 print(f"Simulation PASSED for {config_id}")
                 results[config_id] = "PASS"
+                json_results.append({
+                    "config_id": config_id, "latency": lat, "backpressure": bp,
+                    "compile_exit": 0, "sim_exit": 0,
+                    "read_tx": 4, "write_tx": 4, "committed_stores": 4, "total_resp": 8,
+                    "duplicate_tx": 0, "stability_violations": 0, "result": "PASS"
+                })
             else:
                 print(f"Simulation FAILED for {config_id}")
                 results[config_id] = "FAIL"
                 all_passed = False
+                json_results.append({
+                    "config_id": config_id, "latency": lat, "backpressure": bp,
+                    "compile_exit": 0, "sim_exit": sim_res.returncode, "result": "FAIL"
+                })
+
+    # Save JSON summary
+    json_path = os.path.join(reports_dir, "FASE_6_7_4_2_REGRESSION_RESULTS.json")
+    with open(json_path, "w", encoding="utf-8") as f:
+        json.dump(json_results, f, indent=2)
 
     print("\n=========================================")
     print("      MULTI-LATENCY x BACKPRESSURE MATRIX")
@@ -93,7 +130,7 @@ def main():
     print("=========================================")
 
     if all_passed:
-        print("\n>>> ALL 20 CONFIGURATIONS PASSED — SUCCESS <<<")
+        print(f"\n>>> ALL {len(results)}/20 CONFIGURATIONS PASSED — SUCCESS <<<")
         sys.exit(0)
     else:
         print("\n>>> REGRESSION MATRIX FAILED — NON-ZERO EXIT <<<")

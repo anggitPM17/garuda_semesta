@@ -1,8 +1,8 @@
 =========================================================
- GARUDA SEMESTA GEN2 — FASE 6.7.4 MATRIX VERIFICATION TEST
+ GARUDA SEMESTA GEN2 — FASE 6.7.4.1 HARDENING TEST
 =========================================================
 WARNING: rtl/core/rv64i_memory_model.v:217: $readmemh(reports/single_hart_program.hex): Not enough words in the file for the requested range [0:1023].
-PASS: Response valid held stable during 2-cycle backpressure stall.
+PASS: Response valid and payload held stable during 2-cycle backpressure stall.
 
 === COMPREHENSIVE AUTOMATED ASSERTION CHECKS ===
 PASS: Program reached EBREAK / HALT successfully.
@@ -30,14 +30,16 @@ INFO: Write Accepted Transactions (ST) = 4
 INFO: Committed Store Count            = 4
 INFO: Total Responses Issued           = 8
 INFO: Duplicate Transactions           = 0
+INFO: Payload Stability Violations    = 0
 PASS: Read transaction count verified (4)
 PASS: Write transaction count verified (4)
 PASS: Committed store count matches write transaction count (4)
 PASS: Response count matches accepted requests exactly (8)
 PASS: Zero duplicate transactions verified.
+PASS: Zero payload stability violations verified.
 
 =========================================================
  >>> ALL ASSERTIONS PASSED — TEST RESULT: SUCCESS (PASS) <<<
 =========================================================
-tb/garuda_rv64i_core_tb.v:253: $finish called at 555000 (1ps)
+tb/garuda_rv64i_core_tb.v:279: $finish called at 555000 (1ps)
 

@@ -94,7 +94,7 @@ module garuda_rv64i_core_tb;
     integer payload_stability_violations = 0;
     integer bp_count = `BACKPRESSURE_CYCLES;
 
-    // Payload Stability & Backpressure Monitor
+    // Payload Stability & Per-Transaction Backpressure Monitor
     reg [63:0] latched_addr;
     reg        latched_wen;
     reg [2:0]  latched_funct3;
@@ -105,25 +105,21 @@ module garuda_rv64i_core_tb;
         tb_resp_ready_mask = 1'b1;
         if (bp_count > 0) begin
             #100;
-            // Wait until core enters active memory transaction response
-            wait (dmem_valid && dmem_resp_valid);
-            @(posedge clk);
-
-            // Capture payload at start of backpressure stall
+            // Wait for memory transaction request
+            wait (dmem_valid);
+            tb_resp_ready_mask = 1'b0; // Inject backpressure stall BEFORE response completes
             latched_addr   = dmem_addr;
             latched_wen    = dmem_wen;
             latched_funct3 = dmem_funct3;
             latched_wdata  = dmem_wdata;
             latched_rdata  = dmem_rdata;
 
-            tb_resp_ready_mask <= 1'b0; // Inject backpressure stall for bp_count cycles
-
             repeat (bp_count) begin
                 @(posedge clk);
-                // Verify payload stability on every stalled clock edge
+                // Verify payload & response stability on every stalled clock edge
                 if (dmem_addr !== latched_addr || dmem_wen !== latched_wen ||
                     dmem_funct3 !== latched_funct3 || dmem_wdata !== latched_wdata ||
-                    dmem_rdata !== latched_rdata || !dmem_resp_valid) begin
+                    (!dmem_wen && (dmem_rdata !== latched_rdata)) || !dmem_resp_valid) begin
                     $display("FAIL: Payload stability violation at T=%0t!", $time);
                     payload_stability_violations++;
                     $fatal(1, "PAYLOAD STABILITY VIOLATION DETECTED DURING BACKPRESSURE STALL");
