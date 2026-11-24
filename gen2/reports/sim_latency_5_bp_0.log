@@ -1,7 +1,7 @@
 =========================================================
  GARUDA SEMESTA GEN2 — FASE 6.7.4.1 HARDENING TEST
 =========================================================
-WARNING: rtl/core/rv64i_memory_model.v:213: $readmemh(reports/single_hart_program.hex): Not enough words in the file for the requested range [0:1023].
+WARNING: rtl/core/rv64i_memory_model.v:219: $readmemh(reports/single_hart_program.hex): Not enough words in the file for the requested range [0:1023].
 
 === COMPREHENSIVE AUTOMATED ASSERTION CHECKS ===
 PASS: Program reached EBREAK / HALT successfully.
@@ -36,8 +36,15 @@ PASS: Committed store count matches write transaction count (4)
 PASS: Response count matches accepted requests exactly (8)
 PASS: Zero duplicate transactions verified.
 PASS: Zero payload stability violations verified.
+INFO: TB Accepted Requests       = 8
+INFO: TB Completed Responses    = 8
+INFO: TB Outstanding Requests   = 0
+INFO: TB Duplicate Responses     = 0
+PASS: Independent request/response counts match.
+PASS: No outstanding transactions remain.
+PASS: No duplicate or unsolicited responses detected.
 
 =========================================================
  >>> ALL ASSERTIONS PASSED — TEST RESULT: SUCCESS (PASS) <<<
 =========================================================
-tb/garuda_rv64i_core_tb.v:282: $finish called at 935000 (1ps)
+tb/garuda_rv64i_core_tb.v:383: $finish called at 935000 (1ps)

@@ -75,7 +75,13 @@ module rv64i_memory_model (
     assign imem_resp_valid = imem_valid;
     assign imem_rdata      = (imem_addr[11:2] < 1024) ? imem[imem_addr[11:2]] : 32'h00000013;
 
-    assign dmem_ready      = (LATENCY == 0) ? !tx_committed : (dmem_state == STATE_IDLE);
+    // Zero-latency mode uses an atomic request/response
+    // handshake. Do not accept a request unless its response
+    // can also be consumed in the same clock cycle.
+    assign dmem_ready =
+        (LATENCY == 0) ?
+            (!tx_committed && dmem_resp_ready) :
+            (dmem_state == STATE_IDLE);
     assign dmem_resp_valid = (LATENCY == 0) ? (dmem_valid && !tx_committed) : (dmem_state == STATE_RESPONSE);
     assign dmem_rdata      = (LATENCY == 0) ? read_dmem_word(dmem_addr) : read_dmem_word(pending_addr);
 

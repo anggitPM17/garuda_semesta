@@ -185,6 +185,18 @@ module garuda_rv64i_core_tb;
                     payload_stability_violations++;
                     $fatal(1, "PAYLOAD STABILITY VIOLATION DETECTED DURING BACKPRESSURE STALL");
                 end
+
+                if (dmem_resp_ready_core !== 1'b0) begin
+                    $display(
+                        "FAIL: Core response-ready was not LOW during backpressure at T=%0t!",
+                        $time
+                    );
+                    payload_stability_violations++;
+                    $fatal(
+                        1,
+                        "BACKPRESSURE INJECTION FAILED"
+                    );
+                end
             end
 
             $display("PASS: Response valid and payload held stable during %0d-cycle backpressure stall.", bp_count);
