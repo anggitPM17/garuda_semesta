@@ -15,7 +15,13 @@ def parse_scoreboard_metrics(stdout):
         "committed_stores": None,
         "total_resp": None,
         "duplicate_tx": None,
-        "stability_violations": None
+        "stability_violations": None,
+        "tb_accepted": None,
+        "tb_completed": None,
+        "tb_outstanding": None,
+        "tb_duplicate": None,
+        "tb_protocol_violations": None,
+        "tb_max_outstanding": None
     }
 
     m_read = re.search(r"Read Accepted Transactions \(LD\)\s*=\s*(\d+)", stdout)
@@ -35,6 +41,24 @@ def parse_scoreboard_metrics(stdout):
 
     m_stab = re.search(r"Payload Stability Violations\s*=\s*(\d+)", stdout)
     if m_stab: metrics["stability_violations"] = int(m_stab.group(1))
+
+    m_tb_acc = re.search(r"INFO: TB Accepted Requests\s*=\s*(\d+)", stdout)
+    if m_tb_acc: metrics["tb_accepted"] = int(m_tb_acc.group(1))
+
+    m_tb_comp = re.search(r"INFO: TB Completed Responses\s*=\s*(\d+)", stdout)
+    if m_tb_comp: metrics["tb_completed"] = int(m_tb_comp.group(1))
+
+    m_tb_out = re.search(r"INFO: TB Outstanding Requests\s*=\s*(\d+)", stdout)
+    if m_tb_out: metrics["tb_outstanding"] = int(m_tb_out.group(1))
+
+    m_tb_dup = re.search(r"INFO: TB Duplicate Responses\s*=\s*(\d+)", stdout)
+    if m_tb_dup: metrics["tb_duplicate"] = int(m_tb_dup.group(1))
+
+    m_tb_proto = re.search(r"INFO: TB Protocol Violations\s*=\s*(\d+)", stdout)
+    if m_tb_proto: metrics["tb_protocol_violations"] = int(m_tb_proto.group(1))
+
+    m_tb_max = re.search(r"INFO: TB Maximum Outstanding\s*=\s*(\d+)", stdout)
+    if m_tb_max: metrics["tb_max_outstanding"] = int(m_tb_max.group(1))
 
     return metrics
 
@@ -121,16 +145,23 @@ def main():
             # Dynamically parse simulation stdout
             parsed = parse_scoreboard_metrics(sim_res.stdout)
 
+            expected_max_outstanding = 0 if lat == 0 else 1
+
             passed_checks = (
                 sim_res.returncode == 0 and
                 "SUCCESS (PASS)" in sim_res.stdout and
                 "FAILURE" not in sim_res.stdout and
-                parsed["read_tx"] == 4 and
-                parsed["write_tx"] == 4 and
-                parsed["committed_stores"] == 4 and
-                parsed["total_resp"] == 8 and
-                parsed["duplicate_tx"] == 0 and
-                parsed["stability_violations"] == 0
+                parsed.get("read_tx") == 4 and
+                parsed.get("write_tx") == 4 and
+                parsed.get("committed_stores") == 4 and
+                parsed.get("total_resp") == 8 and
+                parsed.get("tb_accepted") == 8 and
+                parsed.get("tb_completed") == 8 and
+                parsed.get("tb_outstanding") == 0 and
+                parsed.get("tb_duplicate") == 0 and
+                parsed.get("tb_protocol_violations") == 0 and
+                parsed.get("stability_violations") == 0 and
+                parsed.get("tb_max_outstanding") == expected_max_outstanding
             )
 
             if passed_checks:
@@ -139,12 +170,7 @@ def main():
                 json_results.append({
                     "config_id": config_id, "latency": lat, "backpressure": bp,
                     "compile_exit": 0, "sim_exit": 0,
-                    "read_tx": parsed["read_tx"],
-                    "write_tx": parsed["write_tx"],
-                    "committed_stores": parsed["committed_stores"],
-                    "total_resp": parsed["total_resp"],
-                    "duplicate_tx": parsed["duplicate_tx"],
-                    "stability_violations": parsed["stability_violations"],
+                    "parsed_metrics": parsed,
                     "result": "PASS"
                 })
             else:
@@ -159,7 +185,7 @@ def main():
                 })
 
     # Save JSON summary
-    json_path = os.path.join(reports_dir, "FASE_6_7_4_3_REGRESSION_RESULTS.json")
+    json_path = os.path.join(reports_dir, "FASE_6_7_4_5_REGRESSION_RESULTS.json")
     with open(json_path, "w", encoding="utf-8") as f:
         json.dump(json_results, f, indent=2)
 
