@@ -19,7 +19,8 @@ module garuda_rv64i_core (
     input  wire        dmem_ready,
     input  wire [63:0] dmem_rdata,
     input  wire        dmem_resp_valid,
-    output wire        dmem_resp_ready, // Response consumption handshake to memory model
+    input  wire        dmem_resp_ready_in, // External response readiness input (backpressure)
+    output wire        dmem_resp_ready,    // Response consumption handshake to memory model
 
     // Core Status (Halt / Ebreak detected)
     output reg         core_halted
@@ -31,12 +32,13 @@ module garuda_rv64i_core (
     wire        branch_taken_ex;
     wire [63:0] branch_target_ex;
 
-    // Data Memory Handshake & Response Consumption
-    assign dmem_resp_ready = dmem_resp_valid;
+    // Data Memory Handshake & Response Consumption (Loop-Free)
+    assign dmem_resp_ready = (ex_mem_mem_read || ex_mem_mem_write);
+    wire response_fire     = dmem_resp_valid && dmem_resp_ready_in;
 
     // Memory handshake stall signals
-    wire        imem_stall = imem_valid && (!imem_ready || !imem_resp_valid);
-    wire        dmem_stall = (ex_mem_mem_read || ex_mem_mem_write) && !dmem_resp_valid;
+    wire imem_stall = imem_valid && (!imem_ready || !imem_resp_valid);
+    wire dmem_stall = (ex_mem_mem_read || ex_mem_mem_write) && !response_fire;
 
     // Hazard Unit Wires
     wire        stall_hazard;

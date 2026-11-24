@@ -68,6 +68,7 @@ module garuda_rv64i_core_tb;
         .dmem_ready(dmem_ready),
         .dmem_rdata(dmem_rdata),
         .dmem_resp_valid(dmem_resp_valid),
+        .dmem_resp_ready_in(dmem_resp_ready_effective), // Connect external backpressure input
         .dmem_resp_ready(dmem_resp_ready_core),
         .core_halted(core_halted)
     );
@@ -86,19 +87,19 @@ module garuda_rv64i_core_tb;
 
     integer errors = 0;
 
-    // Backpressure Injection Monitor (1, 2, 4, 8 cycles)
+    // Backpressure Injection Monitor
     initial begin
         tb_resp_ready_mask = 1'b1;
         #100;
-        // Wait until core enters first store or load transaction
+        // Wait for first memory response
         wait (dmem_valid && dmem_resp_valid);
-        tb_resp_ready_mask = 1'b0; // Inject 1-cycle backpressure stall
-        #10;
+        tb_resp_ready_mask = 1'b0; // Inject backpressure stall for 2 cycles (20ns)
+        #20;
         if (!dmem_resp_valid) begin
-            $display("FAIL: dmem_resp_valid dropped during 1-cycle backpressure stall!");
+            $display("FAIL: dmem_resp_valid dropped during backpressure stall!");
             errors++;
         end else begin
-            $display("PASS: Response valid held stable during 1-cycle backpressure stall.");
+            $display("PASS: Response valid held stable during backpressure stall.");
         end
         tb_resp_ready_mask = 1'b1; // Release backpressure
     end

@@ -56,6 +56,7 @@ module rv64i_memory_model (
     reg        pending_wen;
     reg [2:0]  pending_funct3;
     reg [63:0] pending_wdata;
+    reg        tx_committed; // Exactly-once commit protection register
 
     // SINGLE DRIVER: Combinational Read Data & Ready
     always @(*) begin
@@ -67,10 +68,10 @@ module rv64i_memory_model (
         else
             imem_rdata = 32'h00000013;
 
-        dmem_ready = (LATENCY == 0) ? 1'b1 : (dmem_state == STATE_IDLE);
+        dmem_ready = (LATENCY == 0) ? !tx_committed : (dmem_state == STATE_IDLE);
 
         if (LATENCY == 0) begin
-            dmem_resp_valid = dmem_valid;
+            dmem_resp_valid = dmem_valid && !tx_committed;
             if (dmem_addr < 64'd16376) begin
                 dmem_rdata = {
                     dmem[dmem_addr + 7], dmem[dmem_addr + 6], dmem[dmem_addr + 5], dmem[dmem_addr + 4],
@@ -106,10 +107,19 @@ module rv64i_memory_model (
             pending_wen           <= 1'b0;
             pending_funct3        <= 3'b0;
             pending_wdata         <= 64'd0;
+            tx_committed          <= 1'b0;
         end else begin
             if (LATENCY == 0) begin
-                if (dmem_valid && dmem_ready && dmem_resp_ready) begin
-                    resp_tx_count <= resp_tx_count + 1'b1;
+                if (!dmem_valid || dmem_resp_ready) begin
+                    tx_committed <= 1'b0;
+                end
+                if (dmem_valid && dmem_ready && dmem_resp_ready && !tx_committed) begin
+                    tx_committed   <= 1'b1;
+                    pending_addr   <= dmem_addr;
+                    pending_wen    <= dmem_wen;
+                    pending_funct3 <= dmem_funct3;
+                    pending_wdata  <= dmem_wdata;
+                    resp_tx_count  <= resp_tx_count + 1'b1;
                     if (dmem_wen) begin
                         write_tx_count        <= write_tx_count + 1'b1;
                         committed_store_count <= committed_store_count + 1'b1;
