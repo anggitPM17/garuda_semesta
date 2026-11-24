@@ -91,9 +91,16 @@ module garuda_rv64i_core_tb;
     end
 
     integer errors = 0;
+    integer payload_stability_violations = 0;
     integer bp_count = `BACKPRESSURE_CYCLES;
 
-    // Clock-Cycle Based Backpressure Injection Monitor
+    // Payload Stability & Backpressure Monitor
+    reg [63:0] latched_addr;
+    reg        latched_wen;
+    reg [2:0]  latched_funct3;
+    reg [63:0] latched_wdata;
+    reg [63:0] latched_rdata;
+
     initial begin
         tb_resp_ready_mask = 1'b1;
         if (bp_count > 0) begin
@@ -101,21 +108,36 @@ module garuda_rv64i_core_tb;
             // Wait until core enters active memory transaction response
             wait (dmem_valid && dmem_resp_valid);
             @(posedge clk);
+
+            // Capture payload at start of backpressure stall
+            latched_addr   = dmem_addr;
+            latched_wen    = dmem_wen;
+            latched_funct3 = dmem_funct3;
+            latched_wdata  = dmem_wdata;
+            latched_rdata  = dmem_rdata;
+
             tb_resp_ready_mask <= 1'b0; // Inject backpressure stall for bp_count cycles
-            repeat (bp_count) @(posedge clk);
-            if (!dmem_resp_valid) begin
-                $display("FAIL: dmem_resp_valid dropped during %0d-cycle backpressure stall!", bp_count);
-                errors++;
-            end else begin
-                $display("PASS: Response valid held stable during %0d-cycle backpressure stall.", bp_count);
+
+            repeat (bp_count) begin
+                @(posedge clk);
+                // Verify payload stability on every stalled clock edge
+                if (dmem_addr !== latched_addr || dmem_wen !== latched_wen ||
+                    dmem_funct3 !== latched_funct3 || dmem_wdata !== latched_wdata ||
+                    dmem_rdata !== latched_rdata || !dmem_resp_valid) begin
+                    $display("FAIL: Payload stability violation at T=%0t!", $time);
+                    payload_stability_violations++;
+                    $fatal(1, "PAYLOAD STABILITY VIOLATION DETECTED DURING BACKPRESSURE STALL");
+                end
             end
+
+            $display("PASS: Response valid and payload held stable during %0d-cycle backpressure stall.", bp_count);
             tb_resp_ready_mask <= 1'b1; // Release backpressure
         end
     end
 
     initial begin
         $display("=========================================================");
-        $display(" GARUDA SEMESTA GEN2 — FASE 6.7.4 MATRIX VERIFICATION TEST");
+        $display(" GARUDA SEMESTA GEN2 — FASE 6.7.4.1 HARDENING TEST");
         $display("=========================================================");
 
         clk = 0;
@@ -204,12 +226,13 @@ module garuda_rv64i_core_tb;
         if (mem_model.dmem[24] !== 8'd10) begin $display("FAIL: dmem[24] = %0d", mem_model.dmem[24]); errors++; end
         else $display("PASS: dmem[24] store verified (10)");
 
-        // 5. Transaction accounting assertions
+        // 5. Scoreboard transaction accounting assertions
         $display("INFO: Read Accepted Transactions (LD)  = %0d", read_tx_count);
         $display("INFO: Write Accepted Transactions (ST) = %0d", write_tx_count);
         $display("INFO: Committed Store Count            = %0d", committed_store_count);
         $display("INFO: Total Responses Issued           = %0d", resp_tx_count);
         $display("INFO: Duplicate Transactions           = %0d", duplicate_tx_count);
+        $display("INFO: Payload Stability Violations    = %0d", payload_stability_violations);
 
         if (read_tx_count !== 32'd4) begin
             $display("FAIL: Read transaction count mismatch (%0d, expected 4)", read_tx_count);
@@ -229,14 +252,14 @@ module garuda_rv64i_core_tb;
             $display("FAIL: Committed store count mismatch (%0d vs write_tx=%0d)", committed_store_count, write_tx_count);
             errors++;
         end else begin
-            $display("PASS: Committed store count matches write transaction count (%0d)", committed_store_count);
+            $display("PASS: Committed store count matches write transaction count (4)");
         end
 
         if (resp_tx_count !== (read_tx_count + write_tx_count)) begin
             $display("FAIL: Response count mismatch (resp=%0d vs req=%0d)", resp_tx_count, read_tx_count + write_tx_count);
             errors++;
         end else begin
-            $display("PASS: Response count matches accepted requests exactly (%0d)", resp_tx_count);
+            $display("PASS: Response count matches accepted requests exactly (8)");
         end
 
         if (duplicate_tx_count !== 32'd0) begin
@@ -244,6 +267,13 @@ module garuda_rv64i_core_tb;
             errors++;
         end else begin
             $display("PASS: Zero duplicate transactions verified.");
+        end
+
+        if (payload_stability_violations !== 32'd0) begin
+            $display("FAIL: Payload stability violations detected (%0d)", payload_stability_violations);
+            errors++;
+        end else begin
+            $display("PASS: Zero payload stability violations verified.");
         end
 
         $display("\n=========================================================");
