@@ -23,8 +23,10 @@ module garuda_rv64i_core_tb;
     wire [63:0] dmem_rdata;
     wire        dmem_resp_valid;
     wire        dmem_resp_ready_core;
-    reg         tb_resp_ready_mask = 1'b1; // Backpressure Injection Control
-    wire        dmem_resp_ready_effective = dmem_resp_ready_core && tb_resp_ready_mask;
+
+    // Independent backpressure injection control.
+    // This signal must not depend on core response-ready output.
+    reg         tb_resp_ready_mask = 1'b1;
 
     wire        core_halted;
     wire [31:0] read_tx_count;
@@ -49,7 +51,7 @@ module garuda_rv64i_core_tb;
         .dmem_ready(dmem_ready),
         .dmem_rdata(dmem_rdata),
         .dmem_resp_valid(dmem_resp_valid),
-        .dmem_resp_ready(dmem_resp_ready_effective),
+        .dmem_resp_ready(dmem_resp_ready_core),
         .read_tx_count(read_tx_count),
         .write_tx_count(write_tx_count),
         .committed_store_count(committed_store_count),
@@ -73,7 +75,7 @@ module garuda_rv64i_core_tb;
         .dmem_ready(dmem_ready),
         .dmem_rdata(dmem_rdata),
         .dmem_resp_valid(dmem_resp_valid),
-        .dmem_resp_ready_in(dmem_resp_ready_effective), // Connect external backpressure input
+        .dmem_resp_ready_in(tb_resp_ready_mask), // Connect external backpressure input
         .dmem_resp_ready(dmem_resp_ready_core),
         .core_halted(core_halted)
     );
