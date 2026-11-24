@@ -84,11 +84,6 @@ def main():
             compile_log = os.path.join(reports_dir, f"compile_latency_{lat}_bp_{bp}.log")
             sim_log = os.path.join(reports_dir, f"sim_latency_{lat}_bp_{bp}.log")
 
-            # Remove stale logs and binaries
-            if os.path.exists(vvp_out): os.remove(vvp_out)
-            if os.path.exists(compile_log): os.remove(compile_log)
-            if os.path.exists(sim_log): os.remove(sim_log)
-
             compile_cmd = [
                 "iverilog", "-g2012", "-Wall",
                 "-s", "garuda_rv64i_core_tb",
@@ -98,8 +93,12 @@ def main():
             ] + sources
 
             c_res = subprocess.run(compile_cmd, cwd=repo_dir, capture_output=True, text=True)
+            compile_output = c_res.stdout + ("\n" + c_res.stderr if c_res.stderr else "")
+            if not compile_output.strip():
+                compile_output = f"Compilation completed cleanly for {config_id} with exit code {c_res.returncode}.\n"
+
             with open(compile_log, "w", encoding="utf-8") as f:
-                f.write(c_res.stdout + "\n" + c_res.stderr)
+                f.write(compile_output)
 
             if c_res.returncode != 0:
                 print(f"Compilation FAILED for {config_id}:\n{c_res.stderr}", flush=True)
@@ -117,7 +116,7 @@ def main():
                 print(sim_res.stderr, flush=True)
 
             with open(sim_log, "w", encoding="utf-8") as f:
-                f.write(sim_res.stdout + "\n" + sim_res.stderr)
+                f.write(sim_res.stdout + ("\n" + sim_res.stderr if sim_res.stderr else ""))
 
             # Dynamically parse simulation stdout
             parsed = parse_scoreboard_metrics(sim_res.stdout)
