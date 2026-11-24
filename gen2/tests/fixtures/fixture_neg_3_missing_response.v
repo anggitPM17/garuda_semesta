@@ -1,15 +1,15 @@
 `timescale 1ns / 1ps
-// NEG-03: Fault Injection Fixture — Deliberately Suppressed Response (Watchdog Timeout)
+// NEG-03: Fault Injection Fixture — Deliberately Suppressed Response
 module fixture_neg_3_missing_response;
-    reg clk, rst_n;
-    always #5 clk = ~clk;
+    garuda_rv64i_core_tb tb ();
 
     initial begin
-        clk = 0; rst_n = 0;
-        #20 rst_n = 1;
-        #100;
-        $display("[FAULT INJECTION] Suppressing memory response to test watchdog timeout...");
-        $display("[FATAL TIMEOUT] Simulation timed out waiting for EBREAK.");
-        $fatal(1, "WATCHDOG TIMEOUT — Core failed to reach EBREAK");
+        wait (tb.dmem_valid);
+        @(posedge tb.clk);
+        $display("[FAULT INJECTION] Suppressing response valid signal permanently...");
+        // Suppress response valid, this should trigger watchdog or outstanding tx mismatch
+        force tb.mem_model.dmem_resp_valid = 1'b0;
+        // Suppress payload stability checker to let the timeout occur
+        force tb.tb_resp_ready_mask = 1'b1;
     end
 endmodule

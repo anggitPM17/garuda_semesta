@@ -1,15 +1,17 @@
 `timescale 1ns / 1ps
 // NEG-01: Fault Injection Fixture — Deliberate Payload Mutation during Backpressure Stall
 module fixture_neg_1_unstable_payload;
-    reg clk, rst_n;
-    always #5 clk = ~clk;
+    // Instantiate the real testbench but inject a fault during backpressure
+    garuda_rv64i_core_tb tb ();
 
     initial begin
-        clk = 0; rst_n = 0;
-        #20 rst_n = 1;
-        #100;
-        $display("[FAULT INJECTION] Injecting unstable address payload during stall...");
-        $display("FAIL: Payload stability violation at T=%0t!", $time);
-        $fatal(1, "PAYLOAD STABILITY VIOLATION DETECTED DURING BACKPRESSURE STALL");
+        // Wait until core enters first memory transaction response (valid && ready_in == 0)
+        wait (tb.dmem_valid && tb.dmem_resp_valid && !tb.tb_resp_ready_mask);
+        @(posedge tb.clk);
+        $display("[FAULT INJECTION] Mutating dmem_addr payload mid-transaction stall...");
+        // Force the core's address output to mutate, which should be caught by tb stability monitor
+        force tb.uut.dmem_addr = 64'hDEADBEEF;
+        @(posedge tb.clk);
+        release tb.uut.dmem_addr;
     end
 endmodule
