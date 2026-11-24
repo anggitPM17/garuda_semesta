@@ -4,6 +4,7 @@ import subprocess
 import sys
 
 LATENCIES = [0, 1, 3, 5]
+BACKPRESSURES = [0, 1, 2, 4, 8]
 
 def main():
     repo_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -40,59 +41,62 @@ def main():
     results = {}
 
     for lat in LATENCIES:
-        print(f"\n=========================================")
-        print(f"Running Garuda RV64I Simulation (LATENCY = {lat})")
-        print(f"=========================================")
+        for bp in BACKPRESSURES:
+            config_id = f"LATENCY={lat}_BP={bp}"
+            print(f"\n=========================================")
+            print(f"Running Garuda RV64I Simulation ({config_id})")
+            print(f"=========================================")
 
-        vvp_out = os.path.join(reports_dir, f"garuda_rv64i_lat_{lat}.vvp")
-        compile_log = os.path.join(reports_dir, f"compile_latency_{lat}.log")
-        sim_log = os.path.join(reports_dir, f"sim_latency_{lat}.log")
+            vvp_out = os.path.join(reports_dir, f"garuda_rv64i_lat_{lat}_bp_{bp}.vvp")
+            compile_log = os.path.join(reports_dir, f"compile_latency_{lat}_bp_{bp}.log")
+            sim_log = os.path.join(reports_dir, f"sim_latency_{lat}_bp_{bp}.log")
 
-        compile_cmd = [
-            "iverilog", "-g2012", "-Wall",
-            "-s", "garuda_rv64i_core_tb",
-            f"-DMEM_LATENCY={lat}",
-            "-o", vvp_out
-        ] + sources
+            compile_cmd = [
+                "iverilog", "-g2012", "-Wall",
+                "-s", "garuda_rv64i_core_tb",
+                f"-DMEM_LATENCY={lat}",
+                f"-DBACKPRESSURE_CYCLES={bp}",
+                "-o", vvp_out
+            ] + sources
 
-        c_res = subprocess.run(compile_cmd, cwd=repo_dir, capture_output=True, text=True)
-        with open(compile_log, "w", encoding="utf-8") as f:
-            f.write(c_res.stdout + "\n" + c_res.stderr)
+            c_res = subprocess.run(compile_cmd, cwd=repo_dir, capture_output=True, text=True)
+            with open(compile_log, "w", encoding="utf-8") as f:
+                f.write(c_res.stdout + "\n" + c_res.stderr)
 
-        if c_res.returncode != 0:
-            print(f"Compilation FAILED for LATENCY = {lat}:\n{c_res.stderr}")
-            all_passed = False
-            results[lat] = "FAIL (Compilation)"
-            continue
+            if c_res.returncode != 0:
+                print(f"Compilation FAILED for {config_id}:\n{c_res.stderr}")
+                all_passed = False
+                results[config_id] = "FAIL (Compilation)"
+                continue
 
-        sim_res = subprocess.run(["vvp", vvp_out], cwd=repo_dir, capture_output=True, text=True)
-        print(sim_res.stdout)
-        if sim_res.stderr:
-            print(sim_res.stderr)
+            sim_res = subprocess.run(["vvp", vvp_out], cwd=repo_dir, capture_output=True, text=True)
+            print(sim_res.stdout)
+            if sim_res.stderr:
+                print(sim_res.stderr)
 
-        with open(sim_log, "w", encoding="utf-8") as f:
-            f.write(sim_res.stdout + "\n" + sim_res.stderr)
+            with open(sim_log, "w", encoding="utf-8") as f:
+                f.write(sim_res.stdout + "\n" + sim_res.stderr)
 
-        if sim_res.returncode == 0 and "SUCCESS (PASS)" in sim_res.stdout:
-            print(f"Simulation PASSED for LATENCY = {lat}")
-            results[lat] = "PASS"
-        else:
-            print(f"Simulation FAILED for LATENCY = {lat}")
-            results[lat] = "FAIL"
-            all_passed = False
+            if sim_res.returncode == 0 and "SUCCESS (PASS)" in sim_res.stdout and "FAILURE" not in sim_res.stdout:
+                print(f"Simulation PASSED for {config_id}")
+                results[config_id] = "PASS"
+            else:
+                print(f"Simulation FAILED for {config_id}")
+                results[config_id] = "FAIL"
+                all_passed = False
 
     print("\n=========================================")
-    print("      MULTI-LATENCY SUMMARY REPORT       ")
+    print("      MULTI-LATENCY x BACKPRESSURE MATRIX")
     print("=========================================")
-    for lat in LATENCIES:
-        print(f"  LATENCY = {lat}: {results[lat]}")
+    for config_id, status in results.items():
+        print(f"  {config_id:<20}: {status}")
     print("=========================================")
 
     if all_passed:
-        print("\n>>> ALL LATENCY TESTS PASSED (0, 1, 3, 5) — SUCCESS <<<")
+        print("\n>>> ALL 20 CONFIGURATIONS PASSED — SUCCESS <<<")
         sys.exit(0)
     else:
-        print("\n>>> MULTI-LATENCY TEST SUITE FAILED — NON-ZERO EXIT <<<")
+        print("\n>>> REGRESSION MATRIX FAILED — NON-ZERO EXIT <<<")
         sys.exit(1)
 
 if __name__ == "__main__":

@@ -1,4 +1,9 @@
 `timescale 1ns / 1ps
+
+`ifndef BACKPRESSURE_CYCLES
+  `define BACKPRESSURE_CYCLES 0
+`endif
+
 module garuda_rv64i_core_tb;
     reg clk;
     reg rst_n;
@@ -86,27 +91,31 @@ module garuda_rv64i_core_tb;
     end
 
     integer errors = 0;
+    integer bp_count = `BACKPRESSURE_CYCLES;
 
-    // Backpressure Injection Monitor
+    // Clock-Cycle Based Backpressure Injection Monitor
     initial begin
         tb_resp_ready_mask = 1'b1;
-        #100;
-        // Wait for first memory response
-        wait (dmem_valid && dmem_resp_valid);
-        tb_resp_ready_mask = 1'b0; // Inject backpressure stall for 2 cycles (20ns)
-        #20;
-        if (!dmem_resp_valid) begin
-            $display("FAIL: dmem_resp_valid dropped during backpressure stall!");
-            errors++;
-        end else begin
-            $display("PASS: Response valid held stable during backpressure stall.");
+        if (bp_count > 0) begin
+            #100;
+            // Wait until core enters active memory transaction response
+            wait (dmem_valid && dmem_resp_valid);
+            @(posedge clk);
+            tb_resp_ready_mask <= 1'b0; // Inject backpressure stall for bp_count cycles
+            repeat (bp_count) @(posedge clk);
+            if (!dmem_resp_valid) begin
+                $display("FAIL: dmem_resp_valid dropped during %0d-cycle backpressure stall!", bp_count);
+                errors++;
+            end else begin
+                $display("PASS: Response valid held stable during %0d-cycle backpressure stall.", bp_count);
+            end
+            tb_resp_ready_mask <= 1'b1; // Release backpressure
         end
-        tb_resp_ready_mask = 1'b1; // Release backpressure
     end
 
     initial begin
         $display("=========================================================");
-        $display(" GARUDA SEMESTA GEN2 — FASE 6.7.2 HANDSHAKE REPAIR TEST");
+        $display(" GARUDA SEMESTA GEN2 — FASE 6.7.4 MATRIX VERIFICATION TEST");
         $display("=========================================================");
 
         clk = 0;
