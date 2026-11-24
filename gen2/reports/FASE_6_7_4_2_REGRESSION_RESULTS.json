@@ -1,0 +1,210 @@
+[
+  {
+    "config_id": "LATENCY=0_BP=0",
+    "latency": 0,
+    "backpressure": 0,
+    "compile_exit": 0,
+    "sim_exit": 0,
+    "read_tx": 4,
+    "write_tx": 4,
+    "committed_stores": 4,
+    "total_resp": 8,
+    "duplicate_tx": 0,
+    "stability_violations": 0,
+    "result": "PASS"
+  },
+  {
+    "config_id": "LATENCY=0_BP=1",
+    "latency": 0,
+    "backpressure": 1,
+    "compile_exit": 0,
+    "sim_exit": 0,
+    "read_tx": 4,
+    "write_tx": 4,
+    "committed_stores": 4,
+    "total_resp": 8,
+    "duplicate_tx": 0,
+    "stability_violations": 0,
+    "result": "PASS"
+  },
+  {
+    "config_id": "LATENCY=0_BP=2",
+    "latency": 0,
+    "backpressure": 2,
+    "compile_exit": 0,
+    "sim_exit": 0,
+    "read_tx": 4,
+    "write_tx": 4,
+    "committed_stores": 4,
+    "total_resp": 8,
+    "duplicate_tx": 0,
+    "stability_violations": 0,
+    "result": "PASS"
+  },
+  {
+    "config_id": "LATENCY=0_BP=4",
+    "latency": 0,
+    "backpressure": 4,
+    "compile_exit": 0,
+    "sim_exit": 0,
+    "read_tx": 4,
+    "write_tx": 4,
+    "committed_stores": 4,
+    "total_resp": 8,
+    "duplicate_tx": 0,
+    "stability_violations": 0,
+    "result": "PASS"
+  },
+  {
+    "config_id": "LATENCY=0_BP=8",
+    "latency": 0,
+    "backpressure": 8,
+    "compile_exit": 0,
+    "sim_exit": 0,
+    "read_tx": 4,
+    "write_tx": 4,
+    "committed_stores": 4,
+    "total_resp": 8,
+    "duplicate_tx": 0,
+    "stability_violations": 0,
+    "result": "PASS"
+  },
+  {
+    "config_id": "LATENCY=1_BP=0",
+    "latency": 1,
+    "backpressure": 0,
+    "compile_exit": 0,
+    "sim_exit": 0,
+    "read_tx": 4,
+    "write_tx": 4,
+    "committed_stores": 4,
+    "total_resp": 8,
+    "duplicate_tx": 0,
+    "stability_violations": 0,
+    "result": "PASS"
+  },
+  {
+    "config_id": "LATENCY=1_BP=1",
+    "latency": 1,
+    "backpressure": 1,
+    "compile_exit": 0,
+    "sim_exit": 1,
+    "result": "FAIL"
+  },
+  {
+    "config_id": "LATENCY=1_BP=2",
+    "latency": 1,
+    "backpressure": 2,
+    "compile_exit": 0,
+    "sim_exit": 1,
+    "result": "FAIL"
+  },
+  {
+    "config_id": "LATENCY=1_BP=4",
+    "latency": 1,
+    "backpressure": 4,
+    "compile_exit": 0,
+    "sim_exit": 1,
+    "result": "FAIL"
+  },
+  {
+    "config_id": "LATENCY=1_BP=8",
+    "latency": 1,
+    "backpressure": 8,
+    "compile_exit": 0,
+    "sim_exit": 1,
+    "result": "FAIL"
+  },
+  {
+    "config_id": "LATENCY=3_BP=0",
+    "latency": 3,
+    "backpressure": 0,
+    "compile_exit": 0,
+    "sim_exit": 0,
+    "read_tx": 4,
+    "write_tx": 4,
+    "committed_stores": 4,
+    "total_resp": 8,
+    "duplicate_tx": 0,
+    "stability_violations": 0,
+    "result": "PASS"
+  },
+  {
+    "config_id": "LATENCY=3_BP=1",
+    "latency": 3,
+    "backpressure": 1,
+    "compile_exit": 0,
+    "sim_exit": 1,
+    "result": "FAIL"
+  },
+  {
+    "config_id": "LATENCY=3_BP=2",
+    "latency": 3,
+    "backpressure": 2,
+    "compile_exit": 0,
+    "sim_exit": 1,
+    "result": "FAIL"
+  },
+  {
+    "config_id": "LATENCY=3_BP=4",
+    "latency": 3,
+    "backpressure": 4,
+    "compile_exit": 0,
+    "sim_exit": 1,
+    "result": "FAIL"
+  },
+  {
+    "config_id": "LATENCY=3_BP=8",
+    "latency": 3,
+    "backpressure": 8,
+    "compile_exit": 0,
+    "sim_exit": 1,
+    "result": "FAIL"
+  },
+  {
+    "config_id": "LATENCY=5_BP=0",
+    "latency": 5,
+    "backpressure": 0,
+    "compile_exit": 0,
+    "sim_exit": 0,
+    "read_tx": 4,
+    "write_tx": 4,
+    "committed_stores": 4,
+    "total_resp": 8,
+    "duplicate_tx": 0,
+    "stability_violations": 0,
+    "result": "PASS"
+  },
+  {
+    "config_id": "LATENCY=5_BP=1",
+    "latency": 5,
+    "backpressure": 1,
+    "compile_exit": 0,
+    "sim_exit": 1,
+    "result": "FAIL"
+  },
+  {
+    "config_id": "LATENCY=5_BP=2",
+    "latency": 5,
+    "backpressure": 2,
+    "compile_exit": 0,
+    "sim_exit": 1,
+    "result": "FAIL"
+  },
+  {
+    "config_id": "LATENCY=5_BP=4",
+    "latency": 5,
+    "backpressure": 4,
+    "compile_exit": 0,
+    "sim_exit": 1,
+    "result": "FAIL"
+  },
+  {
+    "config_id": "LATENCY=5_BP=8",
+    "latency": 5,
+    "backpressure": 8,
+    "compile_exit": 0,
+    "sim_exit": 1,
+    "result": "FAIL"
+  }
+]

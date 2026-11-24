@@ -32,7 +32,7 @@ module garuda_rv64i_core (
     wire        branch_taken_ex;
     wire [63:0] branch_target_ex;
 
-    // Data Memory Handshake & Response Consumption (Loop-Free)
+    // Data Memory Handshake & Response Consumption (Loop-Free Unification)
     assign dmem_resp_ready = (ex_mem_mem_read || ex_mem_mem_write);
     wire response_fire     = dmem_resp_valid && dmem_resp_ready_in;
 

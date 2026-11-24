@@ -40,5 +40,5 @@ PASS: Zero payload stability violations verified.
 =========================================================
  >>> ALL ASSERTIONS PASSED — TEST RESULT: SUCCESS (PASS) <<<
 =========================================================
-tb/garuda_rv64i_core_tb.v:283: $finish called at 935000 (1ps)
+tb/garuda_rv64i_core_tb.v:279: $finish called at 935000 (1ps)
 

@@ -3,9 +3,40 @@ import os
 import subprocess
 import sys
 import json
+import re
 
 LATENCIES = [0, 1, 3, 5]
 BACKPRESSURES = [0, 1, 2, 4, 8]
+
+def parse_scoreboard_metrics(stdout):
+    metrics = {
+        "read_tx": None,
+        "write_tx": None,
+        "committed_stores": None,
+        "total_resp": None,
+        "duplicate_tx": None,
+        "stability_violations": None
+    }
+
+    m_read = re.search(r"Read Accepted Transactions \(LD\)\s*=\s*(\d+)", stdout)
+    if m_read: metrics["read_tx"] = int(m_read.group(1))
+
+    m_write = re.search(r"Write Accepted Transactions \(ST\)\s*=\s*(\d+)", stdout)
+    if m_write: metrics["write_tx"] = int(m_write.group(1))
+
+    m_commit = re.search(r"Committed Store Count\s*=\s*(\d+)", stdout)
+    if m_commit: metrics["committed_stores"] = int(m_commit.group(1))
+
+    m_resp = re.search(r"Total Responses Issued\s*=\s*(\d+)", stdout)
+    if m_resp: metrics["total_resp"] = int(m_resp.group(1))
+
+    m_dup = re.search(r"Duplicate Transactions\s*=\s*(\d+)", stdout)
+    if m_dup: metrics["duplicate_tx"] = int(m_dup.group(1))
+
+    m_stab = re.search(r"Payload Stability Violations\s*=\s*(\d+)", stdout)
+    if m_stab: metrics["stability_violations"] = int(m_stab.group(1))
+
+    return metrics
 
 def main():
     repo_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -87,16 +118,19 @@ def main():
             with open(sim_log, "w", encoding="utf-8") as f:
                 f.write(sim_res.stdout + "\n" + sim_res.stderr)
 
+            # Dynamically parse simulation stdout
+            parsed = parse_scoreboard_metrics(sim_res.stdout)
+
             passed_checks = (
                 sim_res.returncode == 0 and
                 "SUCCESS (PASS)" in sim_res.stdout and
                 "FAILURE" not in sim_res.stdout and
-                "Read Accepted Transactions (LD)  = 4" in sim_res.stdout and
-                "Write Accepted Transactions (ST) = 4" in sim_res.stdout and
-                "Committed Store Count            = 4" in sim_res.stdout and
-                "Total Responses Issued           = 8" in sim_res.stdout and
-                "Duplicate Transactions           = 0" in sim_res.stdout and
-                "Payload Stability Violations    = 0" in sim_res.stdout
+                parsed["read_tx"] == 4 and
+                parsed["write_tx"] == 4 and
+                parsed["committed_stores"] == 4 and
+                parsed["total_resp"] == 8 and
+                parsed["duplicate_tx"] == 0 and
+                parsed["stability_violations"] == 0
             )
 
             if passed_checks:
@@ -105,8 +139,13 @@ def main():
                 json_results.append({
                     "config_id": config_id, "latency": lat, "backpressure": bp,
                     "compile_exit": 0, "sim_exit": 0,
-                    "read_tx": 4, "write_tx": 4, "committed_stores": 4, "total_resp": 8,
-                    "duplicate_tx": 0, "stability_violations": 0, "result": "PASS"
+                    "read_tx": parsed["read_tx"],
+                    "write_tx": parsed["write_tx"],
+                    "committed_stores": parsed["committed_stores"],
+                    "total_resp": parsed["total_resp"],
+                    "duplicate_tx": parsed["duplicate_tx"],
+                    "stability_violations": parsed["stability_violations"],
+                    "result": "PASS"
                 })
             else:
                 print(f"Simulation FAILED for {config_id}")
@@ -114,11 +153,13 @@ def main():
                 all_passed = False
                 json_results.append({
                     "config_id": config_id, "latency": lat, "backpressure": bp,
-                    "compile_exit": 0, "sim_exit": sim_res.returncode, "result": "FAIL"
+                    "compile_exit": 0, "sim_exit": sim_res.returncode,
+                    "parsed_metrics": parsed,
+                    "result": "FAIL"
                 })
 
     # Save JSON summary
-    json_path = os.path.join(reports_dir, "FASE_6_7_4_2_REGRESSION_RESULTS.json")
+    json_path = os.path.join(reports_dir, "FASE_6_7_4_3_REGRESSION_RESULTS.json")
     with open(json_path, "w", encoding="utf-8") as f:
         json.dump(json_results, f, indent=2)
 
