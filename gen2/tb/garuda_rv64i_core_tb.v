@@ -105,14 +105,17 @@ module garuda_rv64i_core_tb;
         tb_resp_ready_mask = 1'b1;
         if (bp_count > 0) begin
             #100;
-            // Wait for memory transaction request
-            wait (dmem_valid);
-            tb_resp_ready_mask = 1'b0; // Inject backpressure stall BEFORE response completes
+            // Wait until memory enters active RESPONSE phase (dmem_valid && dmem_resp_valid)
+            wait (dmem_valid && dmem_resp_valid);
+
+            // Capture payload at start of response backpressure stall
             latched_addr   = dmem_addr;
             latched_wen    = dmem_wen;
             latched_funct3 = dmem_funct3;
             latched_wdata  = dmem_wdata;
             latched_rdata  = dmem_rdata;
+
+            tb_resp_ready_mask <= 1'b0; // Inject response backpressure stall for bp_count cycles
 
             repeat (bp_count) begin
                 @(posedge clk);

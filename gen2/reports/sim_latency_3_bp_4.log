@@ -1,8 +1,45 @@
 =========================================================
  GARUDA SEMESTA GEN2 — FASE 6.7.4.1 HARDENING TEST
 =========================================================
-WARNING: rtl/core/rv64i_memory_model.v:217: $readmemh(reports/single_hart_program.hex): Not enough words in the file for the requested range [0:1023].
-FAIL: Payload stability violation at T=195000!
-FATAL: tb/garuda_rv64i_core_tb.v:125: PAYLOAD STABILITY VIOLATION DETECTED DURING BACKPRESSURE STALL
-       Time: 195000  Scope: garuda_rv64i_core_tb
+WARNING: rtl/core/rv64i_memory_model.v:227: $readmemh(reports/single_hart_program.hex): Not enough words in the file for the requested range [0:1023].
+PASS: Response valid and payload held stable during 4-cycle backpressure stall.
+
+=== COMPREHENSIVE AUTOMATED ASSERTION CHECKS ===
+PASS: Program reached EBREAK / HALT successfully.
+PASS: x0 zero protection verified.
+PASS: x1 = 10
+PASS: x2 = 20
+PASS: x3 = 30
+PASS: x4 = 10
+PASS: x5 = 0
+PASS: x6 = 30
+PASS: x7 = 30
+PASS: x8 = 1
+PASS: x9 = 0
+PASS: x10 = 40
+PASS: x13 (LD 30) = 30
+PASS: x14 (Forwarding) = 40
+PASS: x15 (Branch target) = 77
+PASS: x17 (JAL target) = 88
+PASS: dmem[0] store verified (30)
+PASS: dmem[8] store verified (10)
+PASS: dmem[16] store verified (20)
+PASS: dmem[24] store verified (10)
+INFO: Read Accepted Transactions (LD)  = 4
+INFO: Write Accepted Transactions (ST) = 4
+INFO: Committed Store Count            = 4
+INFO: Total Responses Issued           = 8
+INFO: Duplicate Transactions           = 0
+INFO: Payload Stability Violations    = 0
+PASS: Read transaction count verified (4)
+PASS: Write transaction count verified (4)
+PASS: Committed store count matches write transaction count (4)
+PASS: Response count matches accepted requests exactly (8)
+PASS: Zero duplicate transactions verified.
+PASS: Zero payload stability violations verified.
+
+=========================================================
+ >>> ALL ASSERTIONS PASSED — TEST RESULT: SUCCESS (PASS) <<<
+=========================================================
+tb/garuda_rv64i_core_tb.v:282: $finish called at 815000 (1ps)
 

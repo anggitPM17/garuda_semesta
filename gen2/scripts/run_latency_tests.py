@@ -84,7 +84,8 @@ def main():
             compile_log = os.path.join(reports_dir, f"compile_latency_{lat}_bp_{bp}.log")
             sim_log = os.path.join(reports_dir, f"sim_latency_{lat}_bp_{bp}.log")
 
-            # Remove stale logs
+            # Remove stale logs and binaries
+            if os.path.exists(vvp_out): os.remove(vvp_out)
             if os.path.exists(compile_log): os.remove(compile_log)
             if os.path.exists(sim_log): os.remove(sim_log)
 
