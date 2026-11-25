@@ -3,7 +3,7 @@
   "commit_sha": "20d58dcdad2b48a0145abea4b118b742f6ca5e0a",
   "branch": "generation-2",
   "is_dirty": false,
-  "run_timestamp_utc": "2026-11-25T15:40:33.343859+00:00",
+  "run_timestamp_utc": "2026-11-25T15:44:26.447798+00:00",
   "toolchain": {
     "compiler": "Icarus Verilog 12.0 (stable)",
     "simulator": "Icarus Verilog vvp 12.0",
@@ -24,7 +24,7 @@
     "rtl/core/rv64i_writeback.v": "4424c9e01055ebf0f71c27cc9fd01957d3dcf1434ea053f5e623e5898c21511d",
     "rtl/core/rv64i_memory_model.v": "389313451f94863b5fc3051cc70a762eae573a5950ba890ad4b1f9b046f1c452",
     "rtl/core/garuda_rv64i_core.v": "45e92323144a08a2ce59a0672b4d62b4274a0e572fe128476723f62450dc2139",
-    "tb/garuda_rv64i_core_tb.v": "80a54dbff4d5f432d2005e640b7f83558224eb08a7027b944fe7804d435ada3c",
+    "tb/garuda_rv64i_core_tb.v": "a9a71fd414a77d1bd5c2a194151119b278a8da6b5d5cdcb820bd0d342097a24e",
     "scripts/run_latency_tests.py": "3f7b9b5f45bd85eb5a90b1c4f56697a32c03ba0910042b1f6989ffefcb8a0db1",
     "tests/run_negative_tests.py": "c7b60322f5b049f3ddcc56b64a36f4eca7ae3bb4a3be21d58f32260636514b1d",
     "reports/single_hart_program.hex": "f48c11805109594f371782effc59529360308d186ee9f0c9349669cba8a85805"
@@ -52,7 +52,7 @@
       },
       "compile_log": "/workspace/reports/compile_latency_0_bp_0.log",
       "sim_log": "/workspace/reports/sim_latency_0_bp_0.log",
-      "sim_log_sha256": "fc154daa9335355b8f6fc69bc2cd83165edabee22bff98e3ae5736ce253d0aeb",
+      "sim_log_sha256": "267e71c44a9644883529743c73d7fbe3c22071c399f2c88fe297837e9a8b1007",
       "result": "PASS"
     },
     {
@@ -77,7 +77,7 @@
       },
       "compile_log": "/workspace/reports/compile_latency_0_bp_1.log",
       "sim_log": "/workspace/reports/sim_latency_0_bp_1.log",
-      "sim_log_sha256": "b8be9b5f35dd0b9bb20159a32f3dc256851183ba228f6c11270118194f7912cd",
+      "sim_log_sha256": "6be4d020c8bdc51ee53e441b662164e4a0be0f3f643f1f4583cce3f9dbd128b3",
       "result": "PASS"
     },
     {
@@ -102,7 +102,7 @@
       },
       "compile_log": "/workspace/reports/compile_latency_0_bp_2.log",
       "sim_log": "/workspace/reports/sim_latency_0_bp_2.log",
-      "sim_log_sha256": "a0d05d2e8d820ec94a9a676b023c74029d34b7198e51626ab60679f4e0aae217",
+      "sim_log_sha256": "d73070fff277f19b7ba6e0d8da3d658d42d0580022ae2e50d4675286c717daa6",
       "result": "PASS"
     },
     {
@@ -127,7 +127,7 @@
       },
       "compile_log": "/workspace/reports/compile_latency_0_bp_4.log",
       "sim_log": "/workspace/reports/sim_latency_0_bp_4.log",
-      "sim_log_sha256": "5a259470a2fea9bc89d1e2647878de94e2385dafe4afba399261e3db2d978a81",
+      "sim_log_sha256": "8afcf33d77e9c573bef24c32339840ddf8978dc61487a5cf1fc30fba1f60ac6b",
       "result": "PASS"
     },
     {
@@ -152,7 +152,7 @@
       },
       "compile_log": "/workspace/reports/compile_latency_0_bp_8.log",
       "sim_log": "/workspace/reports/sim_latency_0_bp_8.log",
-      "sim_log_sha256": "8446f5c67b60d61370a841300e7133c162f0d4a8c1a3c8aeddef9eae7ff7a814",
+      "sim_log_sha256": "4c60e2e2ebd4d6cf28d74850daa6c34b390557c3bf7c46d20d48751b79334dbf",
       "result": "PASS"
     },
     {
@@ -177,7 +177,7 @@
       },
       "compile_log": "/workspace/reports/compile_latency_1_bp_0.log",
       "sim_log": "/workspace/reports/sim_latency_1_bp_0.log",
-      "sim_log_sha256": "e6e78afe09d0ff6c88376d9d55c59815bd997a2e56a483cd0db43d6a76fba5a6",
+      "sim_log_sha256": "118dad257ba0b6c1bd3ecf32951588ed36b76c0a9073fc5c9306c9374a70601b",
       "result": "PASS"
     },
     {
@@ -202,7 +202,7 @@
       },
       "compile_log": "/workspace/reports/compile_latency_1_bp_1.log",
       "sim_log": "/workspace/reports/sim_latency_1_bp_1.log",
-      "sim_log_sha256": "cea71fb9ea91d06646d4de24ce58c9df9eb848d25302fb25f66bf2443d39f6f9",
+      "sim_log_sha256": "787ed45a9914bed6ec9376e23eac10f28a698de18a80057ebd6685e7696156c4",
       "result": "PASS"
     },
     {
@@ -227,7 +227,7 @@
       },
       "compile_log": "/workspace/reports/compile_latency_1_bp_2.log",
       "sim_log": "/workspace/reports/sim_latency_1_bp_2.log",
-      "sim_log_sha256": "b79d2632563d023bbe3ca5b851e9f67b8428b2907564c269ab372fcd4c083732",
+      "sim_log_sha256": "e697fd32648db25cb698b2a8ae02156a2315a94e1b90e5ef5f727e2f55de9a4a",
       "result": "PASS"
     },
     {
@@ -252,7 +252,7 @@
       },
       "compile_log": "/workspace/reports/compile_latency_1_bp_4.log",
       "sim_log": "/workspace/reports/sim_latency_1_bp_4.log",
-      "sim_log_sha256": "5dd2bebd54d46eec040d5db2fa47809c0e8ee4d30050791928b9d28f9370e0c4",
+      "sim_log_sha256": "8d5844c6ec2e0e7ff8f4ed7480a21f388868cb7507e1fa3364f7b74463232bb5",
       "result": "PASS"
     },
     {
@@ -277,7 +277,7 @@
       },
       "compile_log": "/workspace/reports/compile_latency_1_bp_8.log",
       "sim_log": "/workspace/reports/sim_latency_1_bp_8.log",
-      "sim_log_sha256": "e00661681c97297706d3719de7ec66e1e950841ba0220495a660013fb0005321",
+      "sim_log_sha256": "c06824e420f4253b57b9f08432963bd1b9ecb31ba43d4c830b8999a83395b368",
       "result": "PASS"
     },
     {
@@ -302,7 +302,7 @@
       },
       "compile_log": "/workspace/reports/compile_latency_3_bp_0.log",
       "sim_log": "/workspace/reports/sim_latency_3_bp_0.log",
-      "sim_log_sha256": "d5460fbd2aac0cd43ac3bdeb5e2be3762436b5e6ff80936f56939748b7185946",
+      "sim_log_sha256": "f72f9ac5a775abb6e8a4690a13479c3993b6135321f85e314595b65b96d92d32",
       "result": "PASS"
     },
     {
@@ -327,7 +327,7 @@
       },
       "compile_log": "/workspace/reports/compile_latency_3_bp_1.log",
       "sim_log": "/workspace/reports/sim_latency_3_bp_1.log",
-      "sim_log_sha256": "085bba6b501fd449ae43471c7c60ab12f749f7a15633f501c47a2e37631768b4",
+      "sim_log_sha256": "3f449d40d567f28da8eedc9532b466a9f2aa84f7e24c08ced280148621a32627",
       "result": "PASS"
     },
     {
@@ -352,7 +352,7 @@
       },
       "compile_log": "/workspace/reports/compile_latency_3_bp_2.log",
       "sim_log": "/workspace/reports/sim_latency_3_bp_2.log",
-      "sim_log_sha256": "b09973792643a77f8161419c88d81b5c0b091d8d3fd4a5b5eedc45a87e1f0f00",
+      "sim_log_sha256": "4f0d4687e8534b0d31eae3ae6969a30945b19ff2f1d89da97faf65e55eea9165",
       "result": "PASS"
     },
     {
@@ -377,7 +377,7 @@
       },
       "compile_log": "/workspace/reports/compile_latency_3_bp_4.log",
       "sim_log": "/workspace/reports/sim_latency_3_bp_4.log",
-      "sim_log_sha256": "21281327c71a2666066fa25c15753c11089e18a7e70bc11cba7986cc3a624b3e",
+      "sim_log_sha256": "78f791d4fd2c56d19d4217fe3cd8e190feffcf93d240d6d33d220447fc69bcac",
       "result": "PASS"
     },
     {
@@ -402,7 +402,7 @@
       },
       "compile_log": "/workspace/reports/compile_latency_3_bp_8.log",
       "sim_log": "/workspace/reports/sim_latency_3_bp_8.log",
-      "sim_log_sha256": "2c773964dd56c8db898333bb28578a0e6b3b6257838e4a6d168fcb4cc1874093",
+      "sim_log_sha256": "09eeb2b6fedf4e668cbd26898a51cb37fc4583c87175aca8b620f54d9a9fde7c",
       "result": "PASS"
     },
     {
@@ -427,7 +427,7 @@
       },
       "compile_log": "/workspace/reports/compile_latency_5_bp_0.log",
       "sim_log": "/workspace/reports/sim_latency_5_bp_0.log",
-      "sim_log_sha256": "ce083e73cce2c9f7cfbd4b7393fda76ed2c7fe16b42fc2e1856e6f2075cd541e",
+      "sim_log_sha256": "fd2460e0b55ff92251c2fbf40ee13b8f116baebe5afbd1a4d49d5e57256ac800",
       "result": "PASS"
     },
     {
@@ -452,7 +452,7 @@
       },
       "compile_log": "/workspace/reports/compile_latency_5_bp_1.log",
       "sim_log": "/workspace/reports/sim_latency_5_bp_1.log",
-      "sim_log_sha256": "392ce763e8678bd53bec33fe540b5abeaba1374f11cc72336293ecc297244181",
+      "sim_log_sha256": "0533e4c77427fb8ae180af6f46449cefb16659707505a2fa0afc7ce8a7968d5a",
       "result": "PASS"
     },
     {
@@ -477,7 +477,7 @@
       },
       "compile_log": "/workspace/reports/compile_latency_5_bp_2.log",
       "sim_log": "/workspace/reports/sim_latency_5_bp_2.log",
-      "sim_log_sha256": "eef183d9a2e1d3ba3a11bfe0f9cd354946cf16b465a291da4e327f79be9f0bd8",
+      "sim_log_sha256": "4438fe8b117c3477373d37d60830035ae916b3f6b078e65c81bcdaba1c80284f",
       "result": "PASS"
     },
     {
@@ -502,7 +502,7 @@
       },
       "compile_log": "/workspace/reports/compile_latency_5_bp_4.log",
       "sim_log": "/workspace/reports/sim_latency_5_bp_4.log",
-      "sim_log_sha256": "365ca1508499de713a4cd52395d8269e2f2eba95b82692bafc3aa3ea0a19646b",
+      "sim_log_sha256": "c45b33b996c07b00955395a9630b58cac7c76965bf5913bbec22218f6fede20f",
       "result": "PASS"
     },
     {
@@ -527,7 +527,7 @@
       },
       "compile_log": "/workspace/reports/compile_latency_5_bp_8.log",
       "sim_log": "/workspace/reports/sim_latency_5_bp_8.log",
-      "sim_log_sha256": "d20e8bd850b8e668d0cb55537496ca924e23745ce051ab463e630cde081d9626",
+      "sim_log_sha256": "264b838404afc017ef8b730dfd37dfc3c59cd46621c581b9b590390c3925d8b2",
       "result": "PASS"
     }
   ]

@@ -155,6 +155,33 @@ module garuda_rv64i_core_tb;
     integer tb_protocol_violation_count = 0;
     integer tb_max_outstanding_count = 0;
 
+    integer tb_current_tx_id = 0;
+    integer tb_last_committed_tx_id = -1;
+    integer tb_duplicate_store_commit_count = 0;
+
+    always @(posedge clk) begin
+        if (!rst_n) begin
+            tb_current_tx_id <= 0;
+            tb_last_committed_tx_id <= -1;
+            tb_duplicate_store_commit_count <= 0;
+        end else begin
+            if (tb_request_accept) begin
+                tb_current_tx_id <= tb_current_tx_id + 1;
+            end
+
+            if (tb_response_accept && dmem_wen) begin
+                if (tb_last_committed_tx_id == tb_current_tx_id && tb_current_tx_id != 0) begin
+                    tb_duplicate_store_commit_count <= tb_duplicate_store_commit_count + 1;
+                    $display("FAIL: Duplicate store commit detected for TX ID %0d at T=%0t", tb_current_tx_id, $time);
+                    $display("DUPLICATE STORE COMMIT DETECTED");
+                    $fatal(1, "DUPLICATE STORE COMMIT DETECTED");
+                end else begin
+                    tb_last_committed_tx_id <= tb_current_tx_id;
+                end
+            end
+        end
+    end
+
     // ============================================================
     // INDEPENDENT REQUEST/RESPONSE TRANSACTION SCOREBOARD
     // Mode-aware response provenance and outstanding tracking.
