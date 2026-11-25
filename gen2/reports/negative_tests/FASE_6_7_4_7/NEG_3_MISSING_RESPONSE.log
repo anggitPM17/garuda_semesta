@@ -13,11 +13,7 @@ FAIL: More than one outstanding transaction at T=295000
 FAIL: More than one outstanding transaction at T=305000
 FAIL: More than one outstanding transaction at T=315000
 FAIL: More than one outstanding transaction at T=325000
-
-=========================================================
-[FATAL TIMEOUT] Simulation timed out waiting for EBREAK.
->>> TEST RESULT: FAILURE (FAIL) <<<
-=========================================================
-FATAL: /workspace/tb/garuda_rv64i_core_tb.v:96: WATCHDOG TIMEOUT — Core failed to reach EBREAK
-       Time: 5000000000  Scope: fixture_neg_3_missing_response.tb
+FAIL: RESPONSE TIMEOUT — accepted transaction has no response at T=595000
+FATAL: /workspace/tb/garuda_rv64i_core_tb.v:123: RESPONSE TIMEOUT WATCHDOG DETECTED
+       Time: 595000  Scope: fixture_neg_3_missing_response.tb
 

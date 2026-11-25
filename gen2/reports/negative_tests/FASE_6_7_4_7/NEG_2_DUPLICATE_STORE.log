@@ -35,6 +35,7 @@ INFO: Payload Stability Violations    = 0
 PASS: Read transaction count verified (4)
 PASS: Write transaction count verified (4)
 FAIL: Committed store count mismatch (8 vs write_tx=4)
+DUPLICATE STORE COMMIT DETECTED BY SCOREBOARD
 PASS: Response count matches accepted requests exactly (8)
 PASS: Zero duplicate transactions verified.
 PASS: Zero payload stability violations verified.
@@ -53,6 +54,6 @@ PASS: Outstanding transaction depth is valid.
 =========================================================
  >>> TOTAL ERRORS: 1 — TEST RESULT: FAILURE (FAIL) <<<
 =========================================================
-FATAL: /workspace/tb/garuda_rv64i_core_tb.v:517: ASSERTION FAILURE IN TESTBENCH
+FATAL: /workspace/tb/garuda_rv64i_core_tb.v:527: ASSERTION FAILURE IN TESTBENCH
        Time: 625000  Scope: fixture_neg_2_duplicate_store.tb
 

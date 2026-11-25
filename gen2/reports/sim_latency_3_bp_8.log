@@ -52,4 +52,4 @@ PASS: Outstanding transaction depth is valid.
 =========================================================
  >>> ALL ASSERTIONS PASSED — TEST RESULT: SUCCESS (PASS) <<<
 =========================================================
-tb/garuda_rv64i_core_tb.v:513: $finish called at 855000 (1ps)
+tb/garuda_rv64i_core_tb.v:523: $finish called at 855000 (1ps)

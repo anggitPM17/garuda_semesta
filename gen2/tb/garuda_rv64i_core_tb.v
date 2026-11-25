@@ -109,12 +109,20 @@ module garuda_rv64i_core_tb;
             response_watchdog_cycles <= 0;
             response_watchdog_armed  <= 0;
         end else begin
-            if (dmem_valid && dmem_ready) begin
-                response_watchdog_armed  <= 1'b1;
-                response_watchdog_cycles <= 0;
-            end else if (dmem_resp_valid && dmem_resp_ready_core) begin
+            if (dmem_resp_valid && dmem_resp_ready_core) begin
                 response_watchdog_armed  <= 1'b0;
                 response_watchdog_cycles <= 0;
+            end else if (dmem_valid && dmem_ready) begin
+                if (!response_watchdog_armed) begin
+                    response_watchdog_armed  <= 1'b1;
+                    response_watchdog_cycles <= 0;
+                end else begin
+                    response_watchdog_cycles <= response_watchdog_cycles + 1;
+                    if (response_watchdog_cycles >= RESPONSE_TIMEOUT_CYCLES - 1) begin
+                        $display("FAIL: RESPONSE TIMEOUT — accepted transaction has no response at T=%0t", $time);
+                        $fatal(1, "RESPONSE TIMEOUT WATCHDOG DETECTED");
+                    end
+                end
             end else if (response_watchdog_armed) begin
                 response_watchdog_cycles <= response_watchdog_cycles + 1;
                 if (response_watchdog_cycles >= RESPONSE_TIMEOUT_CYCLES - 1) begin
@@ -428,6 +436,7 @@ module garuda_rv64i_core_tb;
 
         if (committed_store_count !== write_tx_count) begin
             $display("FAIL: Committed store count mismatch (%0d vs write_tx=%0d)", committed_store_count, write_tx_count);
+            $display("DUPLICATE STORE COMMIT DETECTED BY SCOREBOARD");
             errors++;
         end else begin
             $display("PASS: Committed store count matches write transaction count (4)");
@@ -466,6 +475,7 @@ module garuda_rv64i_core_tb;
 
         if (tb_accepted_count !== tb_completed_count) begin
             $display("FAIL: Independent request/response count mismatch.");
+            $display("TRANSACTION MISMATCH DETECTED BY SCOREBOARD");
             errors++;
         end else begin
             $display("PASS: Independent request/response counts match.");
