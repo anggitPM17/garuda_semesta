@@ -8,7 +8,8 @@
     "expected_checker_signature": "PAYLOAD STABILITY VIOLATION DETECTED DURING BACKPRESSURE STALL",
     "sim_exit_code": 1,
     "status": "PASS",
-    "evidence_log": "/workspace/reports/negative_tests/FASE_6_7_4_7/NEG_1_UNSTABLE_PAYLOAD.log",
+    "evidence_log": "/workspace/reports/negative_tests/FASE_6_7_4_8/NEG_1_UNSTABLE_PAYLOAD.log",
+    "evidence_log_sha256": "0e9783a6db22a081d4095186fc1f3f3f9cd770e18740e604af764e2ab0854319",
     "commit_sha": "20d58dcdad2b48a0145abea4b118b742f6ca5e0a"
   },
   {
@@ -17,10 +18,11 @@
     "description": "Inject actual duplicate store commit into memory model",
     "fault_injected": true,
     "detected": true,
-    "expected_checker_signature": "DUPLICATE STORE COMMIT DETECTED BY SCOREBOARD",
+    "expected_checker_signature": "DUPLICATE STORE COMMIT DETECTED",
     "sim_exit_code": 1,
     "status": "PASS",
-    "evidence_log": "/workspace/reports/negative_tests/FASE_6_7_4_7/NEG_2_DUPLICATE_STORE.log",
+    "evidence_log": "/workspace/reports/negative_tests/FASE_6_7_4_8/NEG_2_DUPLICATE_STORE.log",
+    "evidence_log_sha256": "f0fc71667b07246a0af0aa68b45df6725a6cc4e989cfc80a84a6898f3b43ed97",
     "commit_sha": "20d58dcdad2b48a0145abea4b118b742f6ca5e0a"
   },
   {
@@ -32,7 +34,8 @@
     "expected_checker_signature": "RESPONSE TIMEOUT WATCHDOG DETECTED",
     "sim_exit_code": 1,
     "status": "PASS",
-    "evidence_log": "/workspace/reports/negative_tests/FASE_6_7_4_7/NEG_3_MISSING_RESPONSE.log",
+    "evidence_log": "/workspace/reports/negative_tests/FASE_6_7_4_8/NEG_3_MISSING_RESPONSE.log",
+    "evidence_log_sha256": "be38d0b794f3ed69cf6f9a875a630881ce36f94ddddb1143fd8d8b4f2f129959",
     "commit_sha": "20d58dcdad2b48a0145abea4b118b742f6ca5e0a"
   },
   {
@@ -41,10 +44,11 @@
     "description": "Inject actual transaction request count mismatch",
     "fault_injected": true,
     "detected": true,
-    "expected_checker_signature": "TRANSACTION MISMATCH DETECTED BY SCOREBOARD",
+    "expected_checker_signature": "TRANSACTION MISMATCH DETECTED",
     "sim_exit_code": 1,
     "status": "PASS",
-    "evidence_log": "/workspace/reports/negative_tests/FASE_6_7_4_7/NEG_4_COUNT_MISMATCH.log",
+    "evidence_log": "/workspace/reports/negative_tests/FASE_6_7_4_8/NEG_4_COUNT_MISMATCH.log",
+    "evidence_log_sha256": "43d673d855e317fbdfafc18620d3fe552949c7357346d6d727f6363906994de6",
     "commit_sha": "20d58dcdad2b48a0145abea4b118b742f6ca5e0a"
   },
   {
@@ -56,22 +60,25 @@
     "expected_checker_signature": "DELIBERATE SIMULATOR FATAL EXIT",
     "sim_exit_code": 1,
     "status": "PASS",
-    "evidence_log": "/workspace/reports/negative_tests/FASE_6_7_4_7/NEG_5_NONZERO_EXIT.log",
+    "evidence_log": "/workspace/reports/negative_tests/FASE_6_7_4_8/NEG_5_NONZERO_EXIT.log",
+    "evidence_log_sha256": "736570c2eb9945476bb11d502bd949da6ba608837d790b1f81ecbcf12cabc52b",
     "commit_sha": "20d58dcdad2b48a0145abea4b118b742f6ca5e0a"
   },
   {
     "test_id": "NEG_6_STALE_LOG_REJECTION",
     "category": "EVIDENCE_VALIDATOR_TEST",
-    "description": "Test evidence validator against commit SHA mismatch and empty results",
+    "description": "Test strict evidence validator against commit SHA mismatch, branch mismatch, and empty results",
     "fault_injected": true,
     "detected": true,
     "expected_rejection_errors": [
-      "COMMIT_SHA_MISMATCH: expected 20d58dcdad2b48a0145abea4b118b742f6ca5e0a, got INVALID_SHA_12345",
+      "INVALID_COMMIT_SHA_FORMAT",
       "BRANCH_MISMATCH: expected generation-2, got wrong_branch",
+      "MISSING_SOURCE_MANIFEST",
       "EMPTY_RESULTS"
     ],
     "status": "PASS",
-    "evidence_log": "/workspace/reports/negative_tests/FASE_6_7_4_7/NEG_6_STALE_LOG_REJECTION.log",
+    "evidence_log": "/workspace/reports/negative_tests/FASE_6_7_4_8/NEG_6_STALE_LOG_REJECTION.log",
+    "evidence_log_sha256": "1f85e1086112e9b5704f00269d41d4daff70ea503d80080c3e595a4040a17f0f",
     "commit_sha": "20d58dcdad2b48a0145abea4b118b742f6ca5e0a"
   }
 ]

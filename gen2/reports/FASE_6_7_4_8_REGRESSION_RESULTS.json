@@ -3,7 +3,7 @@
   "commit_sha": "20d58dcdad2b48a0145abea4b118b742f6ca5e0a",
   "branch": "generation-2",
   "is_dirty": false,
-  "run_timestamp_utc": "2026-11-25T15:27:12.875253+00:00",
+  "run_timestamp_utc": "2026-11-25T15:40:33.343859+00:00",
   "toolchain": {
     "compiler": "Icarus Verilog 12.0 (stable)",
     "simulator": "Icarus Verilog vvp 12.0",
@@ -24,9 +24,9 @@
     "rtl/core/rv64i_writeback.v": "4424c9e01055ebf0f71c27cc9fd01957d3dcf1434ea053f5e623e5898c21511d",
     "rtl/core/rv64i_memory_model.v": "389313451f94863b5fc3051cc70a762eae573a5950ba890ad4b1f9b046f1c452",
     "rtl/core/garuda_rv64i_core.v": "45e92323144a08a2ce59a0672b4d62b4274a0e572fe128476723f62450dc2139",
-    "tb/garuda_rv64i_core_tb.v": "7ae3f4911610ed36d6dae1b29b0a7fa3ad482a9f1c68c1338c96301fd5d772c0",
+    "tb/garuda_rv64i_core_tb.v": "80a54dbff4d5f432d2005e640b7f83558224eb08a7027b944fe7804d435ada3c",
     "scripts/run_latency_tests.py": "3f7b9b5f45bd85eb5a90b1c4f56697a32c03ba0910042b1f6989ffefcb8a0db1",
-    "tests/run_negative_tests.py": "80d1ddaac712ddbfd0050c64cc9253b76ffba026f74995d4ff641a67b745b59f",
+    "tests/run_negative_tests.py": "c7b60322f5b049f3ddcc56b64a36f4eca7ae3bb4a3be21d58f32260636514b1d",
     "reports/single_hart_program.hex": "f48c11805109594f371782effc59529360308d186ee9f0c9349669cba8a85805"
   },
   "results": [

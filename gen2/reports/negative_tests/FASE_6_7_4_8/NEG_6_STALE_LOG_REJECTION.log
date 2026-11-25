@@ -1,0 +1,1 @@
+EVIDENCE_VALIDATOR_TEST: Rejection confirmed with errors: ['INVALID_COMMIT_SHA_FORMAT', 'BRANCH_MISMATCH: expected generation-2, got wrong_branch', 'MISSING_SOURCE_MANIFEST', 'EMPTY_RESULTS']

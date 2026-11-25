@@ -436,7 +436,7 @@ module garuda_rv64i_core_tb;
 
         if (committed_store_count !== write_tx_count) begin
             $display("FAIL: Committed store count mismatch (%0d vs write_tx=%0d)", committed_store_count, write_tx_count);
-            $display("DUPLICATE STORE COMMIT DETECTED BY SCOREBOARD");
+            $display("DUPLICATE STORE COMMIT DETECTED");
             errors++;
         end else begin
             $display("PASS: Committed store count matches write transaction count (4)");
@@ -475,7 +475,7 @@ module garuda_rv64i_core_tb;
 
         if (tb_accepted_count !== tb_completed_count) begin
             $display("FAIL: Independent request/response count mismatch.");
-            $display("TRANSACTION MISMATCH DETECTED BY SCOREBOARD");
+            $display("TRANSACTION MISMATCH DETECTED");
             errors++;
         end else begin
             $display("PASS: Independent request/response counts match.");
