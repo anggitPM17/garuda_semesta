@@ -96,6 +96,35 @@ module garuda_rv64i_core_tb;
         $fatal(1, "WATCHDOG TIMEOUT — Core failed to reach EBREAK");
     end
 
+    // ============================================================
+    // FASE 6.7.4.7 — RESPONSE TIMEOUT WATCHDOG
+    // ============================================================
+    parameter integer RESPONSE_TIMEOUT_CYCLES = 40;
+
+    integer response_watchdog_cycles = 0;
+    reg     response_watchdog_armed = 0;
+
+    always @(posedge clk) begin
+        if (!rst_n) begin
+            response_watchdog_cycles <= 0;
+            response_watchdog_armed  <= 0;
+        end else begin
+            if (dmem_valid && dmem_ready) begin
+                response_watchdog_armed  <= 1'b1;
+                response_watchdog_cycles <= 0;
+            end else if (dmem_resp_valid && dmem_resp_ready_core) begin
+                response_watchdog_armed  <= 1'b0;
+                response_watchdog_cycles <= 0;
+            end else if (response_watchdog_armed) begin
+                response_watchdog_cycles <= response_watchdog_cycles + 1;
+                if (response_watchdog_cycles >= RESPONSE_TIMEOUT_CYCLES - 1) begin
+                    $display("FAIL: RESPONSE TIMEOUT — accepted transaction has no response at T=%0t", $time);
+                    $fatal(1, "RESPONSE TIMEOUT WATCHDOG DETECTED");
+                end
+            end
+        end
+    end
+
     integer errors = 0;
     integer payload_stability_violations = 0;
     integer bp_count = `BACKPRESSURE_CYCLES;
@@ -222,10 +251,12 @@ module garuda_rv64i_core_tb;
                 tb_protocol_violation_count =
                     tb_protocol_violation_count + 1;
 
-                $display(
-                    "FAIL: More than one outstanding transaction at T=%0t",
-                    $time
-                );
+                if (tb_protocol_violation_count <= 10) begin
+                    $display(
+                        "FAIL: More than one outstanding transaction at T=%0t",
+                        $time
+                    );
+                end
             end
         end
     end

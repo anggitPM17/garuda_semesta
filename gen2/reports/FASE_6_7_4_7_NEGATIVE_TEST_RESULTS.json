@@ -1,0 +1,77 @@
+[
+  {
+    "test_id": "NEG_1_UNSTABLE_PAYLOAD",
+    "category": "RTL_CHECKER",
+    "description": "Inject actual payload mutation during response backpressure stall",
+    "fault_injected": true,
+    "detected": true,
+    "expected_checker_signature": "PAYLOAD STABILITY VIOLATION DETECTED DURING BACKPRESSURE STALL",
+    "sim_exit_code": 1,
+    "status": "PASS",
+    "evidence_log": "/workspace/reports/negative_tests/FASE_6_7_4_7/NEG_1_UNSTABLE_PAYLOAD.log",
+    "commit_sha": "841f8c374cd02195b24b8492c6e5b14ea95913ef"
+  },
+  {
+    "test_id": "NEG_2_DUPLICATE_STORE",
+    "category": "RTL_CHECKER",
+    "description": "Inject actual duplicate store commit into memory model",
+    "fault_injected": true,
+    "detected": true,
+    "expected_checker_signature": "FAIL: Committed store count mismatch",
+    "sim_exit_code": 1,
+    "status": "PASS",
+    "evidence_log": "/workspace/reports/negative_tests/FASE_6_7_4_7/NEG_2_DUPLICATE_STORE.log",
+    "commit_sha": "841f8c374cd02195b24b8492c6e5b14ea95913ef"
+  },
+  {
+    "test_id": "NEG_3_MISSING_RESPONSE",
+    "category": "RTL_CHECKER",
+    "description": "Suppress actual response valid signal permanently",
+    "fault_injected": true,
+    "detected": true,
+    "expected_checker_signature": "WATCHDOG TIMEOUT \u2014 Core failed to reach EBREAK",
+    "sim_exit_code": 1,
+    "status": "PASS",
+    "evidence_log": "/workspace/reports/negative_tests/FASE_6_7_4_7/NEG_3_MISSING_RESPONSE.log",
+    "commit_sha": "841f8c374cd02195b24b8492c6e5b14ea95913ef"
+  },
+  {
+    "test_id": "NEG_4_COUNT_MISMATCH",
+    "category": "RTL_CHECKER",
+    "description": "Inject actual transaction request count mismatch",
+    "fault_injected": true,
+    "detected": true,
+    "expected_checker_signature": "Independent request/response count mismatch",
+    "sim_exit_code": 1,
+    "status": "PASS",
+    "evidence_log": "/workspace/reports/negative_tests/FASE_6_7_4_7/NEG_4_COUNT_MISMATCH.log",
+    "commit_sha": "841f8c374cd02195b24b8492c6e5b14ea95913ef"
+  },
+  {
+    "test_id": "NEG_5_NONZERO_EXIT",
+    "category": "INFRASTRUCTURE_TEST",
+    "description": "Force a genuine simulator $fatal exit",
+    "fault_injected": true,
+    "detected": true,
+    "expected_checker_signature": "DELIBERATE SIMULATOR FATAL EXIT",
+    "sim_exit_code": 1,
+    "status": "PASS",
+    "evidence_log": "/workspace/reports/negative_tests/FASE_6_7_4_7/NEG_5_NONZERO_EXIT.log",
+    "commit_sha": "841f8c374cd02195b24b8492c6e5b14ea95913ef"
+  },
+  {
+    "test_id": "NEG_6_STALE_LOG_REJECTION",
+    "category": "EVIDENCE_VALIDATOR_TEST",
+    "description": "Test evidence validator against commit SHA mismatch and empty results",
+    "fault_injected": true,
+    "detected": true,
+    "expected_rejection_errors": [
+      "COMMIT_SHA_MISMATCH: expected 841f8c374cd02195b24b8492c6e5b14ea95913ef, got INVALID_SHA_12345",
+      "BRANCH_MISMATCH: expected generation-2, got wrong_branch",
+      "EMPTY_RESULTS"
+    ],
+    "status": "PASS",
+    "evidence_log": "/workspace/reports/negative_tests/FASE_6_7_4_7/NEG_6_STALE_LOG_REJECTION.log",
+    "commit_sha": "841f8c374cd02195b24b8492c6e5b14ea95913ef"
+  }
+]

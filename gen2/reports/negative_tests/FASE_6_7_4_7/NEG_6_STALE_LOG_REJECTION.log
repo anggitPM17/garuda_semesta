@@ -1,0 +1,1 @@
+EVIDENCE_VALIDATOR_TEST: Rejection confirmed with errors: ['COMMIT_SHA_MISMATCH: expected 841f8c374cd02195b24b8492c6e5b14ea95913ef, got INVALID_SHA_12345', 'BRANCH_MISMATCH: expected generation-2, got wrong_branch', 'EMPTY_RESULTS']
