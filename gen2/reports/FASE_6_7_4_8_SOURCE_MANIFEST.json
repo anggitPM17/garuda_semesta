@@ -1,0 +1,20 @@
+{
+  "rtl/core/rv64i_alu.v": "eb6099eaa8326d302cb89930372b15289fa960fe0c46f3db6f884fa3e6f83da9",
+  "rtl/core/rv64i_decode.v": "80fd31103262be65f45473b8b99e60ad7dbef4db7598710ca1dde5a94c7e3fbc",
+  "rtl/core/rv64i_regfile.v": "559296cc06b93bfbcfb7e23fcd17115636d83e1834624574630ff5f5a5e80a72",
+  "rtl/core/rv64i_control_flow.v": "5b812bc2055bd6329e51f8af5d4dfaba5bb57f70629725f5252f048566407f41",
+  "rtl/core/rv64i_load_store_unit.v": "89803df9e2462dc92a5c98e4914c4f35122442254a7ba4114e35325ddb1150a0",
+  "rtl/core/rv64i_hazard_unit.v": "e69356aa506135b6c12e3108413cd72967a41483cf735ebe58e5303cb4037991",
+  "rtl/core/rv64i_if_id_reg.v": "7a982df356b8cb9cc9a75f0c7e7389b7b368da0643d2eb5b3ea71c1ed149af55",
+  "rtl/core/rv64i_id_ex_reg.v": "2b5f203c67baa14490494e4cc9b9af2b078516c9cdb0b488c3e84013273a7dec",
+  "rtl/core/rv64i_ex_mem_reg.v": "efc84ffae783ca1dfbc7992cdbb14d1475f13adb6afa0f70f68a6a3c44d67caf",
+  "rtl/core/rv64i_mem_wb_reg.v": "a49e033716e0fab6c67d1dc1e35c520488b9d0ec471b056572cb9bdf1ca5b84c",
+  "rtl/core/rv64i_system_decode.v": "b6197950e99e8d6734e110989c9f95f8888d385b98ad329b6fd525803d913a18",
+  "rtl/core/rv64i_writeback.v": "4424c9e01055ebf0f71c27cc9fd01957d3dcf1434ea053f5e623e5898c21511d",
+  "rtl/core/rv64i_memory_model.v": "389313451f94863b5fc3051cc70a762eae573a5950ba890ad4b1f9b046f1c452",
+  "rtl/core/garuda_rv64i_core.v": "45e92323144a08a2ce59a0672b4d62b4274a0e572fe128476723f62450dc2139",
+  "tb/garuda_rv64i_core_tb.v": "bae60b0ab9a8fdfdcc25b5b0670bc72846a9b0531d30057a0f2ae27c94f1b7fa",
+  "scripts/run_latency_tests.py": "3f7b9b5f45bd85eb5a90b1c4f56697a32c03ba0910042b1f6989ffefcb8a0db1",
+  "tests/run_negative_tests.py": "72b4ca9473f2359020a8bbd2ebb82145d1f551a209352e029eb52c79c62d1066",
+  "reports/single_hart_program.hex": "f48c11805109594f371782effc59529360308d186ee9f0c9349669cba8a85805"
+}

@@ -6,12 +6,17 @@ import json
 from evidence_validator import validate_evidence_package
 
 def get_git_info():
+    commit = os.environ.get("GIT_COMMIT_SHA")
+    branch = os.environ.get("GIT_BRANCH")
+    if commit and len(commit) == 40 and branch:
+        return commit, branch
+
     try:
         commit = subprocess.check_output(["git", "rev-parse", "HEAD"]).decode("utf-8").strip()
         branch = subprocess.check_output(["git", "rev-parse", "--abbrev-ref", "HEAD"]).decode("utf-8").strip()
         return commit, branch
     except Exception:
-        return "841f8c374cd02195b24b8492c6e5b14ea95913ef", "generation-2"
+        raise RuntimeError("Git provenance unavailable; refusing to generate PASS evidence for negative tests")
 
 def main():
     repo_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -125,7 +130,7 @@ def main():
         print(f"  Result: UNEXPECTED PASS — Evidence validator failed to reject invalid evidence!")
         sys.exit(1)
 
-    json_path = os.path.join(reports_dir, "FASE_6_7_4_7_NEGATIVE_TEST_RESULTS.json")
+    json_path = os.path.join(reports_dir, "FASE_6_7_4_8_NEGATIVE_TEST_RESULTS.json")
     with open(json_path, "w", encoding="utf-8") as f:
         json.dump(results, f, indent=2)
 

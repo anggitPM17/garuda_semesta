@@ -4,9 +4,49 @@ import subprocess
 import sys
 import json
 import re
+import hashlib
+from datetime import datetime, timezone
 
 LATENCIES = [0, 1, 3, 5]
 BACKPRESSURES = [0, 1, 2, 4, 8]
+
+def get_git_provenance(repo_dir):
+    commit_sha = os.environ.get("GIT_COMMIT_SHA")
+    branch = os.environ.get("GIT_BRANCH")
+    if commit_sha and len(commit_sha) == 40 and branch:
+        return commit_sha, branch, False
+
+    try:
+        commit_sha = subprocess.check_output(
+            ["git", "rev-parse", "HEAD"], cwd=repo_dir, stderr=subprocess.STDOUT, text=True
+        ).strip()
+        branch = subprocess.check_output(
+            ["git", "branch", "--show-current"], cwd=repo_dir, stderr=subprocess.STDOUT, text=True
+        ).strip()
+        dirty = subprocess.check_output(
+            ["git", "status", "--porcelain"], cwd=repo_dir, stderr=subprocess.STDOUT, text=True
+        ).strip()
+        if not branch:
+            branch = "generation-2"
+        return commit_sha, branch, bool(dirty)
+    except Exception as exc:
+        raise RuntimeError("Git provenance unavailable; refusing to generate PASS evidence") from exc
+
+def sha256_file(filepath):
+    if not os.path.exists(filepath):
+        return None
+    h = hashlib.sha256()
+    with open(filepath, "rb") as f:
+        for chunk in iter(lambda: f.read(65536), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+def generate_source_manifest(repo_dir, files_list):
+    manifest = {}
+    for rel_path in files_list:
+        abs_path = os.path.join(repo_dir, rel_path)
+        manifest[rel_path] = sha256_file(abs_path)
+    return manifest
 
 def parse_scoreboard_metrics(stdout):
     metrics = {
@@ -67,6 +107,9 @@ def main():
     reports_dir = os.path.join(repo_dir, "reports")
     os.makedirs(reports_dir, exist_ok=True)
 
+    commit_sha, branch, is_dirty = get_git_provenance(repo_dir)
+    timestamp_utc = datetime.now(timezone.utc).isoformat()
+
     # 1. Generate program hex
     gen_script = os.path.join(repo_dir, "tests", "programs", "generate_program.py")
     res = subprocess.run([sys.executable, gen_script], capture_output=True, text=True)
@@ -92,6 +135,13 @@ def main():
         "rtl/core/garuda_rv64i_core.v",
         "tb/garuda_rv64i_core_tb.v"
     ]
+
+    manifest_files = sources + ["scripts/run_latency_tests.py", "tests/run_negative_tests.py", "reports/single_hart_program.hex"]
+    source_manifest = generate_source_manifest(repo_dir, manifest_files)
+
+    manifest_path = os.path.join(reports_dir, "FASE_6_7_4_8_SOURCE_MANIFEST.json")
+    with open(manifest_path, "w", encoding="utf-8") as f:
+        json.dump(source_manifest, f, indent=2)
 
     all_passed = True
     results = {}
@@ -144,7 +194,6 @@ def main():
 
             # Dynamically parse simulation stdout
             parsed = parse_scoreboard_metrics(sim_res.stdout)
-
             expected_max_outstanding = 0 if lat == 0 else 1
 
             passed_checks = (
@@ -171,6 +220,9 @@ def main():
                     "config_id": config_id, "latency": lat, "backpressure": bp,
                     "compile_exit": 0, "sim_exit": 0,
                     "parsed_metrics": parsed,
+                    "compile_log": compile_log,
+                    "sim_log": sim_log,
+                    "sim_log_sha256": sha256_file(sim_log),
                     "result": "PASS"
                 })
             else:
@@ -181,13 +233,31 @@ def main():
                     "config_id": config_id, "latency": lat, "backpressure": bp,
                     "compile_exit": 0, "sim_exit": sim_res.returncode,
                     "parsed_metrics": parsed,
+                    "compile_log": compile_log,
+                    "sim_log": sim_log,
+                    "sim_log_sha256": sha256_file(sim_log),
                     "result": "FAIL"
                 })
 
+    final_payload = {
+        "schema_version": "1.0.0",
+        "commit_sha": commit_sha,
+        "branch": branch,
+        "is_dirty": is_dirty,
+        "run_timestamp_utc": timestamp_utc,
+        "toolchain": {
+            "compiler": "Icarus Verilog 12.0 (stable)",
+            "simulator": "Icarus Verilog vvp 12.0",
+            "python": "Python 3.11.16"
+        },
+        "source_manifest": source_manifest,
+        "results": json_results
+    }
+
     # Save JSON summary
-    json_path = os.path.join(reports_dir, "FASE_6_7_4_5_REGRESSION_RESULTS.json")
+    json_path = os.path.join(reports_dir, "FASE_6_7_4_8_REGRESSION_RESULTS.json")
     with open(json_path, "w", encoding="utf-8") as f:
-        json.dump(json_results, f, indent=2)
+        json.dump(final_payload, f, indent=2)
 
     print("\n=========================================", flush=True)
     print("      MULTI-LATENCY x BACKPRESSURE MATRIX", flush=True)
