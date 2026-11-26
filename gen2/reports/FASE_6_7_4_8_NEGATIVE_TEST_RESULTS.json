@@ -10,7 +10,7 @@
     "status": "PASS",
     "evidence_log": "/workspace/reports/negative_tests/FASE_6_7_4_8/NEG_1_UNSTABLE_PAYLOAD.log",
     "evidence_log_sha256": "d6fa489ae1f7f87ef5cf874555da420eecb65ba5421c30a278a413af4a6b046a",
-    "commit_sha": "20d58dcdad2b48a0145abea4b118b742f6ca5e0a"
+    "commit_sha": "1ee1931559ebebf5f0871d7743a6f85f4e28b605"
   },
   {
     "test_id": "NEG_2_DUPLICATE_STORE",
@@ -23,7 +23,7 @@
     "status": "PASS",
     "evidence_log": "/workspace/reports/negative_tests/FASE_6_7_4_8/NEG_2_DUPLICATE_STORE.log",
     "evidence_log_sha256": "1562df2d8826f7aa92c3d9fecd51a69436c1b4a737418612282e2e20c6467363",
-    "commit_sha": "20d58dcdad2b48a0145abea4b118b742f6ca5e0a"
+    "commit_sha": "1ee1931559ebebf5f0871d7743a6f85f4e28b605"
   },
   {
     "test_id": "NEG_3_MISSING_RESPONSE",
@@ -36,7 +36,7 @@
     "status": "PASS",
     "evidence_log": "/workspace/reports/negative_tests/FASE_6_7_4_8/NEG_3_MISSING_RESPONSE.log",
     "evidence_log_sha256": "7c112f94d057500d521aaeeaaf81015e4a7066086439d9e5dbbebe6c375f0fe7",
-    "commit_sha": "20d58dcdad2b48a0145abea4b118b742f6ca5e0a"
+    "commit_sha": "1ee1931559ebebf5f0871d7743a6f85f4e28b605"
   },
   {
     "test_id": "NEG_4_COUNT_MISMATCH",
@@ -49,7 +49,7 @@
     "status": "PASS",
     "evidence_log": "/workspace/reports/negative_tests/FASE_6_7_4_8/NEG_4_COUNT_MISMATCH.log",
     "evidence_log_sha256": "c58e9476bca6c986ffe59e84a69f4c11657b8ccf40499659df94c49d2f1450aa",
-    "commit_sha": "20d58dcdad2b48a0145abea4b118b742f6ca5e0a"
+    "commit_sha": "1ee1931559ebebf5f0871d7743a6f85f4e28b605"
   },
   {
     "test_id": "NEG_5_NONZERO_EXIT",
@@ -62,7 +62,7 @@
     "status": "PASS",
     "evidence_log": "/workspace/reports/negative_tests/FASE_6_7_4_8/NEG_5_NONZERO_EXIT.log",
     "evidence_log_sha256": "736570c2eb9945476bb11d502bd949da6ba608837d790b1f81ecbcf12cabc52b",
-    "commit_sha": "20d58dcdad2b48a0145abea4b118b742f6ca5e0a"
+    "commit_sha": "1ee1931559ebebf5f0871d7743a6f85f4e28b605"
   },
   {
     "test_id": "NEG_6_STALE_LOG_REJECTION",
@@ -79,6 +79,6 @@
     "status": "PASS",
     "evidence_log": "/workspace/reports/negative_tests/FASE_6_7_4_8/NEG_6_STALE_LOG_REJECTION.log",
     "evidence_log_sha256": "1f85e1086112e9b5704f00269d41d4daff70ea503d80080c3e595a4040a17f0f",
-    "commit_sha": "20d58dcdad2b48a0145abea4b118b742f6ca5e0a"
+    "commit_sha": "1ee1931559ebebf5f0871d7743a6f85f4e28b605"
   }
 ]
