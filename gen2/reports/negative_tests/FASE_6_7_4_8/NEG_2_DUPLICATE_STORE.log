@@ -54,6 +54,6 @@ PASS: Outstanding transaction depth is valid.
 =========================================================
  >>> TOTAL ERRORS: 1 — TEST RESULT: FAILURE (FAIL) <<<
 =========================================================
-FATAL: /workspace/tb/garuda_rv64i_core_tb.v:554: ASSERTION FAILURE IN TESTBENCH
+FATAL: /workspace/tb/garuda_rv64i_core_tb.v:556: ASSERTION FAILURE IN TESTBENCH
        Time: 625000  Scope: fixture_neg_2_duplicate_store.tb
 

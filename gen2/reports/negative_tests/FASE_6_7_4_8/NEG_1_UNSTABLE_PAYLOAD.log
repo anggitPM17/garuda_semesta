@@ -4,6 +4,6 @@
 WARNING: /workspace/rtl/core/rv64i_memory_model.v:227: $readmemh(reports/single_hart_program.hex): Not enough words in the file for the requested range [0:1023].
 [FAULT INJECTION] Mutating dmem_addr payload mid-transaction stall...
 FAIL: Payload stability violation at T=195000!
-FATAL: /workspace/tb/garuda_rv64i_core_tb.v:330: PAYLOAD STABILITY VIOLATION DETECTED DURING BACKPRESSURE STALL
+FATAL: /workspace/tb/garuda_rv64i_core_tb.v:332: PAYLOAD STABILITY VIOLATION DETECTED DURING BACKPRESSURE STALL
        Time: 195000  Scope: fixture_neg_1_unstable_payload.tb
 

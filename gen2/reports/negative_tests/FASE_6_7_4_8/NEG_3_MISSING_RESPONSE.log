@@ -13,7 +13,8 @@ FAIL: More than one outstanding transaction at T=295000
 FAIL: More than one outstanding transaction at T=305000
 FAIL: More than one outstanding transaction at T=315000
 FAIL: More than one outstanding transaction at T=325000
-FAIL: RESPONSE TIMEOUT — accepted transaction has no response at T=595000
-FATAL: /workspace/tb/garuda_rv64i_core_tb.v:123: RESPONSE TIMEOUT WATCHDOG DETECTED
+FAIL: RESPONSE TIMEOUT FOR TRANSACTION 20 at T=595000
+RESPONSE TIMEOUT FOR TRANSACTION
+FATAL: /workspace/tb/garuda_rv64i_core_tb.v:124: RESPONSE TIMEOUT WATCHDOG DETECTED
        Time: 595000  Scope: fixture_neg_3_missing_response.tb
 

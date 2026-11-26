@@ -119,14 +119,16 @@ module garuda_rv64i_core_tb;
                 end else begin
                     response_watchdog_cycles <= response_watchdog_cycles + 1;
                     if (response_watchdog_cycles >= RESPONSE_TIMEOUT_CYCLES - 1) begin
-                        $display("FAIL: RESPONSE TIMEOUT — accepted transaction has no response at T=%0t", $time);
+                        $display("FAIL: RESPONSE TIMEOUT FOR TRANSACTION %0d at T=%0t", tb_current_tx_id, $time);
+                        $display("RESPONSE TIMEOUT FOR TRANSACTION");
                         $fatal(1, "RESPONSE TIMEOUT WATCHDOG DETECTED");
                     end
                 end
             end else if (response_watchdog_armed) begin
                 response_watchdog_cycles <= response_watchdog_cycles + 1;
                 if (response_watchdog_cycles >= RESPONSE_TIMEOUT_CYCLES - 1) begin
-                    $display("FAIL: RESPONSE TIMEOUT — accepted transaction has no response at T=%0t", $time);
+                    $display("FAIL: RESPONSE TIMEOUT FOR TRANSACTION %0d at T=%0t", tb_current_tx_id, $time);
+                    $display("RESPONSE TIMEOUT FOR TRANSACTION");
                     $fatal(1, "RESPONSE TIMEOUT WATCHDOG DETECTED");
                 end
             end
