@@ -11,8 +11,8 @@
 ## 1. EXECUTIVE SUMMARY & VERDICT
 
 - **Verdict**: **`FASE 6.7.4.8 — PASS`**
-- **Initial Baseline SHA**: `20d58dcdad2b48a0145abea4b118b742f6ca5e0a`
-- **Final Tested Commit SHA**: `20d58dcdad2b48a0145abea4b118b742f6ca5e0a`
+- **Initial Baseline SHA**: `d6c9e6831615b8ea565da83dc46260dfc7c92182`
+- **Final Tested Commit SHA**: `c1d36b78e8e7261f40d04cc7f85350a7df9ef60f`
 - **Regression Matrix Results**: **20 / 20 PASSED (100%)**
 - **Negative Test Results**: **6 / 6 PASSED (100% Real Fault Injection)**
 
