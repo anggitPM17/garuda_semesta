@@ -61,6 +61,8 @@ def main():
         "rtl/multicore/garuda_response_router.v",
         "rtl/multicore/garuda_memory_interconnect.v",
         "rtl/memory/garuda_shared_ram.v",
+        "rtl/interrupt/garuda_clint.v",
+        "rtl/interrupt/garuda_mailbox.v",
         "rtl/multicore/garuda_4core_top.v",
         "tb/garuda_4core_tb.v"
     ]

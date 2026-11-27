@@ -1,9 +1,11 @@
 `timescale 1ns / 1ps
-// GARUDA SEMESTA GEN2 — 4-Core Top-Level System-on-Chip
+// GARUDA SEMESTA GEN2 — 4-Core Top-Level SoC with CLINT & Mailbox
 module garuda_4core_top (
     input  wire        clk,
     input  wire        rst_n,
-    output wire [3:0]  core_halted_out
+    output wire [3:0]  core_halted_out,
+    output wire [3:0]  timer_interrupt_out,
+    output wire [3:0]  software_interrupt_out
 );
 
     // Hart 0..3 memory interfaces
@@ -52,21 +54,23 @@ module garuda_4core_top (
                 .effective_hart_id()
             );
 
-            // Instruction Fetch interface binding (Simple ROM/RAM fetch)
             assign h_imem_ready[i]      = 1'b1;
             assign h_imem_resp_valid[i] = h_imem_valid[i];
+            // PC 0: csrr x10, mhartid (32'hF1402573)
+            // PC 4: ebreak (32'h00100073)
+            assign h_imem_rdata[i] = (h_imem_addr[i][3:0] == 4'h0) ? 32'hF1402573 : 32'h00100073;
         end
     endgenerate
 
-    // Interconnect Data Memory Signals
-    wire [63:0] interconnect_mem_addr;
-    wire        interconnect_mem_valid;
-    wire        interconnect_mem_wen;
-    wire [2:0]  interconnect_mem_funct3;
-    wire [63:0] interconnect_mem_wdata;
-    wire        interconnect_mem_ready;
-    wire [63:0] interconnect_mem_rdata;
-    wire        interconnect_mem_resp_valid;
+    // Interconnect Memory Subsystem Interfaces
+    wire [63:0] ram_addr, clint_addr, mbox_addr;
+    wire        ram_valid, clint_valid, mbox_valid;
+    wire        ram_wen, clint_wen, mbox_wen;
+    wire [2:0]  ram_funct3, clint_funct3, mbox_funct3;
+    wire [63:0] ram_wdata, clint_wdata, mbox_wdata;
+    wire        ram_ready, clint_ready, mbox_ready;
+    wire [63:0] ram_rdata, clint_rdata, mbox_rdata;
+    wire        ram_resp_valid, clint_resp_valid, mbox_resp_valid;
 
     garuda_memory_interconnect interconnect_inst (
         .clk(clk),
@@ -79,37 +83,35 @@ module garuda_4core_top (
         .h1_ready(h_dmem_ready[1]), .h1_rdata(h_dmem_rdata[1]), .h1_resp_valid(h_dmem_resp_valid[1]),
         .h2_ready(h_dmem_ready[2]), .h2_rdata(h_dmem_rdata[2]), .h2_resp_valid(h_dmem_resp_valid[2]),
         .h3_ready(h_dmem_ready[3]), .h3_rdata(h_dmem_rdata[3]), .h3_resp_valid(h_dmem_resp_valid[3]),
-        .mem_addr(interconnect_mem_addr),
-        .mem_valid(interconnect_mem_valid),
-        .mem_wen(interconnect_mem_wen),
-        .mem_funct3(interconnect_mem_funct3),
-        .mem_wdata(interconnect_mem_wdata),
-        .mem_ready(interconnect_mem_ready),
-        .mem_rdata(interconnect_mem_rdata),
-        .mem_resp_valid(interconnect_mem_resp_valid)
+        .ram_addr(ram_addr), .ram_valid(ram_valid), .ram_wen(ram_wen), .ram_funct3(ram_funct3), .ram_wdata(ram_wdata),
+        .ram_ready(ram_ready), .ram_rdata(ram_rdata), .ram_resp_valid(ram_resp_valid),
+        .clint_addr(clint_addr), .clint_valid(clint_valid), .clint_wen(clint_wen), .clint_funct3(clint_funct3), .clint_wdata(clint_wdata),
+        .clint_ready(clint_ready), .clint_rdata(clint_rdata), .clint_resp_valid(clint_resp_valid),
+        .mbox_addr(mbox_addr), .mbox_valid(mbox_valid), .mbox_wen(mbox_wen), .mbox_funct3(mbox_funct3), .mbox_wdata(mbox_wdata),
+        .mbox_ready(mbox_ready), .mbox_rdata(mbox_rdata), .mbox_resp_valid(mbox_resp_valid)
     );
 
-    // Shared Main RAM Subsystem
+    // Shared Main RAM
     garuda_shared_ram #(.LATENCY(1)) shared_ram_inst (
-        .clk(clk),
-        .rst_n(rst_n),
-        .addr(interconnect_mem_addr),
-        .valid(interconnect_mem_valid),
-        .wen(interconnect_mem_wen),
-        .funct3(interconnect_mem_funct3),
-        .wdata(interconnect_mem_wdata),
-        .ready(interconnect_mem_ready),
-        .rdata(interconnect_mem_rdata),
-        .resp_valid(interconnect_mem_resp_valid)
+        .clk(clk), .rst_n(rst_n),
+        .addr(ram_addr), .valid(ram_valid), .wen(ram_wen), .funct3(ram_funct3), .wdata(ram_wdata),
+        .ready(ram_ready), .rdata(ram_rdata), .resp_valid(ram_resp_valid)
     );
 
-    // Shared Instruction Memory Mocks (Return EBREAK or custom instructions based on PC)
-    generate
-        for (i = 0; i < 4; i = i + 1) begin : imem_mocks
-            // PC 0: csrr x10, mhartid (32'hF1402573)
-            // PC 4: ebreak (32'h00100073)
-            assign h_imem_rdata[i] = (h_imem_addr[i][3:0] == 4'h0) ? 32'hF1402573 : 32'h00100073;
-        end
-    endgenerate
+    // CLINT Subsystem
+    garuda_clint clint_inst (
+        .clk(clk), .rst_n(rst_n),
+        .addr(clint_addr), .valid(clint_valid), .wen(clint_wen), .funct3(clint_funct3), .wdata(clint_wdata),
+        .ready(clint_ready), .rdata(clint_rdata), .resp_valid(clint_resp_valid),
+        .timer_interrupt(timer_interrupt_out),
+        .software_interrupt(software_interrupt_out)
+    );
+
+    // Mailbox Subsystem
+    garuda_mailbox mailbox_inst (
+        .clk(clk), .rst_n(rst_n),
+        .addr(mbox_addr), .valid(mbox_valid), .wen(mbox_wen), .funct3(mbox_funct3), .wdata(mbox_wdata),
+        .ready(mbox_ready), .rdata(mbox_rdata), .resp_valid(mbox_resp_valid)
+    );
 
 endmodule
