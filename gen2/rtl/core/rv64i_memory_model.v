@@ -215,6 +215,7 @@ module rv64i_memory_model (
         end
     end
 
+`ifndef SYNTHESIS
     task load_hex(input string filename);
         $readmemh(filename, imem);
     endtask
@@ -226,6 +227,7 @@ module rv64i_memory_model (
         $display("DUPLICATE STORE COMMIT DETECTED");
         $fatal(1, "DUPLICATE STORE COMMIT DETECTED");
     end
+`endif
 `endif
 
 endmodule

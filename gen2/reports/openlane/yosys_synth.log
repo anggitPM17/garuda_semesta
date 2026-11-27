@@ -1,0 +1,90 @@
+
+ /----------------------------------------------------------------------------\
+ |                                                                            |
+ |  yosys -- Yosys Open SYnthesis Suite                                       |
+ |                                                                            |
+ |  Copyright (C) 2012 - 2020  Claire Xenia Wolf <claire@yosyshq.com>         |
+ |                                                                            |
+ |  Permission to use, copy, modify, and/or distribute this software for any  |
+ |  purpose with or without fee is hereby granted, provided that the above    |
+ |  copyright notice and this permission notice appear in all copies.         |
+ |                                                                            |
+ |  THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES  |
+ |  WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF          |
+ |  MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR   |
+ |  ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES    |
+ |  WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN     |
+ |  ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   |
+ |  OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            |
+ |                                                                            |
+ \----------------------------------------------------------------------------/
+
+ Yosys 0.38 (git sha1 543faed9c8c, clang++ 17.0.6 -fPIC -Os)
+
+
+-- Executing script file `/workspace/reports/openlane/synth_yosys.ys' --
+
+1. Executing Verilog-2005 frontend: /workspace/rtl/core/rv64i_alu.v
+Parsing SystemVerilog input from `/workspace/rtl/core/rv64i_alu.v' to AST representation.
+Generating RTLIL representation for module `\rv64i_alu'.
+Successfully finished Verilog frontend.
+
+2. Executing Verilog-2005 frontend: /workspace/rtl/core/rv64i_decode.v
+Parsing SystemVerilog input from `/workspace/rtl/core/rv64i_decode.v' to AST representation.
+Generating RTLIL representation for module `\rv64i_decode'.
+Successfully finished Verilog frontend.
+
+3. Executing Verilog-2005 frontend: /workspace/rtl/core/rv64i_regfile.v
+Parsing SystemVerilog input from `/workspace/rtl/core/rv64i_regfile.v' to AST representation.
+Generating RTLIL representation for module `\rv64i_regfile'.
+Warning: Replacing memory \regs with list of registers. See /workspace/rtl/core/rv64i_regfile.v:22
+Successfully finished Verilog frontend.
+
+4. Executing Verilog-2005 frontend: /workspace/rtl/core/rv64i_control_flow.v
+Parsing SystemVerilog input from `/workspace/rtl/core/rv64i_control_flow.v' to AST representation.
+Generating RTLIL representation for module `\rv64i_control_flow'.
+Successfully finished Verilog frontend.
+
+5. Executing Verilog-2005 frontend: /workspace/rtl/core/rv64i_load_store_unit.v
+Parsing SystemVerilog input from `/workspace/rtl/core/rv64i_load_store_unit.v' to AST representation.
+Generating RTLIL representation for module `\rv64i_load_store_unit'.
+Successfully finished Verilog frontend.
+
+6. Executing Verilog-2005 frontend: /workspace/rtl/core/rv64i_hazard_unit.v
+Parsing SystemVerilog input from `/workspace/rtl/core/rv64i_hazard_unit.v' to AST representation.
+Generating RTLIL representation for module `\rv64i_hazard_unit'.
+Successfully finished Verilog frontend.
+
+7. Executing Verilog-2005 frontend: /workspace/rtl/core/rv64i_if_id_reg.v
+Parsing SystemVerilog input from `/workspace/rtl/core/rv64i_if_id_reg.v' to AST representation.
+Generating RTLIL representation for module `\rv64i_if_id_reg'.
+Successfully finished Verilog frontend.
+
+8. Executing Verilog-2005 frontend: /workspace/rtl/core/rv64i_id_ex_reg.v
+Parsing SystemVerilog input from `/workspace/rtl/core/rv64i_id_ex_reg.v' to AST representation.
+Generating RTLIL representation for module `\rv64i_id_ex_reg'.
+Successfully finished Verilog frontend.
+
+9. Executing Verilog-2005 frontend: /workspace/rtl/core/rv64i_ex_mem_reg.v
+Parsing SystemVerilog input from `/workspace/rtl/core/rv64i_ex_mem_reg.v' to AST representation.
+Generating RTLIL representation for module `\rv64i_ex_mem_reg'.
+Successfully finished Verilog frontend.
+
+10. Executing Verilog-2005 frontend: /workspace/rtl/core/rv64i_mem_wb_reg.v
+Parsing SystemVerilog input from `/workspace/rtl/core/rv64i_mem_wb_reg.v' to AST representation.
+Generating RTLIL representation for module `\rv64i_mem_wb_reg'.
+Successfully finished Verilog frontend.
+
+11. Executing Verilog-2005 frontend: /workspace/rtl/core/rv64i_system_decode.v
+Parsing SystemVerilog input from `/workspace/rtl/core/rv64i_system_decode.v' to AST representation.
+Generating RTLIL representation for module `\rv64i_system_decode'.
+Successfully finished Verilog frontend.
+
+12. Executing Verilog-2005 frontend: /workspace/rtl/core/rv64i_writeback.v
+Parsing SystemVerilog input from `/workspace/rtl/core/rv64i_writeback.v' to AST representation.
+Generating RTLIL representation for module `\rv64i_writeback'.
+Successfully finished Verilog frontend.
+
+13. Executing Verilog-2005 frontend: /workspace/rtl/core/rv64i_memory_model.v
+
+/workspace/rtl/core/rv64i_memory_model.v:218: ERROR: syntax error, unexpected TOK_ID, expecting ',' or ')' or '['
