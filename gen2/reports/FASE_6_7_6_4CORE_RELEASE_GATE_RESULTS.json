@@ -1,0 +1,54 @@
+{
+  "schema_version": "1.0.0",
+  "phase": "FASE 6.7.6",
+  "commit_sha": "954ae7ef7972f8145be8d46bc766603eabdd68ec",
+  "branch": "generation-2",
+  "aggregate_status": "PASS",
+  "multicore_results": [
+    {
+      "test_id": "MC-01",
+      "description": "Simultaneous requests from Hart 0..3",
+      "status": "PASS"
+    },
+    {
+      "test_id": "MC-02",
+      "description": "Round-robin fairness arbitration",
+      "status": "PASS"
+    },
+    {
+      "test_id": "MC-03",
+      "description": "Response routing zero crosstalk",
+      "status": "PASS"
+    },
+    {
+      "test_id": "MC-04",
+      "description": "Backpressure isolation",
+      "status": "PASS"
+    },
+    {
+      "test_id": "MC-05",
+      "description": "Shared RAM mixed read/write",
+      "status": "PASS"
+    },
+    {
+      "test_id": "MC-08",
+      "description": "Hardware mailbox message passing",
+      "status": "PASS"
+    },
+    {
+      "test_id": "MC-09",
+      "description": "CLINT timer and software interrupts",
+      "status": "PASS"
+    },
+    {
+      "test_id": "MC-10",
+      "description": "Atomic mutex lock register acquisition",
+      "status": "PASS"
+    },
+    {
+      "test_id": "MC-11",
+      "description": "4-Core parallel execution to EBREAK",
+      "status": "PASS"
+    }
+  ]
+}
