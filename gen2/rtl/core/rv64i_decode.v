@@ -8,7 +8,7 @@ module rv64i_decode (
     output wire [4:0]  rs2,
     output wire [6:0]  funct7,
     output reg  [63:0] imm,
-    output reg  [3:0]  alu_op,
+    output reg  [4:0]  alu_op,
     output reg         alu_src,
     output reg         reg_write,
     output reg         mem_read,
@@ -46,7 +46,7 @@ module rv64i_decode (
                 imm = 64'd0;
         endcase
 
-        alu_op     = 4'h0;
+        alu_op     = 5'h0;
         alu_src    = 1'b0;
         reg_write  = 1'b0;
         mem_read   = 1'b0;
@@ -60,33 +60,46 @@ module rv64i_decode (
         is_csr     = 1'b0;
 
         case (opcode)
-            7'b0110011: begin // R-type
+            7'b0110011: begin // R-type & M-extension
                 reg_write = 1'b1;
-                case (funct3)
-                    3'b000: alu_op = (funct7[5] == 1'b1) ? 4'h1 : 4'h0; // SUB : ADD
-                    3'b111: alu_op = 4'h2; // AND
-                    3'b110: alu_op = 4'h3; // OR
-                    3'b100: alu_op = 4'h4; // XOR
-                    3'b001: alu_op = 4'h5; // SLL
-                    3'b101: alu_op = (funct7[5] == 1'b1) ? 4'h7 : 4'h6; // SRA : SRL
-                    3'b010: alu_op = 4'h8; // SLT
-                    3'b011: alu_op = 4'h9; // SLTU
-                    default: alu_op = 4'h0;
-                endcase
+                if (funct7 == 7'b0000001) begin // M-Extension
+                    case (funct3)
+                        3'b000: alu_op = 5'hB; // MUL
+                        3'b001: alu_op = 5'hC; // MULH
+                        3'b011: alu_op = 5'hD; // MULHU
+                        3'b100: alu_op = 5'hE; // DIV
+                        3'b101: alu_op = 5'hF; // DIVU
+                        3'b110: alu_op = 5'h10; // REM
+                        3'b111: alu_op = 5'h11; // REMU
+                        default: alu_op = 5'h0;
+                    endcase
+                end else begin
+                    case (funct3)
+                        3'b000: alu_op = (funct7[5] == 1'b1) ? 5'h1 : 5'h0; // SUB : ADD
+                        3'b111: alu_op = 5'h2; // AND
+                        3'b110: alu_op = 5'h3; // OR
+                        3'b100: alu_op = 5'h4; // XOR
+                        3'b001: alu_op = 5'h5; // SLL
+                        3'b101: alu_op = (funct7[5] == 1'b1) ? 5'h7 : 5'h6; // SRA : SRL
+                        3'b010: alu_op = 5'h8; // SLT
+                        3'b011: alu_op = 5'h9; // SLTU
+                        default: alu_op = 5'h0;
+                    endcase
+                end
             end
             7'b0010011: begin // I-type arithmetic
                 reg_write = 1'b1;
                 alu_src   = 1'b1;
                 case (funct3)
-                    3'b000: alu_op = 4'h0; // ADDI
-                    3'b111: alu_op = 4'h2; // ANDI
-                    3'b110: alu_op = 4'h3; // ORI
-                    3'b100: alu_op = 4'h4; // XORI
-                    3'b001: alu_op = 4'h5; // SLLI
-                    3'b101: alu_op = (funct7[5] == 1'b1) ? 4'h7 : 4'h6; // SRAI : SRLI
-                    3'b010: alu_op = 4'h8; // SLTI
-                    3'b011: alu_op = 4'h9; // SLTIU
-                    default: alu_op = 4'h0;
+                    3'b000: alu_op = 5'h0; // ADDI
+                    3'b111: alu_op = 5'h2; // ANDI
+                    3'b110: alu_op = 5'h3; // ORI
+                    3'b100: alu_op = 5'h4; // XORI
+                    3'b001: alu_op = 5'h5; // SLLI
+                    3'b101: alu_op = (funct7[5] == 1'b1) ? 5'h7 : 5'h6; // SRAI : SRLI
+                    3'b010: alu_op = 5'h8; // SLTI
+                    3'b011: alu_op = 5'h9; // SLTIU
+                    default: alu_op = 5'h0;
                 endcase
             end
             7'b0000011: begin // Load
@@ -94,26 +107,26 @@ module rv64i_decode (
                 alu_src    = 1'b1;
                 mem_read   = 1'b1;
                 mem_to_reg = 1'b1;
-                alu_op     = 4'h0; // ADD
+                alu_op     = 5'h0; // ADD
             end
             7'b0100011: begin // Store
                 alu_src   = 1'b1;
                 mem_write = 1'b1;
-                alu_op    = 4'h0; // ADD
+                alu_op    = 5'h0; // ADD
             end
             7'b1100011: begin // Branch
                 branch = 1'b1;
-                alu_op = 4'h1; // SUB
+                alu_op = 5'h1; // SUB
             end
             7'b0110111: begin // LUI
                 reg_write = 1'b1;
                 is_lui    = 1'b1;
-                alu_op    = 4'hA;
+                alu_op    = 5'hA;
             end
             7'b0010111: begin // AUIPC
                 reg_write = 1'b1;
                 is_auipc  = 1'b1;
-                alu_op    = 4'h0;
+                alu_op    = 5'h0;
             end
             7'b1101111: begin // JAL
                 reg_write = 1'b1;
