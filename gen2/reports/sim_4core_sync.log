@@ -1,0 +1,14 @@
+=========================================================
+ GARUDA SEMESTA GEN2 — 4-CORE MULTICORE SYNCHRONIZATION TEST
+=========================================================
+
+=== 4-CORE SYNCHRONIZATION ASSERTIONS ===
+Hart 0 Halted = 1 (Timer IRQ = 0, SW IRQ = 0)
+Hart 1 Halted = 1 (Timer IRQ = 0, SW IRQ = 0)
+Hart 2 Halted = 1 (Timer IRQ = 0, SW IRQ = 0)
+Hart 3 Halted = 1 (Timer IRQ = 0, SW IRQ = 0)
+
+=========================================================
+ >>> ALL 4 HARTS REACHED EBREAK & SYNC PASSED — SUCCESS (PASS) <<<
+=========================================================
+/workspace/tb/garuda_4core_sync_tb.v:54: $finish called at 125000 (1ps)
