@@ -89,3 +89,33 @@ Successfully finished Verilog frontend.
 Parsing SystemVerilog input from `/workspace/rtl/core/rv64i_memory_model.v' to AST representation.
 Generating RTLIL representation for module `\rv64i_memory_model'.
 Warning: Replacing memory \dmem with list of registers. See /workspace/rtl/core/rv64i_memory_model.v:119, /workspace/rtl/core/rv64i_memory_model.v:45
+Successfully finished Verilog frontend.
+
+14. Executing Verilog-2005 frontend: /workspace/rtl/core/garuda_rv64i_core.v
+Parsing SystemVerilog input from `/workspace/rtl/core/garuda_rv64i_core.v' to AST representation.
+Generating RTLIL representation for module `\garuda_rv64i_core'.
+Successfully finished Verilog frontend.
+
+15. Executing Verilog-2005 frontend: /workspace/rtl/multicore/garuda_hart_wrapper.v
+Parsing SystemVerilog input from `/workspace/rtl/multicore/garuda_hart_wrapper.v' to AST representation.
+Generating RTLIL representation for module `\garuda_hart_wrapper'.
+Successfully finished Verilog frontend.
+
+16. Executing Verilog-2005 frontend: /workspace/rtl/multicore/garuda_bus_arbiter.v
+Parsing SystemVerilog input from `/workspace/rtl/multicore/garuda_bus_arbiter.v' to AST representation.
+Generating RTLIL representation for module `\garuda_bus_arbiter'.
+Successfully finished Verilog frontend.
+
+17. Executing Verilog-2005 frontend: /workspace/rtl/multicore/garuda_response_router.v
+Parsing SystemVerilog input from `/workspace/rtl/multicore/garuda_response_router.v' to AST representation.
+Generating RTLIL representation for module `\garuda_response_router'.
+Successfully finished Verilog frontend.
+
+18. Executing Verilog-2005 frontend: /workspace/rtl/multicore/garuda_memory_interconnect.v
+Parsing SystemVerilog input from `/workspace/rtl/multicore/garuda_memory_interconnect.v' to AST representation.
+Generating RTLIL representation for module `\garuda_memory_interconnect'.
+Successfully finished Verilog frontend.
+
+19. Executing Verilog-2005 frontend: /workspace/rtl/memory/garuda_shared_ram.v
+
+/workspace/rtl/memory/garuda_shared_ram.v:98: ERROR: syntax error, unexpected TOK_ID, expecting ',' or ')' or '['
