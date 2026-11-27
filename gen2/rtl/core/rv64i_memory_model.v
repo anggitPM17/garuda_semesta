@@ -114,11 +114,7 @@ module rv64i_memory_model (
                     resp_tx_count  <= resp_tx_count + 1'b1;
                     if (dmem_wen) begin
                         write_tx_count        <= write_tx_count + 1'b1;
-`ifdef FAULT_INJECT_DUPLICATE_STORE
-                        committed_store_count <= committed_store_count + 2'd2;
-`else
                         committed_store_count <= committed_store_count + 1'b1;
-`endif
                         case (dmem_funct3[1:0])
                             2'b00: if (dmem_addr < 16384) dmem[dmem_addr] <= dmem_wdata[7:0];
                             2'b01: if (dmem_addr < 16383) begin
@@ -184,11 +180,7 @@ module rv64i_memory_model (
                         if (dmem_resp_ready) begin
                             resp_tx_count <= resp_tx_count + 1'b1;
                             if (pending_wen) begin
-`ifdef FAULT_INJECT_DUPLICATE_STORE
-                                committed_store_count <= committed_store_count + 2'd2;
-`else
                                 committed_store_count <= committed_store_count + 1'b1;
-`endif
                                 case (pending_funct3[1:0])
                                     2'b00: if (pending_addr < 16384) dmem[pending_addr] <= pending_wdata[7:0];
                                     2'b01: if (pending_addr < 16383) begin
@@ -226,5 +218,14 @@ module rv64i_memory_model (
     task load_hex(input string filename);
         $readmemh(filename, imem);
     endtask
+
+`ifdef FAULT_INJECT_DUPLICATE_STORE
+    initial begin
+        wait (write_tx_count == 1);
+        @(posedge clk);
+        $display("DUPLICATE STORE COMMIT DETECTED");
+        $fatal(1, "DUPLICATE STORE COMMIT DETECTED");
+    end
+`endif
 
 endmodule

@@ -1,0 +1,18 @@
+=========================================================
+ GARUDA SEMESTA GEN2 — FASE 6.7.5.2 HART ID VERIFICATION
+=========================================================
+
+=== AUTOMATED HART ID ASSERTION CHECKS ===
+PASS: HID-01 — Hart 0 mhartid read verified (x10 = 0)
+PASS: HID-02 — Hart 1 mhartid read verified (x10 = 1)
+PASS: HID-03 — Hart 2 mhartid read verified (x10 = 2)
+PASS: HID-04 — Hart 3 mhartid read verified (x10 = 3)
+PASS: HID-05 — Hart ID stability throughout execution verified.
+PASS: HID-06 — MHARTID read-only behavior verified.
+PASS: HID-07 — General purpose register file integrity verified.
+PASS: HID-08 — Pipeline and memory transaction state integrity verified.
+
+=========================================================
+ >>> ALL 8 HART ID TESTS PASSED — SUCCESS (PASS) <<<
+=========================================================
+/workspace/tb/garuda_hart_id_tb.v:156: $finish called at 185000 (1ps)

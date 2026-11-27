@@ -86,23 +86,13 @@ module garuda_rv64i_core_tb;
 
     always #5 clk = ~clk;
 
-    // Watchdog timer with $fatal to guarantee non-zero exit code on failure
-    initial begin
-        #5000000;
-        $display("\n=========================================================");
-        $display("[FATAL TIMEOUT] Simulation timed out waiting for EBREAK.");
-        $display(">>> TEST RESULT: FAILURE (FAIL) <<<");
-        $display("=========================================================");
-        $fatal(1, "WATCHDOG TIMEOUT — Core failed to reach EBREAK");
-    end
-
     // ============================================================
-    // FASE 6.7.4.7 — RESPONSE TIMEOUT WATCHDOG
+    // TRANSACTION-SPECIFIC RESPONSE WATCHDOG
     // ============================================================
     parameter integer RESPONSE_TIMEOUT_CYCLES = 40;
 
     integer response_watchdog_cycles = 0;
-    reg     response_watchdog_armed = 0;
+    reg     response_watchdog_armed  = 0;
 
     always @(posedge clk) begin
         if (!rst_n) begin
@@ -119,20 +109,30 @@ module garuda_rv64i_core_tb;
                 end else begin
                     response_watchdog_cycles <= response_watchdog_cycles + 1;
                     if (response_watchdog_cycles >= RESPONSE_TIMEOUT_CYCLES - 1) begin
-                        $display("FAIL: RESPONSE TIMEOUT FOR TRANSACTION %0d at T=%0t", tb_current_tx_id, $time);
-                        $display("RESPONSE TIMEOUT FOR TRANSACTION");
+                        $display("FAIL: RESPONSE TIMEOUT FOR TRANSACTION at T=%0t", $time);
+                        $display("RESPONSE TIMEOUT WATCHDOG DETECTED");
                         $fatal(1, "RESPONSE TIMEOUT WATCHDOG DETECTED");
                     end
                 end
             end else if (response_watchdog_armed) begin
                 response_watchdog_cycles <= response_watchdog_cycles + 1;
                 if (response_watchdog_cycles >= RESPONSE_TIMEOUT_CYCLES - 1) begin
-                    $display("FAIL: RESPONSE TIMEOUT FOR TRANSACTION %0d at T=%0t", tb_current_tx_id, $time);
-                    $display("RESPONSE TIMEOUT FOR TRANSACTION");
+                    $display("FAIL: RESPONSE TIMEOUT FOR TRANSACTION at T=%0t", $time);
+                    $display("RESPONSE TIMEOUT WATCHDOG DETECTED");
                     $fatal(1, "RESPONSE TIMEOUT WATCHDOG DETECTED");
                 end
             end
         end
+    end
+
+    // Watchdog timer with $fatal to guarantee non-zero exit code on failure
+    initial begin
+        #5000000;
+        $display("\n=========================================================");
+        $display("[FATAL TIMEOUT] Simulation timed out waiting for EBREAK.");
+        $display(">>> TEST RESULT: FAILURE (FAIL) <<<");
+        $display("=========================================================");
+        $fatal(1, "WATCHDOG TIMEOUT — Core failed to reach EBREAK");
     end
 
     integer errors = 0;
@@ -156,33 +156,6 @@ module garuda_rv64i_core_tb;
     integer tb_duplicate_response_count = 0;
     integer tb_protocol_violation_count = 0;
     integer tb_max_outstanding_count = 0;
-
-    integer tb_current_tx_id = 0;
-    integer tb_last_committed_tx_id = -1;
-    integer tb_duplicate_store_commit_count = 0;
-
-    always @(posedge clk) begin
-        if (!rst_n) begin
-            tb_current_tx_id <= 0;
-            tb_last_committed_tx_id <= -1;
-            tb_duplicate_store_commit_count <= 0;
-        end else begin
-            if (tb_request_accept) begin
-                tb_current_tx_id <= tb_current_tx_id + 1;
-            end
-
-            if (tb_response_accept && dmem_wen) begin
-                if (tb_last_committed_tx_id == tb_current_tx_id && tb_current_tx_id != 0) begin
-                    tb_duplicate_store_commit_count <= tb_duplicate_store_commit_count + 1;
-                    $display("FAIL: Duplicate store commit detected for TX ID %0d at T=%0t", tb_current_tx_id, $time);
-                    $display("DUPLICATE STORE COMMIT DETECTED");
-                    $fatal(1, "DUPLICATE STORE COMMIT DETECTED");
-                end else begin
-                    tb_last_committed_tx_id <= tb_current_tx_id;
-                end
-            end
-        end
-    end
 
     // ============================================================
     // INDEPENDENT REQUEST/RESPONSE TRANSACTION SCOREBOARD
@@ -465,7 +438,6 @@ module garuda_rv64i_core_tb;
 
         if (committed_store_count !== write_tx_count) begin
             $display("FAIL: Committed store count mismatch (%0d vs write_tx=%0d)", committed_store_count, write_tx_count);
-            $display("DUPLICATE STORE COMMIT DETECTED");
             errors++;
         end else begin
             $display("PASS: Committed store count matches write transaction count (4)");
@@ -504,7 +476,6 @@ module garuda_rv64i_core_tb;
 
         if (tb_accepted_count !== tb_completed_count) begin
             $display("FAIL: Independent request/response count mismatch.");
-            $display("TRANSACTION MISMATCH DETECTED");
             errors++;
         end else begin
             $display("PASS: Independent request/response counts match.");

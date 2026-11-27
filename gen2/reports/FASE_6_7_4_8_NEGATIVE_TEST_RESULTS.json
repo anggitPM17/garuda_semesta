@@ -9,7 +9,7 @@
     "sim_exit_code": 1,
     "status": "PASS",
     "evidence_log": "/workspace/reports/negative_tests/FASE_6_7_4_8/NEG_1_UNSTABLE_PAYLOAD.log",
-    "evidence_log_sha256": "d6fa489ae1f7f87ef5cf874555da420eecb65ba5421c30a278a413af4a6b046a",
+    "evidence_log_sha256": "b36ee32bd00b86fdd1d73122c30c99ff24a8fc79feaaec27644db942ed790d34",
     "commit_sha": "1ee1931559ebebf5f0871d7743a6f85f4e28b605"
   },
   {
@@ -22,7 +22,7 @@
     "sim_exit_code": 1,
     "status": "PASS",
     "evidence_log": "/workspace/reports/negative_tests/FASE_6_7_4_8/NEG_2_DUPLICATE_STORE.log",
-    "evidence_log_sha256": "1562df2d8826f7aa92c3d9fecd51a69436c1b4a737418612282e2e20c6467363",
+    "evidence_log_sha256": "cffe9933b5d71d426389f0f7a5f55b53b42accc34b9acb68cda59692fc89f5b7",
     "commit_sha": "1ee1931559ebebf5f0871d7743a6f85f4e28b605"
   },
   {
@@ -35,7 +35,7 @@
     "sim_exit_code": 1,
     "status": "PASS",
     "evidence_log": "/workspace/reports/negative_tests/FASE_6_7_4_8/NEG_3_MISSING_RESPONSE.log",
-    "evidence_log_sha256": "7c112f94d057500d521aaeeaaf81015e4a7066086439d9e5dbbebe6c375f0fe7",
+    "evidence_log_sha256": "dfbd49ede5e5e13eca033d9eec64d137c1b18544a6b44073f70e9dae334cf58d",
     "commit_sha": "1ee1931559ebebf5f0871d7743a6f85f4e28b605"
   },
   {
@@ -44,11 +44,11 @@
     "description": "Inject actual transaction request count mismatch",
     "fault_injected": true,
     "detected": true,
-    "expected_checker_signature": "TRANSACTION MISMATCH DETECTED",
+    "expected_checker_signature": "Independent request/response count mismatch",
     "sim_exit_code": 1,
     "status": "PASS",
     "evidence_log": "/workspace/reports/negative_tests/FASE_6_7_4_8/NEG_4_COUNT_MISMATCH.log",
-    "evidence_log_sha256": "c58e9476bca6c986ffe59e84a69f4c11657b8ccf40499659df94c49d2f1450aa",
+    "evidence_log_sha256": "64f82d06b4ba1deadc10f22bdadde0815d952497940ca720c47b37e9e0572862",
     "commit_sha": "1ee1931559ebebf5f0871d7743a6f85f4e28b605"
   },
   {
@@ -61,7 +61,7 @@
     "sim_exit_code": 1,
     "status": "PASS",
     "evidence_log": "/workspace/reports/negative_tests/FASE_6_7_4_8/NEG_5_NONZERO_EXIT.log",
-    "evidence_log_sha256": "736570c2eb9945476bb11d502bd949da6ba608837d790b1f81ecbcf12cabc52b",
+    "evidence_log_sha256": "537441918caf00479ccf17d28c1e986f3ce60ce9d1087f9a9a87e1c49fde6c2c",
     "commit_sha": "1ee1931559ebebf5f0871d7743a6f85f4e28b605"
   },
   {

@@ -2,6 +2,7 @@
 module garuda_rv64i_core (
     input  wire        clk,
     input  wire        rst_n,
+    input  wire [1:0]  hart_id,            // Architectural Hart Identifier (0, 1, 2, 3)
 
     // Instruction Memory Interface (with ready/valid handshake)
     output wire [63:0] imem_addr,
@@ -34,20 +35,17 @@ module garuda_rv64i_core (
 
     // ============================================================
     // DATA MEMORY RESPONSE HANDSHAKE
-    // Unified ready/valid response-consumption handshake
+    // Loop-free unified ready/valid response-consumption handshake
     // ============================================================
 
-    assign dmem_resp_ready =
-        (ex_mem_mem_read || ex_mem_mem_write) &&
-        dmem_resp_ready_in;
+    // Core readiness to consume response in MEM stage
+    assign dmem_resp_ready = (ex_mem_mem_read || ex_mem_mem_write) && dmem_resp_ready_in;
 
-    wire response_fire =
-        dmem_resp_valid &&
-        dmem_resp_ready;
+    // Handshake completion condition (incorporating external backpressure dmem_resp_ready_in)
+    wire response_fire = dmem_resp_valid && dmem_resp_ready_in;
 
-    wire dmem_stall =
-        (ex_mem_mem_read || ex_mem_mem_write) &&
-        !response_fire;
+    // Memory transaction remains in EX/MEM until response is consumed.
+    wire dmem_stall = (ex_mem_mem_read || ex_mem_mem_write) && !response_fire;
 
     // Memory handshake stall signals
     wire imem_stall = imem_valid && (!imem_ready || !imem_resp_valid);
@@ -73,7 +71,8 @@ module garuda_rv64i_core (
     wire [6:0]  id_funct7;
     wire [63:0] id_imm;
     wire [3:0]  id_alu_op;
-    wire        id_alu_src, id_reg_write, id_mem_read, id_mem_write, id_branch, id_jump, id_mem_to_reg, id_is_lui, id_is_auipc, id_is_jalr;
+    wire        id_alu_src, id_reg_write, id_mem_read, id_mem_write, id_branch, id_jump, id_mem_to_reg, id_is_lui, id_is_auipc, id_is_jalr, id_is_csr;
+    wire [11:0] id_csr_addr;
 
     wire [63:0] rs1_data_raw, rs2_data_raw;
 
@@ -86,8 +85,9 @@ module garuda_rv64i_core (
     wire [3:0]  id_ex_alu_op;
     wire        id_ex_alu_src, id_ex_reg_write, id_ex_mem_read, id_ex_mem_write, id_ex_is_ebreak;
 
-    reg         id_ex_branch, id_ex_jump, id_ex_mem_to_reg, id_ex_is_auipc, id_ex_is_jalr;
+    reg         id_ex_branch, id_ex_jump, id_ex_mem_to_reg, id_ex_is_auipc, id_ex_is_jalr, id_ex_is_csr;
     reg  [2:0]  id_ex_funct3;
+    reg  [11:0] id_ex_csr_addr;
 
     // EX Stage Wires
     reg  [63:0] alu_operand_a, alu_operand_b;
@@ -99,8 +99,9 @@ module garuda_rv64i_core (
     wire [63:0] ex_mem_alu_result, ex_mem_rs2_val;
     wire [4:0]  ex_mem_rd;
     wire        ex_mem_reg_write, ex_mem_mem_read, ex_mem_mem_write, ex_mem_is_ebreak;
-    reg         ex_mem_mem_to_reg;
+    reg         ex_mem_mem_to_reg, ex_mem_is_csr;
     reg  [2:0]  ex_mem_funct3;
+    reg  [11:0] ex_mem_csr_addr;
 
     // MEM Stage Wires
     wire [63:0] mem_load_data;
@@ -110,8 +111,11 @@ module garuda_rv64i_core (
     wire [63:0] mem_wb_mem_data, mem_wb_alu_result;
     wire [4:0]  mem_wb_rd;
     wire        mem_wb_reg_write, mem_wb_mem_to_reg, mem_wb_is_ebreak;
+    reg         mem_wb_is_csr;
+    reg  [11:0] mem_wb_csr_addr;
 
     // WB Stage Wires
+    wire [63:0] wb_data_standard;
     wire [63:0] wb_data;
     wire        wb_write_en;
 
@@ -201,7 +205,9 @@ module garuda_rv64i_core (
         .mem_to_reg(id_mem_to_reg),
         .is_lui(id_is_lui),
         .is_auipc(id_is_auipc),
-        .is_jalr(id_is_jalr)
+        .is_jalr(id_is_jalr),
+        .is_csr(id_is_csr),
+        .csr_addr(id_csr_addr)
     );
 
     rv64i_regfile regfile_inst (
@@ -235,7 +241,7 @@ module garuda_rv64i_core (
         .id_ex_rs2(id_ex_rs2)
     );
 
-    // ID/EX Register: Stall ONLY on memory stalls; Flush on load-use hazard stall or branch taken!
+    // ID/EX Register
     rv64i_id_ex_reg id_ex_reg (
         .clk(clk),
         .rst_n(rst_n),
@@ -276,14 +282,18 @@ module garuda_rv64i_core (
             id_ex_mem_to_reg <= 1'b0;
             id_ex_is_auipc   <= 1'b0;
             id_ex_is_jalr    <= 1'b0;
+            id_ex_is_csr     <= 1'b0;
             id_ex_funct3     <= 3'b0;
+            id_ex_csr_addr   <= 12'b0;
         end else if (!imem_stall && !dmem_stall) begin
             id_ex_branch     <= id_branch;
             id_ex_jump       <= id_jump;
             id_ex_mem_to_reg <= id_mem_to_reg;
             id_ex_is_auipc   <= id_is_auipc;
             id_ex_is_jalr    <= id_is_jalr;
+            id_ex_is_csr     <= id_is_csr;
             id_ex_funct3     <= id_funct3;
+            id_ex_csr_addr   <= id_csr_addr;
         end
     end
 
@@ -345,10 +355,14 @@ module garuda_rv64i_core (
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             ex_mem_mem_to_reg <= 1'b0;
+            ex_mem_is_csr     <= 1'b0;
             ex_mem_funct3     <= 3'b0;
+            ex_mem_csr_addr   <= 12'b0;
         end else if (!dmem_stall) begin
             ex_mem_mem_to_reg <= id_ex_mem_to_reg;
+            ex_mem_is_csr     <= id_ex_is_csr;
             ex_mem_funct3     <= id_ex_funct3;
+            ex_mem_csr_addr   <= id_ex_csr_addr;
         end
     end
 
@@ -395,6 +409,16 @@ module garuda_rv64i_core (
         .mem_to_reg_out(mem_wb_mem_to_reg)
     );
 
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            mem_wb_is_csr   <= 1'b0;
+            mem_wb_csr_addr <= 12'b0;
+        end else if (!dmem_stall) begin
+            mem_wb_is_csr   <= ex_mem_is_csr;
+            mem_wb_csr_addr <= ex_mem_csr_addr;
+        end
+    end
+
     // WB Stage: Writeback Unit
     rv64i_writeback writeback_inst (
         .alu_result(mem_wb_alu_result),
@@ -403,9 +427,12 @@ module garuda_rv64i_core (
         .mem_to_reg(mem_wb_mem_to_reg),
         .is_jump(1'b0),
         .rd_addr(mem_wb_rd),
-        .wb_data(wb_data),
+        .wb_data(wb_data_standard),
         .wb_write_en(wb_write_en),
         .reg_write_in(mem_wb_reg_write)
     );
+
+    // CSR Read Data Muxing (mhartid at CSR address 0xF14)
+    assign wb_data = (mem_wb_is_csr && mem_wb_csr_addr == 12'hF14) ? {62'd0, hart_id} : wb_data_standard;
 
 endmodule

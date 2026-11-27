@@ -1,7 +1,7 @@
 =========================================================
  GARUDA SEMESTA GEN2 — FASE 6.7.4.1 HARDENING TEST
 =========================================================
-WARNING: /workspace/rtl/core/rv64i_memory_model.v:227: $readmemh(reports/single_hart_program.hex): Not enough words in the file for the requested range [0:1023].
+WARNING: /workspace/rtl/core/rv64i_memory_model.v:219: $readmemh(reports/single_hart_program.hex): Not enough words in the file for the requested range [0:1023].
 [FAULT INJECTION] Injecting transaction request count mismatch into independent scoreboard...
 
 === COMPREHENSIVE AUTOMATED ASSERTION CHECKS ===
@@ -42,7 +42,6 @@ INFO: TB Completed Responses    = 8
 INFO: TB Outstanding Requests   = 0
 INFO: TB Duplicate Responses     = 0
 FAIL: Independent request/response count mismatch.
-TRANSACTION MISMATCH DETECTED
 PASS: No outstanding transactions remain.
 PASS: No duplicate or unsolicited responses detected.
 INFO: TB Protocol Violations       = 0
@@ -53,6 +52,6 @@ PASS: Outstanding transaction depth is valid.
 =========================================================
  >>> TOTAL ERRORS: 1 — TEST RESULT: FAILURE (FAIL) <<<
 =========================================================
-FATAL: /workspace/tb/garuda_rv64i_core_tb.v:556: ASSERTION FAILURE IN TESTBENCH
+FATAL: /workspace/tb/garuda_rv64i_core_tb.v:527: ASSERTION FAILURE IN TESTBENCH
        Time: 605000  Scope: fixture_neg_4_count_mismatch.tb
 

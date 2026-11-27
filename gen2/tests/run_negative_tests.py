@@ -44,7 +44,7 @@ def main():
         ("NEG_1_UNSTABLE_PAYLOAD", "fixture_neg_1_unstable_payload.v", "Inject actual payload mutation during response backpressure stall", "PAYLOAD STABILITY VIOLATION DETECTED DURING BACKPRESSURE STALL", "RTL_CHECKER"),
         ("NEG_2_DUPLICATE_STORE", "fixture_neg_2_duplicate_store.v", "Inject actual duplicate store commit into memory model", "DUPLICATE STORE COMMIT DETECTED", "RTL_CHECKER"),
         ("NEG_3_MISSING_RESPONSE", "fixture_neg_3_missing_response.v", "Suppress actual response valid signal permanently", "RESPONSE TIMEOUT WATCHDOG DETECTED", "RTL_CHECKER"),
-        ("NEG_4_COUNT_MISMATCH", "fixture_neg_4_count_mismatch.v", "Inject actual transaction request count mismatch", "TRANSACTION MISMATCH DETECTED", "RTL_CHECKER"),
+        ("NEG_4_COUNT_MISMATCH", "fixture_neg_4_count_mismatch.v", "Inject actual transaction request count mismatch", "Independent request/response count mismatch", "RTL_CHECKER"),
         ("NEG_5_NONZERO_EXIT", "fixture_neg_5_nonzero_exit.v", "Force a genuine simulator $fatal exit", "DELIBERATE SIMULATOR FATAL EXIT", "INFRASTRUCTURE_TEST")
     ]
 
@@ -71,6 +71,8 @@ def main():
         bp_cycles = 2
         if test_id == "NEG_2_DUPLICATE_STORE":
             extra_defines = ["-DFAULT_INJECT_DUPLICATE_STORE"]
+        elif test_id == "NEG_1_UNSTABLE_PAYLOAD":
+            extra_defines = ["-DMEM_LATENCY=1"]
         elif test_id in ["NEG_3_MISSING_RESPONSE", "NEG_4_COUNT_MISMATCH"]:
             bp_cycles = 0
 

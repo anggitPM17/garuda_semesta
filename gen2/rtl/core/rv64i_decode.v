@@ -18,14 +18,17 @@ module rv64i_decode (
     output reg         mem_to_reg,
     output reg         is_lui,
     output reg         is_auipc,
-    output reg         is_jalr
+    output reg         is_jalr,
+    output reg         is_csr,
+    output wire [11:0] csr_addr
 );
-    assign opcode = inst[6:0];
-    assign rd     = inst[11:7];
-    assign funct3 = inst[14:12];
-    assign rs1    = inst[19:15];
-    assign rs2    = inst[24:20];
-    assign funct7 = inst[31:25];
+    assign opcode   = inst[6:0];
+    assign rd       = inst[11:7];
+    assign funct3   = inst[14:12];
+    assign rs1      = inst[19:15];
+    assign rs2      = inst[24:20];
+    assign funct7   = inst[31:25];
+    assign csr_addr = inst[31:20];
 
     always @(*) begin
         case (opcode)
@@ -54,6 +57,7 @@ module rv64i_decode (
         is_lui     = 1'b0;
         is_auipc   = 1'b0;
         is_jalr    = 1'b0;
+        is_csr     = 1'b0;
 
         case (opcode)
             7'b0110011: begin // R-type
@@ -120,7 +124,15 @@ module rv64i_decode (
                 jump      = 1'b1;
                 is_jalr   = 1'b1;
             end
-            default: ;
+            7'b1110011: begin // SYSTEM / CSR
+                if (funct3 != 3'b000) begin
+                    reg_write = 1'b1; // CSR read writes value to rd
+                    is_csr    = 1'b1;
+                end
+            end
+            default: begin
+                // Default NOP / Unknown
+            end
         endcase
     end
 endmodule
