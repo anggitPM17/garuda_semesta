@@ -44,6 +44,8 @@ def main():
     sources = [
         "rtl/npu/garuda_systolic_array_8x8.v",
         "rtl/npu/garuda_npu_afu.v",
+        "rtl/npu/garuda_npu_pooling.v",
+        "rtl/npu/garuda_npu_quantizer.v",
         "rtl/npu/garuda_npu_top.v",
         "tb/garuda_npu_tb.v"
     ]
