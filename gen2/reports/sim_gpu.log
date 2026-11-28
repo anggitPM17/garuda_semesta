@@ -1,0 +1,12 @@
+=========================================================
+ GARUDA SEMESTA GEN3 — GPU / VPU SIMULATION TEST
+=========================================================
+VADD Result v3 = 0000000e0000000c0000000a00000008 (Expected: 0000000e_0000000c_0000000a_00000008)
+PASS: Vector Addition (VADD.VV) verified successfully.
+VMUL Result v4 = 000000280000001b0000001000000007 (Expected: 00000028_0000001b_00000010_00000007)
+PASS: Vector Multiplication (VMUL.VV) verified successfully.
+
+=========================================================
+ >>> ALL GEN3 GPU / VPU TESTS PASSED — SUCCESS (PASS) <<<
+=========================================================
+/workspace/tb/garuda_gpu_tb.v:85: $finish called at 90000 (1ps)
