@@ -32,7 +32,7 @@ module garuda_npu_tb;
 
     initial begin
         $display("=========================================================");
-        $display(" GARUDA SEMESTA GEN4 — NPU AI ENGINE SIMULATION TEST");
+        $display(" GARUDA SEMESTA GEN4 — HARDENED NPU AI ENGINE TEST");
         $display("=========================================================");
 
         clk = 0;
@@ -53,19 +53,23 @@ module garuda_npu_tb;
         valid = 1; wen = 1; addr = 64'h10; wdata = 64'h0004_0003_0002_0001; #10;
         valid = 0; #10;
 
-        // Test 3: Trigger NPU Compute Command (AFU Mode = 1 -> ReLU)
+        // Test 3: Load Layer Bias = 50 (0x32) into Bias Register
+        valid = 1; wen = 1; addr = 64'h38; wdata = 64'd50; #10;
+        valid = 0; #10;
+
+        // Test 4: Trigger NPU Compute Command (AFU Mode = 1 -> ReLU)
         valid = 1; wen = 1; addr = 64'h20; wdata = 64'd1; #10;
         valid = 0; #20;
 
-        // Expected Dot Product = (10*1) + (20*2) + (30*3) + (40*4) = 10 + 40 + 90 + 160 = 300 (0x12C)
+        // Expected Tensor Inference = ReLU(DotProduct + Bias) = ReLU(300 + 50) = 350 (0x15E)
         valid = 1; wen = 0; addr = 64'h30; #10;
-        $display("NPU Inference Result = %d (Hex: 0x%h)", uut.afu_activated_out, uut.afu_activated_out);
+        $display("NPU Hardened Tensor Result = %d (Hex: 0x%h)", uut.afu_activated_out, uut.afu_activated_out);
 
-        if (uut.afu_activated_out === 64'd300) begin
-            $display("PASS: NPU 8x8 Systolic Array Dot Product & ReLU Activation verified successfully.");
+        if (uut.afu_activated_out === 64'd350) begin
+            $display("PASS: NPU 8x8 Systolic Array + Bias Addition + ReLU Activation verified successfully.");
         end else begin
-            $display("FAIL: NPU Inference Mismatch!");
-            $fatal(1, "NPU TEST FAILED");
+            $display("FAIL: Hardened NPU Inference Mismatch!");
+            $fatal(1, "NPU HARDENED TEST FAILED");
         end
 
         $display("\n=========================================================");

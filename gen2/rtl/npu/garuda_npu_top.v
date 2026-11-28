@@ -1,5 +1,5 @@
 `timescale 1ns / 1ps
-// GARUDA SEMESTA GEN4 — NPU (Neural Processing Unit) Top Module
+// GARUDA SEMESTA GEN4 — Industrial-Grade NPU Top (Systolic Array, Bias Unit & AFU)
 module garuda_npu_top (
     input  wire        clk,
     input  wire        rst_n,
@@ -18,11 +18,13 @@ module garuda_npu_top (
 
     reg [127:0] weight_buffer;
     reg [127:0] feature_buffer;
-    reg [1:0]   afu_mode;
+    reg [63:0]  bias_buffer;       // Layer Bias addition register
+    reg [1:0]   afu_mode;          // 00=Bypass, 01=ReLU, 10=GELU
     reg         systolic_enable;
     reg         systolic_clear;
 
     wire [63:0] mac_raw_out;
+    wire [63:0] mac_with_bias = mac_raw_out + bias_buffer; // Hardware Bias Addition
     wire [63:0] afu_activated_out;
 
     garuda_systolic_array_8x8 systolic_inst (
@@ -37,7 +39,7 @@ module garuda_npu_top (
 
     garuda_npu_afu afu_inst (
         .afu_type(afu_mode),
-        .data_in(mac_raw_out),
+        .data_in(mac_with_bias), // Pass bias-augmented MAC result into AFU
         .data_out(afu_activated_out)
     );
 
@@ -45,6 +47,7 @@ module garuda_npu_top (
         if (!rst_n) begin
             weight_buffer   <= 128'd0;
             feature_buffer  <= 128'd0;
+            bias_buffer     <= 64'd0;
             afu_mode        <= 2'b01; // Default ReLU
             systolic_enable <= 1'b0;
             systolic_clear  <= 1'b0;
@@ -73,6 +76,7 @@ module garuda_npu_top (
                             npu_done_irq    <= 1'b1;
                         end
                         6'h28: systolic_clear <= 1'b1; // Clear accumulator
+                        6'h38: bias_buffer    <= wdata; // Load layer bias
                         default: ;
                     endcase
                 end else begin
@@ -80,6 +84,7 @@ module garuda_npu_top (
                         6'h00: rdata <= weight_buffer[63:0];
                         6'h10: rdata <= feature_buffer[63:0];
                         6'h30: rdata <= afu_activated_out; // Read NPU tensor inference result
+                        6'h38: rdata <= bias_buffer;
                         default: rdata <= 64'd0;
                     endcase
                 end
