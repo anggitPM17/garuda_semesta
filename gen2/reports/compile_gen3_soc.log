@@ -15,3 +15,12 @@
 /workspace/rtl/core/garuda_rv64i_core.v:189:        : Padding 1 high bits of the port.
 /workspace/rtl/core/garuda_rv64i_core.v:323: warning: Port 1 (alu_op) of rv64i_alu expects 5 bits, got 4.
 /workspace/rtl/core/garuda_rv64i_core.v:323:        : Padding 1 high bits of the port.
+/workspace/rtl/multicore/garuda_4core_top.v:75: warning: Instantiating module garuda_memory_interconnect with dangling input port 64 (crypto_ready) floating.
+/workspace/rtl/multicore/garuda_4core_top.v:75: warning: Instantiating module garuda_memory_interconnect with dangling input port 65 (crypto_rdata) floating.
+/workspace/rtl/multicore/garuda_4core_top.v:75: warning: Instantiating module garuda_memory_interconnect with dangling input port 66 (crypto_resp_valid) floating.
+/workspace/rtl/multicore/garuda_4core_top.v:75: warning: Instantiating module garuda_memory_interconnect with dangling input port 72 (fb_ready) floating.
+/workspace/rtl/multicore/garuda_4core_top.v:75: warning: Instantiating module garuda_memory_interconnect with dangling input port 73 (fb_rdata) floating.
+/workspace/rtl/multicore/garuda_4core_top.v:75: warning: Instantiating module garuda_memory_interconnect with dangling input port 74 (fb_resp_valid) floating.
+/workspace/rtl/multicore/garuda_4core_top.v:75: warning: Instantiating module garuda_memory_interconnect with dangling input port 80 (gpu_ready) floating.
+/workspace/rtl/multicore/garuda_4core_top.v:75: warning: Instantiating module garuda_memory_interconnect with dangling input port 81 (gpu_rdata) floating.
+/workspace/rtl/multicore/garuda_4core_top.v:75: warning: Instantiating module garuda_memory_interconnect with dangling input port 82 (gpu_resp_valid) floating.

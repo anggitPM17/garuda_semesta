@@ -1,5 +1,5 @@
 `timescale 1ns / 1ps
-// GARUDA SEMESTA GEN2 — 4-Core Memory Interconnect with CLINT & Mailbox Address Decoding
+// GARUDA SEMESTA GEN3 — Fully-Decoded Heterogeneous Memory Interconnect (RAM, CLINT, Mailbox, Crypto, Framebuffer, GPU)
 module garuda_memory_interconnect (
     input  wire        clk,
     input  wire        rst_n,
@@ -17,34 +17,28 @@ module garuda_memory_interconnect (
     output wire        h3_ready, output wire [63:0] h3_rdata, output wire h3_resp_valid,
 
     // Shared RAM Subsystem Interface
-    output reg  [63:0] ram_addr,
-    output reg         ram_valid,
-    output reg         ram_wen,
-    output reg  [2:0]  ram_funct3,
-    output reg  [63:0] ram_wdata,
-    input  wire        ram_ready,
-    input  wire [63:0] ram_rdata,
-    input  wire        ram_resp_valid,
+    output reg  [63:0] ram_addr, output reg ram_valid, output reg ram_wen, output reg [2:0] ram_funct3, output reg [63:0] ram_wdata,
+    input  wire        ram_ready, input wire [63:0] ram_rdata, input wire ram_resp_valid,
 
     // CLINT Subsystem Interface
-    output reg  [63:0] clint_addr,
-    output reg         clint_valid,
-    output reg         clint_wen,
-    output reg  [2:0]  clint_funct3,
-    output reg  [63:0] clint_wdata,
-    input  wire        clint_ready,
-    input  wire [63:0] clint_rdata,
-    input  wire        clint_resp_valid,
+    output reg  [63:0] clint_addr, output reg clint_valid, output reg clint_wen, output reg [2:0] clint_funct3, output reg [63:0] clint_wdata,
+    input  wire        clint_ready, input wire [63:0] clint_rdata, input wire clint_resp_valid,
 
     // Mailbox Subsystem Interface
-    output reg  [63:0] mbox_addr,
-    output reg         mbox_valid,
-    output reg         mbox_wen,
-    output reg  [2:0]  mbox_funct3,
-    output reg  [63:0] mbox_wdata,
-    input  wire        mbox_ready,
-    input  wire [63:0] mbox_rdata,
-    input  wire        mbox_resp_valid
+    output reg  [63:0] mbox_addr, output reg mbox_valid, output reg mbox_wen, output reg [2:0] mbox_funct3, output reg [63:0] mbox_wdata,
+    input  wire        mbox_ready, input wire [63:0] mbox_rdata, input wire mbox_resp_valid,
+
+    // Crypto Engine Subsystem Interface
+    output reg  [63:0] crypto_addr, output reg crypto_valid, output reg crypto_wen, output reg [2:0] crypto_funct3, output reg [63:0] crypto_wdata,
+    input  wire        crypto_ready, input wire [63:0] crypto_rdata, input wire crypto_resp_valid,
+
+    // Framebuffer Subsystem Interface
+    output reg  [63:0] fb_addr, output reg fb_valid, output reg fb_wen, output reg [2:0] fb_funct3, output reg [63:0] fb_wdata,
+    input  wire        fb_ready, input wire [63:0] fb_rdata, input wire fb_resp_valid,
+
+    // GPU / VPU Subsystem Interface
+    output reg  [63:0] gpu_addr, output reg gpu_valid, output reg gpu_wen, output reg [2:0] gpu_funct3, output reg [63:0] gpu_wdata,
+    input  wire        gpu_ready, input wire [63:0] gpu_rdata, input wire gpu_resp_valid
 );
 
     wire [3:0] req = {h3_valid, h2_valid, h1_valid, h0_valid};
@@ -59,17 +53,35 @@ module garuda_memory_interconnect (
     reg  [63:0] sel_wdata;
 
     // Address decoding signals
-    wire is_clint = (sel_addr[19:16] == 4'h2); // 0x0002_0000 - 0x0002_FFFF
-    wire is_mbox  = (sel_addr[19:16] == 4'h0 && sel_addr[15:12] == 4'h2); // 0x0000_2000 - 0x0000_20FF
+    wire is_clint  = (sel_addr[19:16] == 4'h2); // 0x0002_0000 - 0x0002_FFFF
+    wire is_mbox   = (sel_addr[19:16] == 4'h0 && sel_addr[15:12] == 4'h2); // 0x0000_2000 - 0x0000_20FF
+    wire is_crypto = (sel_addr[19:16] == 4'h0 && sel_addr[15:12] == 4'h3); // 0x0000_3000 - 0x0000_30FF
+    wire is_fb     = (sel_addr[19:16] == 4'h0 && sel_addr[15:12] == 4'h4); // 0x0000_4000 - 0x0000_40FF
+    wire is_gpu    = (sel_addr[19:16] == 4'h0 && sel_addr[15:12] == 4'h5); // 0x0000_5000 - 0x0000_50FF
 
-    wire selected_ready = is_clint ? clint_ready :
-                          is_mbox  ? mbox_ready  : ram_ready;
+    wire selected_ready = is_clint  ? clint_ready  :
+                          is_mbox   ? mbox_ready   :
+                          is_crypto ? crypto_ready :
+                          is_fb     ? fb_ready     :
+                          is_gpu    ? gpu_ready    : ram_ready;
+
+    wire selected_resp_valid = is_clint  ? clint_resp_valid  :
+                               is_mbox   ? mbox_resp_valid   :
+                               is_crypto ? crypto_resp_valid :
+                               is_fb     ? fb_resp_valid     :
+                               is_gpu    ? gpu_resp_valid    : ram_resp_valid;
+
+    wire [63:0] selected_resp_rdata = is_clint  ? clint_rdata  :
+                                      is_mbox   ? mbox_rdata   :
+                                      is_crypto ? crypto_rdata :
+                                      is_fb     ? fb_rdata     :
+                                      is_gpu    ? gpu_rdata    : ram_rdata;
 
     wire [3:0] transaction_done = {
-        ((is_clint ? clint_resp_valid : is_mbox ? mbox_resp_valid : ram_resp_valid)) && (owner_id == 2'b11),
-        ((is_clint ? clint_resp_valid : is_mbox ? mbox_resp_valid : ram_resp_valid)) && (owner_id == 2'b10),
-        ((is_clint ? clint_resp_valid : is_mbox ? mbox_resp_valid : ram_resp_valid)) && (owner_id == 2'b01),
-        ((is_clint ? clint_resp_valid : is_mbox ? mbox_resp_valid : ram_resp_valid)) && (owner_id == 2'b00)
+        selected_resp_valid && (owner_id == 2'b11),
+        selected_resp_valid && (owner_id == 2'b10),
+        selected_resp_valid && (owner_id == 2'b01),
+        selected_resp_valid && (owner_id == 2'b00)
     };
 
     garuda_bus_arbiter arbiter_inst (
@@ -125,7 +137,7 @@ module garuda_memory_interconnect (
     // Subsystem demuxing
     always @(*) begin
         ram_addr   = sel_addr;
-        ram_valid  = sel_valid && !is_clint && !is_mbox;
+        ram_valid  = sel_valid && !is_clint && !is_mbox && !is_crypto && !is_fb && !is_gpu;
         ram_wen    = sel_wen;
         ram_funct3 = sel_funct3;
         ram_wdata  = sel_wdata;
@@ -141,6 +153,24 @@ module garuda_memory_interconnect (
         mbox_wen    = sel_wen;
         mbox_funct3 = sel_funct3;
         mbox_wdata  = sel_wdata;
+
+        crypto_addr   = sel_addr;
+        crypto_valid  = sel_valid && is_crypto;
+        crypto_wen    = sel_wen;
+        crypto_funct3 = sel_funct3;
+        crypto_wdata  = sel_wdata;
+
+        fb_addr   = sel_addr;
+        fb_valid  = sel_valid && is_fb;
+        fb_wen    = sel_wen;
+        fb_funct3 = sel_funct3;
+        fb_wdata  = sel_wdata;
+
+        gpu_addr   = sel_addr;
+        gpu_valid  = sel_valid && is_gpu;
+        gpu_wen    = sel_wen;
+        gpu_funct3 = sel_funct3;
+        gpu_wdata  = sel_wdata;
     end
 
     // Hart readiness assignment
@@ -150,13 +180,10 @@ module garuda_memory_interconnect (
     assign h3_ready = selected_ready && grant[3];
 
     // Response routing
-    wire        shared_resp_valid = is_clint ? clint_resp_valid : is_mbox ? mbox_resp_valid : ram_resp_valid;
-    wire [63:0] shared_resp_rdata = is_clint ? clint_rdata      : is_mbox ? mbox_rdata      : ram_rdata;
-
     wire [3:0] hart_resp_valid;
     garuda_response_router router_inst (
-        .shared_resp_valid(shared_resp_valid),
-        .shared_resp_rdata(shared_resp_rdata),
+        .shared_resp_valid(selected_resp_valid),
+        .shared_resp_rdata(selected_resp_rdata),
         .owner_id(owner_id),
         .hart_resp_valid(hart_resp_valid),
         .hart0_rdata(h0_rdata),
