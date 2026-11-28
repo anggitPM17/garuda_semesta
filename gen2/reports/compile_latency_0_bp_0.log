@@ -1,2 +1,6 @@
 
+rtl/core/garuda_rv64i_core.v:189: warning: Port 9 (alu_op) of rv64i_decode expects 5 bits, got 4.
+rtl/core/garuda_rv64i_core.v:189:        : Padding 1 high bits of the port.
+rtl/core/garuda_rv64i_core.v:323: warning: Port 1 (alu_op) of rv64i_alu expects 5 bits, got 4.
+rtl/core/garuda_rv64i_core.v:323:        : Padding 1 high bits of the port.
 tb/garuda_rv64i_core_tb.v:66: warning: Instantiating module garuda_rv64i_core with dangling input port 3 (hart_id) floating.

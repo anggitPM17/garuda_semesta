@@ -9,8 +9,8 @@
     "sim_exit_code": 1,
     "status": "PASS",
     "evidence_log": "/workspace/reports/negative_tests/FASE_6_7_4_8/NEG_1_UNSTABLE_PAYLOAD.log",
-    "evidence_log_sha256": "b36ee32bd00b86fdd1d73122c30c99ff24a8fc79feaaec27644db942ed790d34",
-    "commit_sha": "1ee1931559ebebf5f0871d7743a6f85f4e28b605"
+    "evidence_log_sha256": "b01d1f83ebd3983f3a5b71e49b5357cd1c314c0405ad3659133e61ec2b95c2f2",
+    "commit_sha": "ef8929dcfe445e268b5216f5acab0997d34c5db3"
   },
   {
     "test_id": "NEG_2_DUPLICATE_STORE",
@@ -22,8 +22,8 @@
     "sim_exit_code": 1,
     "status": "PASS",
     "evidence_log": "/workspace/reports/negative_tests/FASE_6_7_4_8/NEG_2_DUPLICATE_STORE.log",
-    "evidence_log_sha256": "cffe9933b5d71d426389f0f7a5f55b53b42accc34b9acb68cda59692fc89f5b7",
-    "commit_sha": "1ee1931559ebebf5f0871d7743a6f85f4e28b605"
+    "evidence_log_sha256": "16ae9bd228582334c5a94c687cc7b53ee914c071790e86d7b1d159a1d17f4be3",
+    "commit_sha": "ef8929dcfe445e268b5216f5acab0997d34c5db3"
   },
   {
     "test_id": "NEG_3_MISSING_RESPONSE",
@@ -35,8 +35,8 @@
     "sim_exit_code": 1,
     "status": "PASS",
     "evidence_log": "/workspace/reports/negative_tests/FASE_6_7_4_8/NEG_3_MISSING_RESPONSE.log",
-    "evidence_log_sha256": "dfbd49ede5e5e13eca033d9eec64d137c1b18544a6b44073f70e9dae334cf58d",
-    "commit_sha": "1ee1931559ebebf5f0871d7743a6f85f4e28b605"
+    "evidence_log_sha256": "9d7ed1f110d367781c6c26e0722eb6f0160eb1c015b622e13d4f5dcec0afbc7d",
+    "commit_sha": "ef8929dcfe445e268b5216f5acab0997d34c5db3"
   },
   {
     "test_id": "NEG_4_COUNT_MISMATCH",
@@ -48,8 +48,8 @@
     "sim_exit_code": 1,
     "status": "PASS",
     "evidence_log": "/workspace/reports/negative_tests/FASE_6_7_4_8/NEG_4_COUNT_MISMATCH.log",
-    "evidence_log_sha256": "64f82d06b4ba1deadc10f22bdadde0815d952497940ca720c47b37e9e0572862",
-    "commit_sha": "1ee1931559ebebf5f0871d7743a6f85f4e28b605"
+    "evidence_log_sha256": "c1407975f8565104fa9c8fc9dc4283d89c79a81ef5602cee37bbfcbf25a2296a",
+    "commit_sha": "ef8929dcfe445e268b5216f5acab0997d34c5db3"
   },
   {
     "test_id": "NEG_5_NONZERO_EXIT",
@@ -61,8 +61,8 @@
     "sim_exit_code": 1,
     "status": "PASS",
     "evidence_log": "/workspace/reports/negative_tests/FASE_6_7_4_8/NEG_5_NONZERO_EXIT.log",
-    "evidence_log_sha256": "537441918caf00479ccf17d28c1e986f3ce60ce9d1087f9a9a87e1c49fde6c2c",
-    "commit_sha": "1ee1931559ebebf5f0871d7743a6f85f4e28b605"
+    "evidence_log_sha256": "8b7cf3ea745e59b77bd7cb42c6a1e691f381be152904402a38aee7026bf34370",
+    "commit_sha": "ef8929dcfe445e268b5216f5acab0997d34c5db3"
   },
   {
     "test_id": "NEG_6_STALE_LOG_REJECTION",
@@ -72,13 +72,13 @@
     "detected": true,
     "expected_rejection_errors": [
       "INVALID_COMMIT_SHA_FORMAT",
-      "BRANCH_MISMATCH: expected generation-2, got wrong_branch",
+      "BRANCH_MISMATCH: expected main, got wrong_branch",
       "MISSING_SOURCE_MANIFEST",
       "EMPTY_RESULTS"
     ],
     "status": "PASS",
     "evidence_log": "/workspace/reports/negative_tests/FASE_6_7_4_8/NEG_6_STALE_LOG_REJECTION.log",
-    "evidence_log_sha256": "1f85e1086112e9b5704f00269d41d4daff70ea503d80080c3e595a4040a17f0f",
-    "commit_sha": "1ee1931559ebebf5f0871d7743a6f85f4e28b605"
+    "evidence_log_sha256": "4bdacf781986af7b59bc0267a31b806731a3fe84c0a199d7344313f4d9af467f",
+    "commit_sha": "ef8929dcfe445e268b5216f5acab0997d34c5db3"
   }
 ]
