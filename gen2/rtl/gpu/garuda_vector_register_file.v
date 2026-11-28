@@ -1,19 +1,23 @@
 `timescale 1ns / 1ps
-// GARUDA SEMESTA GEN3 — Vector Register File (VRF)
-// 16 Vector Registers, each 128 bits wide (4 x 32-bit elements or 2 x 64-bit elements)
+// GARUDA SEMESTA GEN3 — Multi-Port Vector Register File (VRF)
+// 16 Vector Registers, 128 bits wide, with 3 Read Ports (rs1, rs2, acc) and 1 Write Port (rd)
 module garuda_vector_register_file (
     input  wire        clk,
     input  wire        rst_n,
 
-    // Read Port 1
+    // Read Port 1 (vs1)
     input  wire [3:0]  rs1_addr,
     output wire [127:0] rs1_data,
 
-    // Read Port 2
+    // Read Port 2 (vs2)
     input  wire [3:0]  rs2_addr,
     output wire [127:0] rs2_data,
 
-    // Write Port
+    // Read Port 3 (Accumulator read / vd)
+    input  wire [3:0]  acc_addr,
+    output wire [127:0] acc_data,
+
+    // Write Port (vd write)
     input  wire [3:0]  rd_addr,
     input  wire [127:0] rd_data,
     input  wire        rd_write_en
@@ -24,6 +28,7 @@ module garuda_vector_register_file (
 
     assign rs1_data = vregs[rs1_addr];
     assign rs2_data = vregs[rs2_addr];
+    assign acc_data = vregs[acc_addr];
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin

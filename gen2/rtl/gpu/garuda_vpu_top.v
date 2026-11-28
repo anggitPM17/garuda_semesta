@@ -1,5 +1,5 @@
 `timescale 1ns / 1ps
-// GARUDA SEMESTA GEN3 — Vector Processing Unit (VPU) Top
+// GARUDA SEMESTA GEN3 — Vector Processing Unit (VPU) Top with Masking & MAC
 module garuda_vpu_top (
     input  wire        clk,
     input  wire        rst_n,
@@ -7,6 +7,7 @@ module garuda_vpu_top (
     // Command / Instruction Interface from Host CPU
     input  wire        v_valid,
     input  wire [2:0]  vop,
+    input  wire [3:0]  vmask,
     input  wire [3:0]  vs1_addr,
     input  wire [3:0]  vs2_addr,
     input  wire [3:0]  vd_addr,
@@ -14,7 +15,7 @@ module garuda_vpu_top (
     output reg         v_done
 );
 
-    wire [127:0] rs1_data, rs2_data, v_alu_result;
+    wire [127:0] rs1_data, rs2_data, acc_data, v_alu_result;
 
     garuda_vector_register_file vrf_inst (
         .clk(clk),
@@ -23,6 +24,8 @@ module garuda_vpu_top (
         .rs1_data(rs1_data),
         .rs2_addr(vs2_addr),
         .rs2_data(rs2_data),
+        .acc_addr(vd_addr),
+        .acc_data(acc_data),
         .rd_addr(vd_addr),
         .rd_data(v_alu_result),
         .rd_write_en(v_valid)
@@ -30,8 +33,10 @@ module garuda_vpu_top (
 
     garuda_vector_alu valu_inst (
         .vop(vop),
+        .vmask(vmask),
         .v_op_a(rs1_data),
         .v_op_b(rs2_data),
+        .v_op_acc(acc_data),
         .v_result(v_alu_result)
     );
 
