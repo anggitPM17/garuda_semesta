@@ -1,0 +1,10 @@
+=========================================================
+ GARUDA SEMESTA GEN4 — NPU AI ENGINE SIMULATION TEST
+=========================================================
+NPU Inference Result =                  300 (Hex: 0x000000000000012c)
+PASS: NPU 8x8 Systolic Array Dot Product & ReLU Activation verified successfully.
+
+=========================================================
+ >>> ALL GEN4 NPU AI ENGINE TESTS PASSED — SUCCESS (PASS) <<<
+=========================================================
+/workspace/tb/garuda_npu_tb.v:74: $finish called at 110000 (1ps)
