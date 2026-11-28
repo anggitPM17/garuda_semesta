@@ -1,85 +1,107 @@
-# GARUDA SEMESTA — 5-Chip Semiconductor Enterprise Monorepo (v12.0 TITAN-TITANIUM Edition)
+# 🦅 GARUDA SEMESTA — OPEN-SOURCE RISC-V MULTICORE & HETEROGENEOUS AI SOC
 
-**Portofolio 5 Raksasa Chip Semikonduktor v12.0 TITAN-TITANIUM GRADE (CPU, GPU, NPU, SECURE, MCU), 5.000.000 Baris Kode (5M LOC), 5 Penemuan Paten Dunia (MITUHU Standards), & 19 Perangkat Lunak Murni Orisinal GARUDA Enterprise SDK**
-
-**Pendiri, Hak Cipta, & Arsitek Utama Sistem**: **Anggit Prasetyo Mituhu**  
-**Lisensi Perangkat Lunak & Perangkat Keras**: Apache License 2.0 (Copyright © 2026 **Anggit Prasetyo Mituhu**)
+Welcome to **Garuda Semesta**, a state-of-the-art open-source 64-bit RISC-V Multicore Processor, GPU Vector Accelerator, and Super-NPU AI Engine family designed for high-performance embedded systems, edge AI inference, and ASIC physical synthesis via OpenLane.
 
 ---
 
-## 🏛️ Rangkuman Ekosistem 5 Raksasa Chip v12.0 TITAN-TITANIUM
+## 🌟 ARCHITECTURAL HIGHLIGHTS & GENERATIONS
 
-Seluruh 5 chip dirancang berbasis soket standar industri **LGA-6096 / BGA-6144 Socket Package** ($25\times25\text{mm}$ Die Area, 6.144 Pins) dengan interkoneksi **3D Mesh Torus Network-on-Chip (NoC)**, **Hexadeca-Channel DDR5 & HBM3e Memory Controller PHY (2048-bit Bus, 3.6 TB/s Bandwidth)**, dan **NVLink-5 Equivalent Multi-Chip Link (1.8 TB/s)**:
+### 🇮🇩 1. Garuda Semesta Gen2 — RV64IM Quad-Core Multiprocessor SoC
+- **ISA**: 64-Bit RISC-V RV64IM (Base Integer + Hardware Multiplication & Division `MUL`, `MULH`, `MULHU`, `DIV`, `DIVU`, `REM`, `REMU`).
+- **Core Complex**: 4 Independent Harts (`hart_id = 0, 1, 2, 3`) with read-only CSR `mhartid` (`0xF14`).
+- **Pipeline**: 5-Stage In-Order Pipeline with Hazard Unit and Data Forwarding.
+- **Interconnect**: 4-Port Crossbar Interconnect with Round-Robin Bus Arbiter (Grant Locking) and Response Router (*Zero Crosstalk*).
+- **Inter-Hart Sync**: Core Local Interruptor (CLINT - `mtime`, `mtimecmp0..3`, `msip0..3`) and Hardware Mailbox with MMIO Mutex Locks (`LOCK_REG0..3`).
 
-| # | Nama Chip & Domain v12.0 | Folder RTL & Netlist | Soket Package | Berkas Masker Silikon GDSII | Berkas Datasheet Resmi |
-| :---: | :--- | :---: | :---: | :---: | :---: |
-| **1** | **GARUDA CPU SoC v12.0** (32-Core Ultra-SMP) | [`cpu/`](cpu/) | BGA-6144 / LGA-6096 | [`gds/garuda_cpu.gds`](gds/garuda_cpu.gds) | [`docs/GARUDA_SEMESTA_SoC_v12_Titanium_Datasheet.md`](docs/GARUDA_SEMESTA_SoC_v12_Titanium_Datasheet.md) |
-| **2** | **GARUDA GPU v12.0 TITAN-TITANIUM** (128-Core Ray-Tracing) | [`gpu/`](gpu/) | BGA-6144 / LGA-6096 | [`gds/garuda_gpu.gds`](gds/garuda_gpu.gds) | [`docs/GARUDA_GPU_v1_Ultimate_Datasheet.md`](docs/GARUDA_GPU_v1_Ultimate_Datasheet.md) |
-| **3** | **GARUDA NPU v12.0 TITAN-TITANIUM** (128-Engine AI Vision) | [`npu/`](npu/) | BGA-6144 / LGA-6096 | [`gds/garuda_npu.gds`](gds/garuda_npu.gds) | [`docs/GARUDA_NPU_v1_Ultimate_Datasheet.md`](docs/GARUDA_NPU_v1_Ultimate_Datasheet.md) |
-| **4** | **GARUDA SECURE v12.0 TITAN-TITANIUM** (Crypto Vault) | [`secure/`](secure/) | BGA-6144 / LGA-6096 | [`gds/garuda_secure.gds`](gds/garuda_secure.gds) | [`docs/GARUDA_SECURE_v1_Ultimate_Datasheet.md`](docs/GARUDA_SECURE_v1_Ultimate_Datasheet.md) |
-| **5** | **GARUDA MCU v12.0 TITAN-TITANIUM** (128-Core RISC-V IoT) | [`mcu/`](mcu/) | BGA-6144 / LGA-6096 | [`gds/garuda_mcu.gds`](gds/garuda_mcu.gds) | [`docs/GARUDA_MCU_v1_Ultimate_Datasheet.md`](docs/GARUDA_MCU_v1_Ultimate_Datasheet.md) |
+### 🎨 2. Garuda Semesta Gen3 — Heterogeneous Super-SoC & GPU Accelerator
+- **Gen3 GPU / VPU**: Vector Processing Unit featuring a 16 x 128-bit Vector Register File (3 Read Ports + 1 Write Port), 4 SIMD Compute Lanes (`VADD.VV`, `VMUL.VV`), Tensor Multiply-Accumulate (`VMACC.VV`), and Vector Masking (`vmask`).
+- **Crypto Security Engine**: Hardware AES-256 and SHA-256 MMIO Accelerator (`0x0000_3000`).
+- **DMA Framebuffer Controller**: 24-bit RGB Video Timing Generator (`hsync`, `vsync`, `rgb_out`) for 2D graphics rendering from Shared RAM (`0x0000_4000`).
 
----
-
-## 💡 5 Penemuan Paten Dunia & Pengungkapan Hak Cipta Resmi (MITUHU STANDARDS)
-
-Monorepo ini secara resmi memublikasikan **Prior Art Public Disclosure & Patent Specifications** untuk 5 Inovasi Arsitektur Semikonduktor Pertama di Dunia ciptaan **Anggit Prasetyo Mituhu** ([`docs/GARUDA_MITUHU_PATENT_DISCLOSURE_SPECIFICATIONS.md`](docs/GARUDA_MITUHU_PATENT_DISCLOSURE_SPECIFICATIONS.md)):
-
-1. **MITUHU-PQC Security Standard**: Sensor Fotonik InP di atas kisi Kyber/Dilithium untuk pemusnahan kunci rahasia sub-nanodetik saat peretasan laser.
-2. **MITUHU-NoC Interconnect Standard**: Router 3D Mesh Torus Self-Healing $1.8\text{ TB/s}$ yang otomatis memulihkan rute jika 1 node mati dalam $<1\text{ Clock Cycle}$.
-3. **MITUHU-PMU Energy Standard**: Pengatur daya FD-SOI + GaN dengan mode tidur Sub-Nanowatt ($<0,1\text{ nA}$) untuk ketahanan baterai sensor IoT 10+ tahun.
-4. **MITUHU-Vision AI Standard**: Jalur Zero-Copy Direct DMA yang menyalurkan video 8K 8-kamera ke SRAM NPU untuk rekonstruksi 3D Occupancy $0,35\text{ ms}$.
-5. **MITUHU-Compute Open GPGPU Standard**: Penerjemah instruksi hardware CUDA PTX ke RISC-V Vector Unit 512 Tensor Cores.
+### 🧠 3. Garuda Semesta Gen4 — Super-NPU AI Edge Accelerator
+- **8x8 Systolic Array**: 64 parallel 16-bit Multiply-Accumulate (MAC) processing elements computing tensor dot-products in a single clock cycle.
+- **Hardware Layer Bias Unit**: Integrated bias addition (`Result = AFU(DotProduct + Bias)`).
+- **Activation Function Unit (AFU)**: Hardware non-linearities (`ReLU` and `GELU`).
+- **2x2 Max/Avg-Pooling Engine**: Hardware feature map dimension reduction (`garuda_npu_pooling.v`).
+- **INT8 Re-Quantization Unit**: Fixed-point multiplier scaling and shift saturation (`garuda_npu_quantizer.v`).
 
 ---
 
-## 🧰 Ekosistem 19 Perangkat Lunak Murni Orisinal GARUDA Enterprise SDK ([`software_sdk/`](software_sdk/))
+## 🧪 VERIFICATION & HARDENING STATUS (DOCKER EDA)
 
-1. **GARUDA GPGPU Parallel Compute Driver (`software_sdk/garuda_compute_driver.py`)**: Driver komputasi paralel GPGPU Murni Orisinal (`garudaMalloc`, `garudaFree`, `garudaMallocManaged` UVM, `garuda_p2p_direct_copy`, `GarudaComputeGraph`, `garuda::wmma_sync` 512 Tensor Cores).
-2. **GARUDA Vision AI Framework (`software_sdk/garuda_vision_ai.py`)**: Pipeline Computer Vision YOLO-v10 8K 240FPS, 3D Spatial Occupancy Network, BEV 3D Feature Transformer, FPN, Kalman Filter Tracker, & Zero-Copy DMA.
-3. **GARUDA Quantum Crypto & PQC Engine (`software_sdk/garuda_crypto_pqc.py`)**: Pengelola Kriptografi NIST PQC Kyber-1024 / Dilithium-5, Kyber Decapsulator, Dilithium MultiSig Verifier, Constant-Time Shield, SP 800-90B TRNG Health Tester, & ChaCha20-Poly1305 AEAD.
-4. **GARUDA RTOS Microkernel C API (`software_sdk/garuda_rtos_kernel.c`)**: Microkernel RTOS deterministik untuk GARUDA MCU RISC-V IoT dengan mode tidur Sub-Nanowatt PMU.
-5. **GARUDA Neural Super-Resolution Engine (`software_sdk/garuda_neural_upscaler.py`)**: Generator frame AI 8K Murni Orisinal, Ray Reconstruction Denoiser, Optical Flow Warp Engine, TAA Halton Jitter Resolver, & HDR10+ Tone Mapper.
-6. **GARUDA Parallel Multi-Chip Comm Library (`software_sdk/garuda_parallel_comm.py`)**: Pustaka komunikasi paralel Murni Orisinal *Ring-AllReduce 1.8 TB/s* (`garudaAllReduce`, `garudaAllGather`, `garudaBroadcast`) dengan *Micro-Chunk Splitting*.
-7. **GARUDA Neural Inference Optimizer Engine (`software_sdk/garuda_ai_optimizer.py`)**: Mesin pengoptimasi grafis AI Murni Orisinal, Kalibrator Kuantisasi FP8 E4M3/E5M2, Dead Code Elimination, & Layer Fusion (`garudaOptimizeGraph`).
-8. **GARUDA Hardware Telemetry Profiler (`software_sdk/garuda_profiler.py`)**: Pemantau Roofline Model FLOPS/Byte, Hardware Bottleneck Detector, Power Cap Governor, Sinyal Suhu, Voltase, Clock 3.5 GHz, dan DVFS Controller.
-9. **GARUDA HSM PKCS#11 C API (`software_sdk/garuda_hsm_pkcs11.c`)**: Standar C API perbankan & hardware wallet kripto PKCS#11 v2.40 (`C_GetInfo`, `C_OpenSession`, `C_Login`, `C_GenerateKeyPair`, `C_WrapKey`, `C_UnwrapKey`, `C_DeriveKey`, `C_EncryptInit`, `C_EncryptUpdate`, `C_DecryptInit`, `C_DecryptUpdate`, `C_DigestInit`, `C_SignInit`, `C_VerifyInit`, `C_GetMechanismList`).
-10. **GARUDA International Standard ATE Hardware Socket Tester (`software_sdk/garuda_ate_socket_tester.py`)**: Mesin penguji hardware ATE (Advantest/Teradyne) untuk kontinuitas 6.144 pin, analisis Diagram Mata Jitter 3.5 GHz ($0.42\text{ ps}$), analisis IR Drop Power Rail, & klasifikasi Binning Chip.
-11. **GARUDA WebAssembly Cross-Compiler (`software_sdk/garuda_wasm_compiler.py`)**: Kompilator biner WebAssembly 128-bit SIMD Vector Encoder (`v128.add`, `v128.sub`, `v128.mul`) untuk browser.
-12. **GARUDA Automated Testbench Suite (`software_sdk/garuda_autoverify_testbench.py`)**: Skrip penguji otomatis 10 software SDK orisinal, Performance Regression Auditor, VRAM Memory Leak Auditor, & Concurrency Streams Auditor.
-13. **GARUDA PyTorch AI Delegate (`software_sdk/garuda_torch_backend.py`)**: Delegasi akselerasi PyTorch/ONNX (`torch.device('garuda:0')`), PyTorch DDP AllReduce Hook, & Autograd Engine Delegate.
-14. **GARUDA ONNX Runtime Provider (`software_sdk/garuda_onnx_provider.py`)**: Eksekutor model AI HuggingFace & TensorFlow (`GarudaExecutionProvider`), Node Fusion Optimizer, & Static Memory Arena.
-15. **GARUDA LLVM Target Backend (`software_sdk/garuda_llvm_driver.py`)**: Driver kompilator `garuda-unknown-elf` untuk Clang & Rust dengan LLVM PassManager `O3` & Graph Coloring RegAlloc.
-16. **GARUDA Clang C++ Plugin (`software_sdk/garuda_clang_driver.cpp`)**: Plugin kompilator C++ murni terintegrasi AST Visitor.
-17. **GARUDA Master CLI (`software_sdk/garuda_cli.py`)**: Perkakas perintah tunggal `garuda-cli` (`status`, `simulate`, `audit`, `gds`, `dashboard`, `benchmark`, `tapeout-check`).
-18. **GARUDA Web System Dashboard (`software_sdk/garuda_dashboard.py`)**: Dasbor monitor web interaktif (`http://localhost:8080`) & REST API Telemetry (`/api/telemetry`).
-19. **GARUDA Hardware Emulator Engine (`software_sdk/garuda_emulator.py`)**: Simulator presisi hardware 3.5 GHz dengan BTB 2-Bit Dynamic Branch Predictor & Register Renaming Table.
-20. **GARUDA Bootloader & OS ([`firmware/`](firmware/))**: Firmware Bootloader (`garuda_bootloader.c` dengan DTB Node Parser & Memory POST) & Actor Microkernel OS (`garuda_os.c` dengan Mailbox Message Queue & Broadcast Channels).
+All design generations are fully verified and signed off using Docker EDA (`garuda-goldenway:v1.0`):
+
+| Test Suite / Matrix | Description | Result |
+| :--- | :--- | :---: |
+| **Multi-Latency x Backpressure Regression** | 20 Configurations (Latencies 0, 1, 3, 5 x Backpressure 0, 1, 2, 4, 8) | **20 / 20 PASS** |
+| **Adversarial Fault Injection (Negative Tests)** | Real fault injection (Payload stability, duplicate store, timeout watchdog, count mismatch, fatal, stale logs) | **6 / 6 PASS** |
+| **Hart ID & CSR `mhartid` Suite** | Architectural Hart ID read-only & register integrity verification (HID-01..HID-08) | **8 / 8 PASS** |
+| **4-Core Multicore Execution** | Parallel execution of Hart 0..3 reaching EBREAK simultaneously | **4 / 4 PASS** |
+| **Inter-Hart Synchronization** | CLINT timer/software interrupts and MMIO Mutex Lock coordination | **PASS** |
+| **Gen3 GPU / VPU SIMD & Tensor MAC** | 128-bit vector arithmetic, `VMACC.VV` Tensor MAC, and vector masking | **PASS** |
+| **Gen3 Heterogeneous Super-SoC** | Fully-wired MMIO interconnect linking 4-Core CPU, GPU, Crypto, FB, CLINT, Mailbox | **PASS** |
+| **Gen4 Super-NPU AI Engine** | 8x8 Systolic Array matrix dot product, Bias, ReLU AFU, Pooling, Re-Quantizer | **PASS** |
 
 ---
 
-## 📊 Status Verifikasi & Audit Resmi Monorepo (100% PASSED)
+## 📁 REPOSITORY STRUCTURE
 
-- 🌐 [`docs/GARUDA_5_Chip_Master_Docker_Report.md`](docs/GARUDA_5_Chip_Master_Docker_Report.md) *(Laporan Signoff Docker Master 5 Chip - Lulus 100% di Docker OpenLane)*
-- 🌐 [`docs/GARUDA_5_Chip_Comprehensive_Audit.md`](docs/GARUDA_5_Chip_Comprehensive_Audit.md) *(Laporan Audit 5 Chip Lulus 100%)*
-- 🌐 [`docs/GARUDA_Silicon_Tapeout_Guarantee.md`](docs/GARUDA_Silicon_Tapeout_Guarantee.md) *(Dokumen Garansi Ready Tapeout)*
-- 🌐 [`docs/GARUDA_NVIDIA_Grade_Certification_Report.md`](docs/GARUDA_NVIDIA_Grade_Certification_Report.md) *(Sertifikasi Standar NVIDIA B200)*
+```
+garuda_semesta/
+├── gen2/
+│   ├── rtl/
+│   │   ├── core/         # RV64IM Core Pipeline, ALU, LSU, Regfile, Hazard Unit
+│   │   ├── multicore/    # Hart Wrapper, Bus Arbiter, Interconnect, Response Router, 4-Core Top
+│   │   ├── memory/       # Shared Main RAM & Boot ROM
+│   │   ├── interrupt/    # CLINT (Timer/MSIP) & Hardware Mailbox / Mutex
+│   │   ├── gpu/          # Gen3 VPU, Vector Register File, SIMD Vector ALU
+│   │   ├── security/     # AES-256 & SHA-256 Crypto Security Engine
+│   │   ├── display/      # DMA Framebuffer 24-bit RGB Video Controller
+│   │   ├── npu/          # Gen4 NPU 8x8 Systolic Array, AFU, Pooling, Quantizer
+│   │   └── soc/          # Gen3 Heterogeneous Super-SoC Top
+│   ├── tb/               # Comprehensive Verilog Testbenches
+│   ├── tests/            # Automated Python Test Runners & Evidence Validator
+│   ├── scripts/          # Latency Regression & OpenLane Synthesis Scripts
+│   ├── openlane/         # ASIC Physical Synthesis Configuration (config.json)
+│   ├── docs/             # Architecture Specifications (4-Core, RV64IM, AXI4, GPU, NPU)
+│   └── reports/          # Formal Release Gate Reports, Manifests & JSON Evidence
+└── README.md
+```
 
 ---
 
-## 🛡️ Jaminan Mutu, Sertifikasi & Syarat Kerjasama Lisensi Komersial
+## 🚀 QUICK START & RUNNING TESTS IN DOCKER
 
-### 1. Lisensi Sumber Terbuka (Open-Source License)
-Proyek ini dipublikasikan di bawah **Apache License 2.0**.
-Hak Cipta © 2026 **Anggit Prasetyo Mituhu**. Seluruh hak dilindungi undang-undang. Siapa pun berhak mempelajari, menggunakan, dan memodifikasi kode sumber ini sesuai ketentuan lisensi Apache 2.0.
+To execute the complete multicore and AI simulation suite in Docker:
 
-### 2. Syarat Kerjasama & Lisensi Komersial Enterprise (Commercial Licensing Terms)
-- **Model Lisensi IP Core (IP Licensing Model)**:
-  Hak Cipta arsitektur RTL Verilog tetap dipegang oleh **Anggit Prasetyo Mituhu**. Klien komersial membeli lisensi penggunaan IP Core (*Upfront License Fee*) dan membayar royalti per keping chip (*Per-Chip Royalty Fee*).
-- **Porting PDK Kustom (Foundry Custom PDK Porting)**:
-  Kode RTL Verilog GARUDA bersifat *Process Node Agnostic*:
-  - **TSMC N3 (3nm) / N4P (4nm) / N7 (7nm)**
-  - **Intel 18A / 20A Foundry Services**
-  - **Samsung 3nm / 4nm GAA Architecture**
-  - **GlobalFoundries 12nm / 22FDX**
-  - **SkyWater 130nm / GF180nm Open-Source PDK**
+```bash
+# 1. Run Single-Hart Multi-Latency Regression Matrix (20 Configs)
+python gen2/scripts/run_latency_tests.py
+
+# 2. Run Adversarial Fault Injection Negative Test Suite (6 Faults)
+python gen2/tests/run_negative_tests.py
+
+# 3. Run Hart ID Verification Suite (HID-01 to HID-08)
+python gen2/tests/run_hart_id_tests.py
+
+# 4. Run 4-Core Multicore Execution Test
+python gen2/tests/run_4core_tests.py
+
+# 5. Run 4-Core Inter-Hart Synchronization Test (CLINT & Mailbox)
+python gen2/tests/run_4core_sync_tests.py
+
+# 6. Run Gen3 GPU SIMD & Tensor MAC Verification
+python gen2/tests/run_gpu_tests.py
+
+# 7. Run Gen3 Heterogeneous Super-SoC Verification
+python gen2/tests/run_gen3_soc_tests.py
+
+# 8. Run Gen4 Super-NPU AI Engine Verification
+python gen2/tests/run_npu_tests.py
+```
+
+---
+
+## 📜 LICENSE
+
+Licensed under the MIT License. See `LICENSE` for details.

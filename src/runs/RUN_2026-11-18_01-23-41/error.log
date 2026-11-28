@@ -1,5 +1,0 @@
-Subprocess had a non-zero exit.
-Last 1 line(s):
-Run 'yosys -h' for help.
-
-Full log file: 'src/runs/RUN_2026-11-18_01-23-41/05-yosys-jsonheader/yosys-jsonheader.log'
