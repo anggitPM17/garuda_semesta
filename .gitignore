@@ -9,6 +9,10 @@ src/runs/
 *.def
 *.def.tmp
 
+# Icarus Verilog compiled build binaries
+*.vvp
+build/
+
 # Private Local Oscilloscope & Waveform Tools (Anggit Prasetyo Mituhu Local Private Assets)
 *.vcd
 *_audit_report.md

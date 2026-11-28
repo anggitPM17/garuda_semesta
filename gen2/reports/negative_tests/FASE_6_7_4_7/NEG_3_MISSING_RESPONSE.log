@@ -1,0 +1,19 @@
+=========================================================
+ GARUDA SEMESTA GEN2 — FASE 6.7.4.1 HARDENING TEST
+=========================================================
+WARNING: /workspace/rtl/core/rv64i_memory_model.v:227: $readmemh(reports/single_hart_program.hex): Not enough words in the file for the requested range [0:1023].
+[FAULT INJECTION] Suppressing response valid signal permanently...
+FAIL: More than one outstanding transaction at T=235000
+FAIL: More than one outstanding transaction at T=245000
+FAIL: More than one outstanding transaction at T=255000
+FAIL: More than one outstanding transaction at T=265000
+FAIL: More than one outstanding transaction at T=275000
+FAIL: More than one outstanding transaction at T=285000
+FAIL: More than one outstanding transaction at T=295000
+FAIL: More than one outstanding transaction at T=305000
+FAIL: More than one outstanding transaction at T=315000
+FAIL: More than one outstanding transaction at T=325000
+FAIL: RESPONSE TIMEOUT — accepted transaction has no response at T=595000
+FATAL: /workspace/tb/garuda_rv64i_core_tb.v:123: RESPONSE TIMEOUT WATCHDOG DETECTED
+       Time: 595000  Scope: fixture_neg_3_missing_response.tb
+

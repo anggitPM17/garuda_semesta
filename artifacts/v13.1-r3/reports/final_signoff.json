@@ -1,0 +1,21 @@
+{
+  "project": "GARUDA SEMESTA",
+  "milestone": "GARUDA TITAN V13.1-R3.3 \u2014 EVIDENCE RECOVERY & SIGN-OFF",
+  "timestamp_utc": "2026-11-21T15:00:05Z",
+  "host_environment": "linux",
+  "overall_status": "FAIL",
+  "exit_code": 1,
+  "stage_results": {
+    "tb_garuda_v125_branch_jump": "PASS",
+    "tb_garuda_v033_interconnect": "PASS",
+    "tb_garuda_v033_uart": "PASS",
+    "tb_cpu_load_store_v123": "TIMEOUT",
+    "tb_garuda_v131_full_soc": "NOT_RUN"
+  },
+  "assertions_verified": [
+    "BRANCH_JUMP_ASSERTION_PASS",
+    "INTERCONNECT_DECODE_ASSERTION_PASS",
+    "UART_WAVEFORM_ASSERTION_PASS"
+  ],
+  "duration_seconds": 181.614
+}

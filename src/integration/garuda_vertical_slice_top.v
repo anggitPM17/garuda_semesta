@@ -1,15 +1,13 @@
 // =========================================================================
-// GARUDA SEMESTA — VERTICAL SLICE HARDWARE INTEGRATION TOP (v12.3.2-R6.2)
+// GARUDA SEMESTA — VERTICAL SLICE TOP-LEVEL MODULE (v12.5.0-64BITFIX)
 // Author & Chief System Architect: Anggit Prasetyo Mituhu
 // Copyright (c) 2026 Anggit Prasetyo Mituhu. All rights reserved.
 // Licensed under the Apache License, Version 2.0
 //
-// Synthesizable End-to-End Vertical Slice Integration Top:
-// - Integrates GARUDA 5-Stage CPU Core Pipeline (Full 64-bit ISA Word Fetch)
-// - Integrates L1 4KB I-Cache (64-bit) & L1 4KB D-Cache (32-bit)
-// - Integrates L2 32KB 4-Way Cache & Scratchpad SRAM
-// - Integrates Multi-Master Arbiter & Main Memory Controller
-// - Executes Compiled GARUDA Instructions from Fetch -> Memory Writeback
+// Synthesizable Vertical Slice Top-Level:
+// - Integrates 5-Stage CPU Pipeline Core (garuda_cpu_pipeline_top)
+// - Integrates Memory Subsystem Top with 64-bit Instruction Word Interface
+// - Integrates L1 Instruction Cache, L1 Data Cache, L2 Cache, and SRAM Controller
 // =========================================================================
 
 `timescale 1ns / 1ps
@@ -21,7 +19,7 @@ module garuda_vertical_slice_top #(
     input  wire                  clk,
     input  wire                  rst_n,
 
-    // External DMA / GPU Secondary Master Access
+    // External DMA Master Interface (Secondary Bus Master)
     input  wire [ADDR_WIDTH-1:0] ext_dma_addr,
     input  wire [DATA_WIDTH-1:0] ext_dma_write_val,
     input  wire [3:0]            ext_dma_byte_en,
@@ -38,7 +36,7 @@ module garuda_vertical_slice_top #(
     output wire                  parity_error_detected
 );
 
-    // CPU Wires (Full 64-bit Instruction Bus - No Truncation)
+    // CPU Wires
     wire [ADDR_WIDTH-1:0] icache_addr;
     wire                  icache_req_valid;
     wire [63:0]           icache_inst_data;
@@ -61,6 +59,7 @@ module garuda_vertical_slice_top #(
     ) u_cpu (
         .clk(clk),
         .rst_n(rst_n),
+        .irq_req(1'b0),
         .icache_addr(icache_addr),
         .icache_req_valid(icache_req_valid),
         .icache_inst_data(icache_inst_data),
@@ -79,7 +78,7 @@ module garuda_vertical_slice_top #(
         .illegal_instruction(illegal_instruction)
     );
 
-    // 2. Memory Subsystem Top (Full 64-bit I-Cache Instruction Bus Integration)
+    // 2. Memory Subsystem Top
     garuda_memory_subsystem_top #(
         .ADDR_WIDTH(32),
         .DATA_WIDTH(32)
@@ -88,7 +87,7 @@ module garuda_vertical_slice_top #(
         .rst_n(rst_n),
         .cpu_inst_addr(icache_addr),
         .cpu_inst_req_valid(icache_req_valid),
-        .cpu_inst_data(icache_inst_data), // Full 64-bit Instruction Bus
+        .cpu_inst_data(icache_inst_data),
         .cpu_inst_hit(icache_valid),
         .cpu_inst_valid(icache_valid),
         .cpu_inst_stall(icache_stall),

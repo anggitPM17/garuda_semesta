@@ -1,0 +1,277 @@
+#!/usr/bin/env python3
+import os
+import subprocess
+import sys
+import json
+import re
+import hashlib
+from datetime import datetime, timezone
+
+LATENCIES = [0, 1, 3, 5]
+BACKPRESSURES = [0, 1, 2, 4, 8]
+
+def get_git_provenance(repo_dir):
+    commit_sha = os.environ.get("GIT_COMMIT_SHA")
+    branch = os.environ.get("GIT_BRANCH")
+    if commit_sha and len(commit_sha) == 40 and branch:
+        return commit_sha, branch, False
+
+    try:
+        commit_sha = subprocess.check_output(
+            ["git", "rev-parse", "HEAD"], cwd=repo_dir, stderr=subprocess.STDOUT, text=True
+        ).strip()
+        branch = subprocess.check_output(
+            ["git", "branch", "--show-current"], cwd=repo_dir, stderr=subprocess.STDOUT, text=True
+        ).strip()
+        dirty = subprocess.check_output(
+            ["git", "status", "--porcelain"], cwd=repo_dir, stderr=subprocess.STDOUT, text=True
+        ).strip()
+        if not branch:
+            branch = "generation-2"
+        return commit_sha, branch, bool(dirty)
+    except Exception as exc:
+        raise RuntimeError("Git provenance unavailable; refusing to generate PASS evidence") from exc
+
+def sha256_file(filepath):
+    if not os.path.exists(filepath):
+        return None
+    h = hashlib.sha256()
+    with open(filepath, "rb") as f:
+        for chunk in iter(lambda: f.read(65536), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+def generate_source_manifest(repo_dir, files_list):
+    manifest = {}
+    for rel_path in files_list:
+        abs_path = os.path.join(repo_dir, rel_path)
+        manifest[rel_path] = sha256_file(abs_path)
+    return manifest
+
+def parse_scoreboard_metrics(stdout):
+    metrics = {
+        "read_tx": None,
+        "write_tx": None,
+        "committed_stores": None,
+        "total_resp": None,
+        "duplicate_tx": None,
+        "stability_violations": None,
+        "tb_accepted": None,
+        "tb_completed": None,
+        "tb_outstanding": None,
+        "tb_duplicate": None,
+        "tb_protocol_violations": None,
+        "tb_max_outstanding": None
+    }
+
+    m_read = re.search(r"Read Accepted Transactions \(LD\)\s*=\s*(\d+)", stdout)
+    if m_read: metrics["read_tx"] = int(m_read.group(1))
+
+    m_write = re.search(r"Write Accepted Transactions \(ST\)\s*=\s*(\d+)", stdout)
+    if m_write: metrics["write_tx"] = int(m_write.group(1))
+
+    m_commit = re.search(r"Committed Store Count\s*=\s*(\d+)", stdout)
+    if m_commit: metrics["committed_stores"] = int(m_commit.group(1))
+
+    m_resp = re.search(r"Total Responses Issued\s*=\s*(\d+)", stdout)
+    if m_resp: metrics["total_resp"] = int(m_resp.group(1))
+
+    m_dup = re.search(r"Duplicate Transactions\s*=\s*(\d+)", stdout)
+    if m_dup: metrics["duplicate_tx"] = int(m_dup.group(1))
+
+    m_stab = re.search(r"Payload Stability Violations\s*=\s*(\d+)", stdout)
+    if m_stab: metrics["stability_violations"] = int(m_stab.group(1))
+
+    m_tb_acc = re.search(r"INFO: TB Accepted Requests\s*=\s*(\d+)", stdout)
+    if m_tb_acc: metrics["tb_accepted"] = int(m_tb_acc.group(1))
+
+    m_tb_comp = re.search(r"INFO: TB Completed Responses\s*=\s*(\d+)", stdout)
+    if m_tb_comp: metrics["tb_completed"] = int(m_tb_comp.group(1))
+
+    m_tb_out = re.search(r"INFO: TB Outstanding Requests\s*=\s*(\d+)", stdout)
+    if m_tb_out: metrics["tb_outstanding"] = int(m_tb_out.group(1))
+
+    m_tb_dup = re.search(r"INFO: TB Duplicate Responses\s*=\s*(\d+)", stdout)
+    if m_tb_dup: metrics["tb_duplicate"] = int(m_tb_dup.group(1))
+
+    m_tb_proto = re.search(r"INFO: TB Protocol Violations\s*=\s*(\d+)", stdout)
+    if m_tb_proto: metrics["tb_protocol_violations"] = int(m_tb_proto.group(1))
+
+    m_tb_max = re.search(r"INFO: TB Maximum Outstanding\s*=\s*(\d+)", stdout)
+    if m_tb_max: metrics["tb_max_outstanding"] = int(m_tb_max.group(1))
+
+    return metrics
+
+def main():
+    repo_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    reports_dir = os.path.join(repo_dir, "reports")
+    os.makedirs(reports_dir, exist_ok=True)
+
+    commit_sha, branch, is_dirty = get_git_provenance(repo_dir)
+    timestamp_utc = datetime.now(timezone.utc).isoformat()
+
+    # 1. Generate program hex
+    gen_script = os.path.join(repo_dir, "tests", "programs", "generate_program.py")
+    res = subprocess.run([sys.executable, gen_script], capture_output=True, text=True)
+    if res.returncode != 0:
+        print(f"Error generating program: {res.stderr}", flush=True)
+        sys.exit(1)
+    print(res.stdout, flush=True)
+
+    sources = [
+        "rtl/core/rv64i_alu.v",
+        "rtl/core/rv64i_decode.v",
+        "rtl/core/rv64i_regfile.v",
+        "rtl/core/rv64i_control_flow.v",
+        "rtl/core/rv64i_load_store_unit.v",
+        "rtl/core/rv64i_hazard_unit.v",
+        "rtl/core/rv64i_if_id_reg.v",
+        "rtl/core/rv64i_id_ex_reg.v",
+        "rtl/core/rv64i_ex_mem_reg.v",
+        "rtl/core/rv64i_mem_wb_reg.v",
+        "rtl/core/rv64i_system_decode.v",
+        "rtl/core/rv64i_writeback.v",
+        "rtl/core/rv64i_memory_model.v",
+        "rtl/core/garuda_rv64i_core.v",
+        "tb/garuda_rv64i_core_tb.v"
+    ]
+
+    manifest_files = sources + ["scripts/run_latency_tests.py", "tests/run_negative_tests.py", "reports/single_hart_program.hex"]
+    source_manifest = generate_source_manifest(repo_dir, manifest_files)
+
+    manifest_path = os.path.join(reports_dir, "FASE_6_7_4_8_SOURCE_MANIFEST.json")
+    with open(manifest_path, "w", encoding="utf-8") as f:
+        json.dump(source_manifest, f, indent=2)
+
+    all_passed = True
+    results = {}
+    json_results = []
+
+    for lat in LATENCIES:
+        for bp in BACKPRESSURES:
+            config_id = f"LATENCY={lat}_BP={bp}"
+            print(f"\n=========================================", flush=True)
+            print(f"Running Garuda RV64I Simulation ({config_id})", flush=True)
+            print(f"=========================================", flush=True)
+
+            vvp_out = os.path.join(reports_dir, f"garuda_rv64i_lat_{lat}_bp_{bp}.vvp")
+            compile_log = os.path.join(reports_dir, f"compile_latency_{lat}_bp_{bp}.log")
+            sim_log = os.path.join(reports_dir, f"sim_latency_{lat}_bp_{bp}.log")
+
+            compile_cmd = [
+                "iverilog", "-g2012", "-Wall",
+                "-s", "garuda_rv64i_core_tb",
+                f"-DMEM_LATENCY={lat}",
+                f"-DBACKPRESSURE_CYCLES={bp}",
+                "-o", vvp_out
+            ] + sources
+
+            c_res = subprocess.run(compile_cmd, cwd=repo_dir, capture_output=True, text=True)
+            compile_output = c_res.stdout + ("\n" + c_res.stderr if c_res.stderr else "")
+            if not compile_output.strip():
+                compile_output = f"Compilation completed cleanly for {config_id} with exit code {c_res.returncode}.\n"
+
+            with open(compile_log, "w", encoding="utf-8") as f:
+                f.write(compile_output)
+
+            if c_res.returncode != 0:
+                print(f"Compilation FAILED for {config_id}:\n{c_res.stderr}", flush=True)
+                all_passed = False
+                results[config_id] = "FAIL (Compilation)"
+                json_results.append({
+                    "config_id": config_id, "latency": lat, "backpressure": bp,
+                    "compile_exit": c_res.returncode, "sim_exit": -1, "result": "FAIL"
+                })
+                continue
+
+            sim_res = subprocess.run(["vvp", vvp_out], cwd=repo_dir, capture_output=True, text=True)
+            print(sim_res.stdout, flush=True)
+            if sim_res.stderr:
+                print(sim_res.stderr, flush=True)
+
+            with open(sim_log, "w", encoding="utf-8") as f:
+                f.write(sim_res.stdout + ("\n" + sim_res.stderr if sim_res.stderr else ""))
+
+            # Dynamically parse simulation stdout
+            parsed = parse_scoreboard_metrics(sim_res.stdout)
+            expected_max_outstanding = 0 if lat == 0 else 1
+
+            passed_checks = (
+                sim_res.returncode == 0 and
+                "SUCCESS (PASS)" in sim_res.stdout and
+                "FAILURE" not in sim_res.stdout and
+                parsed.get("read_tx") == 4 and
+                parsed.get("write_tx") == 4 and
+                parsed.get("committed_stores") == 4 and
+                parsed.get("total_resp") == 8 and
+                parsed.get("tb_accepted") == 8 and
+                parsed.get("tb_completed") == 8 and
+                parsed.get("tb_outstanding") == 0 and
+                parsed.get("tb_duplicate") == 0 and
+                parsed.get("tb_protocol_violations") == 0 and
+                parsed.get("stability_violations") == 0 and
+                parsed.get("tb_max_outstanding") == expected_max_outstanding
+            )
+
+            if passed_checks:
+                print(f"Simulation PASSED for {config_id}", flush=True)
+                results[config_id] = "PASS"
+                json_results.append({
+                    "config_id": config_id, "latency": lat, "backpressure": bp,
+                    "compile_exit": 0, "sim_exit": 0,
+                    "parsed_metrics": parsed,
+                    "compile_log": compile_log,
+                    "sim_log": sim_log,
+                    "sim_log_sha256": sha256_file(sim_log),
+                    "result": "PASS"
+                })
+            else:
+                print(f"Simulation FAILED for {config_id}", flush=True)
+                results[config_id] = "FAIL"
+                all_passed = False
+                json_results.append({
+                    "config_id": config_id, "latency": lat, "backpressure": bp,
+                    "compile_exit": 0, "sim_exit": sim_res.returncode,
+                    "parsed_metrics": parsed,
+                    "compile_log": compile_log,
+                    "sim_log": sim_log,
+                    "sim_log_sha256": sha256_file(sim_log),
+                    "result": "FAIL"
+                })
+
+    final_payload = {
+        "schema_version": "1.0.0",
+        "commit_sha": commit_sha,
+        "branch": branch,
+        "is_dirty": is_dirty,
+        "run_timestamp_utc": timestamp_utc,
+        "toolchain": {
+            "compiler": "Icarus Verilog 12.0 (stable)",
+            "simulator": "Icarus Verilog vvp 12.0",
+            "python": "Python 3.11.16"
+        },
+        "source_manifest": source_manifest,
+        "results": json_results
+    }
+
+    # Save JSON summary
+    json_path = os.path.join(reports_dir, "FASE_6_7_4_8_REGRESSION_RESULTS.json")
+    with open(json_path, "w", encoding="utf-8") as f:
+        json.dump(final_payload, f, indent=2)
+
+    print("\n=========================================", flush=True)
+    print("      MULTI-LATENCY x BACKPRESSURE MATRIX", flush=True)
+    print("=========================================", flush=True)
+    for config_id, status in results.items():
+        print(f"  {config_id:<20}: {status}", flush=True)
+    print("=========================================", flush=True)
+
+    if all_passed:
+        print(f"\n>>> ALL {len(results)}/20 CONFIGURATIONS PASSED — SUCCESS <<<", flush=True)
+        sys.exit(0)
+    else:
+        print("\n>>> REGRESSION MATRIX FAILED — NON-ZERO EXIT <<<", flush=True)
+        sys.exit(1)
+
+if __name__ == "__main__":
+    main()

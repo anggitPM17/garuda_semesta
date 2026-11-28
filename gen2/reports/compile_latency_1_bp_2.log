@@ -1,0 +1,2 @@
+
+tb/garuda_rv64i_core_tb.v:66: warning: Instantiating module garuda_rv64i_core with dangling input port 3 (hart_id) floating.

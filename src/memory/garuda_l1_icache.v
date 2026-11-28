@@ -1,13 +1,14 @@
 // =========================================================================
-// GARUDA SEMESTA — L1 4KB INSTRUCTION CACHE MODULE (v12.4.6-R2)
+// GARUDA SEMESTA — L1 4KB INSTRUCTION CACHE MODULE (v12.10.0-FINAL)
 // Author & Chief System Architect: Anggit Prasetyo Mituhu
 // Copyright (c) 2026 Anggit Prasetyo Mituhu. All rights reserved.
 // Licensed under the Apache License, Version 2.0
 //
-// Synthesizable 4 KB L1 Instruction Cache:
-// - 32-bit Address, 64-bit Full GARUDA ISA Instruction Word Output
-// - Direct-Mapped (128 Lines, 32-Byte Line Size = 4 x 64-bit Words per Line)
-// - Zero-lag combinational stall output on miss to freeze PC at exact request address
+// FIX v12.10.0:
+//  - refill_word_cnt reset ONLY in ST_RESP (after refill completes)
+//  - NOT reset in ST_COMPARE (was causing refill to restart every miss)
+//  - NOT reset in ST_IDLE (was causing refill to restart after hit)
+//  - X-safe latched_req_addr gating
 // =========================================================================
 
 `timescale 1ns / 1ps
@@ -74,7 +75,9 @@ module garuda_l1_icache #(
     wire tag_match = valid_array[req_index] && (tag_array[req_index] == req_tag);
 
     // Zero-lag combinational stall to prevent PC increment during miss
-    assign stall = (state == ST_IDLE && req_valid && !tag_match) || (state == ST_COMPARE && !tag_match) || (state == ST_REFILL);
+    assign stall = (state == ST_IDLE && req_valid && !tag_match) ||
+                   (state == ST_COMPARE && !tag_match) ||
+                   (state == ST_REFILL);
 
     integer i;
 
@@ -86,33 +89,36 @@ module garuda_l1_icache #(
             resp_valid <= 1'b0;
             resp_data <= {DATA_WIDTH{1'b0}};
             mem_req_valid <= 1'b0;
-            mem_req_addr <= {ADDR_WIDTH{1'b0}};
-            latched_req_addr <= {ADDR_WIDTH{1'b0}};
+            mem_req_addr <= 32'h8000_0000;
+            latched_req_addr <= 32'h8000_0000;
             refill_word_cnt <= 2'b00;
 
             for (i = 0; i < NUM_LINES; i = i + 1) begin
-                valid_array[i] <= 1'b0;
-                tag_array[i] <= {TAG_BITS{1'b0}};
+                valid_array[i] = 1'b0;
+                tag_array[i] = {TAG_BITS{1'b0}};
             end
         end else begin
             if (flush || invalidate) begin
                 for (i = 0; i < NUM_LINES; i = i + 1) begin
-                    valid_array[i] <= 1'b0;
+                    valid_array[i] = 1'b0;
                 end
             end
 
             state <= next_state;
 
+            // X-safe latched_req_addr
+            if ((req_valid || state == ST_IDLE) && (^req_addr !== 1'bx)) begin
+                latched_req_addr <= req_addr;
+            end
+
             case (state)
                 ST_IDLE: begin
                     resp_valid <= 1'b0;
-                    refill_word_cnt <= 2'b00;
-                    if (req_valid) begin
-                        latched_req_addr <= req_addr;
-                    end
+                    // DO NOT reset refill_word_cnt here
                 end
 
                 ST_COMPARE: begin
+                    resp_valid <= 1'b0;
                     if (tag_match) begin
                         resp_hit <= 1'b1;
                         resp_valid <= 1'b1;
@@ -120,12 +126,13 @@ module garuda_l1_icache #(
                     end else begin
                         resp_hit <= 1'b0;
                         mem_req_valid <= 1'b1;
-                        mem_req_addr <= latched_line_base; // Word 0: latched_base + 0
-                        refill_word_cnt <= 2'b00;
+                        mem_req_addr <= latched_line_base;
+                        // DO NOT reset refill_word_cnt here
                     end
                 end
 
                 ST_REFILL: begin
+                    resp_valid <= 1'b0;
                     if (mem_resp_error) begin
                         valid_array[latched_index] <= 1'b0;
                         mem_req_valid <= 1'b0;
@@ -134,10 +141,12 @@ module garuda_l1_icache #(
                         if (refill_word_cnt == (WORDS_PER_LINE - 1)) begin
                             tag_array[latched_index] <= latched_req_addr[ADDR_WIDTH-1 : INDEX_BITS+OFFSET_BITS];
                             valid_array[latched_index] <= 1'b1;
+                            refill_word_cnt <= 2'b00;
                             mem_req_valid <= 1'b0;
                         end else begin
                             refill_word_cnt <= refill_word_cnt + 1'b1;
                             mem_req_addr <= latched_line_base + ((refill_word_cnt + 1'b1) * 8);
+                            mem_req_valid <= 1'b1;
                         end
                     end
                 end

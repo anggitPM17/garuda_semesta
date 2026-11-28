@@ -1,0 +1,1 @@
+{"schema_version": "1.0.0", "commit_sha": "INVALID_SHA_12345", "branch": "wrong_branch", "run_timestamp_utc": "2026-01-01T00:00:00Z", "toolchain": {"compiler": "iverilog"}, "source_manifest": {}, "results": []}

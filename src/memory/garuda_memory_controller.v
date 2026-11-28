@@ -1,5 +1,5 @@
 // =========================================================================
-// GARUDA SEMESTA — MAIN MEMORY SRAM CONTROLLER MODULE (v12.4.6)
+// GARUDA SEMESTA — MAIN MEMORY SRAM CONTROLLER MODULE (v12.4.7-MCPROBE)
 // Author & Chief System Architect: Anggit Prasetyo Mituhu
 // Copyright (c) 2026 Anggit Prasetyo Mituhu. All rights reserved.
 // Licensed under the Apache License, Version 2.0
@@ -42,7 +42,12 @@ module garuda_memory_controller #(
 
     wire addr_valid = (req_addr >= 32'h8000_0000) && (req_addr < 32'h8000_0000 + MEM_SIZE_BYTES);
 
+    integer i;
     initial begin
+        // Initialize entire SRAM with zero to prevent X-propagation and $readmemh warnings
+        for (i = 0; i < NUM_WORDS; i = i + 1) begin
+            main_sram[i] = 32'h00000000;
+        end
         $readmemh(PROGRAM_HEX, main_sram);
     end
 
@@ -73,6 +78,15 @@ module garuda_memory_controller #(
                     end
                 end
             end
+        end
+    end
+
+    always @(posedge clk) begin
+        if (rst_n && req_valid) begin
+            $display("[SRAM-F28] req_addr=%h word_addr=%0d req_write_en=%b resp_read_data=%h main_sram_0=%h main_sram_1=%h main_sram_2=%h",
+                     req_addr, word_addr, req_write_en, resp_read_data,
+                     main_sram[0], main_sram[1], main_sram[2]);
+            $fflush();
         end
     end
 

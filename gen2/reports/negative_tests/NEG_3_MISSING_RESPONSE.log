@@ -1,0 +1,9 @@
+=========================================================
+ GARUDA SEMESTA GEN2 — FASE 6.7.4.1 HARDENING TEST
+=========================================================
+WARNING: /workspace/rtl/core/rv64i_memory_model.v:219: $readmemh(reports/single_hart_program.hex): Not enough words in the file for the requested range [0:1023].
+[FAULT INJECTION] Suppressing response valid signal permanently...
+FAIL: Payload stability violation at T=205000!
+FATAL: /workspace/tb/garuda_rv64i_core_tb.v:264: PAYLOAD STABILITY VIOLATION DETECTED DURING BACKPRESSURE STALL
+       Time: 205000  Scope: fixture_neg_3_missing_response.tb
+

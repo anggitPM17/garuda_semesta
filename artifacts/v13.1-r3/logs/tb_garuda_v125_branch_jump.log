@@ -1,0 +1,22 @@
+=== COMMAND ===
+/usr/bin/vvp /workspace/build/tb_garuda_v125_branch_jump.vvp
+=== DURATION_SEC ===
+0.038
+=== SIMULATION STDOUT ===
+=========================================================================
+GARUDA SEMESTA V12.5.1 — REAL BRANCH & JUMP EXECUTION TESTBENCH
+Architect & Author: Anggit Prasetyo Mituhu
+=========================================================================
+
+[BRANCH/JUMP TEST] Reset Released. Fetching Real Instructions from Memory Array...
+[BRANCH/JUMP TEST] CPU Halted at PC = 0x80000048. Verifying Register File Statements...
+  r1 =                   10 (Expected 10)
+  r2 =                   10 (Expected 10)
+  r3 =                    0 (Expected 0  - Flushed wrong-path instructions 99 and 88!)
+  r4 =                  500 (Expected 500 - Executed Branch Target instruction!)
+  r5 =                    0 (Expected 0  - Flushed Jump wrong-path instruction 77!)
+BRANCH_JUMP_ASSERTION_PASS: REAL BEQ, JMP & PIPELINE FLUSH 100% VERIFIED!
+/workspace/tests/cpu/tb_garuda_v125_branch_jump.v:123: $finish called at 145000 (1ps)
+
+=== SIMULATION STDERR ===
+

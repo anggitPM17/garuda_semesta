@@ -1,0 +1,5 @@
+
+/workspace/tb/garuda_hart_id_tb.v:87: warning: @* is sensitive to all 4 words in array 'core_halted'.
+/workspace/tb/garuda_hart_id_tb.v:87: warning: @* is sensitive to all 4 words in array 'core_halted'.
+/workspace/tb/garuda_hart_id_tb.v:87: warning: @* is sensitive to all 4 words in array 'core_halted'.
+/workspace/tb/garuda_hart_id_tb.v:87: warning: @* is sensitive to all 4 words in array 'core_halted'.

@@ -1,0 +1,25 @@
+read_verilog -sv /workspace/rtl/core/rv64i_alu.v
+read_verilog -sv /workspace/rtl/core/rv64i_decode.v
+read_verilog -sv /workspace/rtl/core/rv64i_regfile.v
+read_verilog -sv /workspace/rtl/core/rv64i_control_flow.v
+read_verilog -sv /workspace/rtl/core/rv64i_load_store_unit.v
+read_verilog -sv /workspace/rtl/core/rv64i_hazard_unit.v
+read_verilog -sv /workspace/rtl/core/rv64i_if_id_reg.v
+read_verilog -sv /workspace/rtl/core/rv64i_id_ex_reg.v
+read_verilog -sv /workspace/rtl/core/rv64i_ex_mem_reg.v
+read_verilog -sv /workspace/rtl/core/rv64i_mem_wb_reg.v
+read_verilog -sv /workspace/rtl/core/rv64i_system_decode.v
+read_verilog -sv /workspace/rtl/core/rv64i_writeback.v
+read_verilog -sv /workspace/rtl/core/rv64i_memory_model.v
+read_verilog -sv /workspace/rtl/core/garuda_rv64i_core.v
+read_verilog -sv /workspace/rtl/multicore/garuda_hart_wrapper.v
+read_verilog -sv /workspace/rtl/multicore/garuda_bus_arbiter.v
+read_verilog -sv /workspace/rtl/multicore/garuda_response_router.v
+read_verilog -sv /workspace/rtl/multicore/garuda_memory_interconnect.v
+read_verilog -sv /workspace/rtl/memory/garuda_shared_ram.v
+read_verilog -sv /workspace/rtl/interrupt/garuda_clint.v
+read_verilog -sv /workspace/rtl/interrupt/garuda_mailbox.v
+read_verilog -sv /workspace/rtl/multicore/garuda_4core_top.v
+synth -top garuda_4core_top
+write_verilog /workspace/reports/openlane/garuda_4core_top_synth.v
+stat

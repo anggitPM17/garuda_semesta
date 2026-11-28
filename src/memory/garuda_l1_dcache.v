@@ -1,5 +1,5 @@
 // =========================================================================
-// GARUDA SEMESTA — L1 4KB DATA CACHE MODULE (v12.4.6-R2)
+// GARUDA SEMESTA — L1 4KB DATA CACHE MODULE (v12.5.0-XSAFE)
 // Author & Chief System Architect: Anggit Prasetyo Mituhu
 // Copyright (c) 2026 Anggit Prasetyo Mituhu. All rights reserved.
 // Licensed under the Apache License, Version 2.0
@@ -7,7 +7,7 @@
 // Synthesizable 4 KB L1 Data Cache:
 // - 32-bit Address, 32-bit Data Bus, 4-bit Byte Enable
 // - Direct-Mapped / Write-Through to guarantee SRAM consistency
-// - Hybrid combinational & latched memory address/data output for zero-lag write-through
+// - X-safe memory address & valid gating to eliminate X propagation
 // =========================================================================
 
 `timescale 1ns / 1ps
@@ -69,17 +69,19 @@ module garuda_l1_dcache #(
     reg                 valid_array [0:NUM_LINES-1];
     reg [DATA_WIDTH-1:0] data_array  [0:NUM_LINES-1][0:(LINE_SIZE_BYTES/4)-1];
 
-    wire [TAG_BITS-1:0]   req_tag     = req_addr[ADDR_WIDTH-1 : INDEX_BITS+OFFSET_BITS];
-    wire [INDEX_BITS-1:0] req_index   = req_addr[INDEX_BITS+OFFSET_BITS-1 : OFFSET_BITS];
-    wire [2:0]            word_offset = req_addr[OFFSET_BITS-1 : 2];
+    wire [ADDR_WIDTH-1:0] safe_req_addr = (req_valid && rst_n) ? req_addr : 32'h8000_0000;
 
-    wire hit = valid_array[req_index] && (tag_array[req_index] == req_tag);
+    wire [TAG_BITS-1:0]   req_tag     = safe_req_addr[ADDR_WIDTH-1 : INDEX_BITS+OFFSET_BITS];
+    wire [INDEX_BITS-1:0] req_index   = safe_req_addr[INDEX_BITS+OFFSET_BITS-1 : OFFSET_BITS];
+    wire [2:0]            word_offset = safe_req_addr[OFFSET_BITS-1 : 2];
 
-    // Hybrid zero-lag combinational & latched memory assignments
-    assign mem_addr       = (state == ST_IDLE || state == ST_COMPARE) ? ((req_write_en) ? req_addr : {req_addr[ADDR_WIDTH-1:OFFSET_BITS], {OFFSET_BITS{1'b0}}}) : latched_mem_addr;
-    assign mem_write_data = (state == ST_IDLE || state == ST_COMPARE) ? req_write_data : latched_mem_write_data;
-    assign mem_write_en   = (state == ST_COMPARE) ? req_write_en : latched_mem_write_en;
-    assign mem_req_valid  = (state == ST_COMPARE && (!hit || req_write_en)) || mem_req_valid_reg;
+    wire hit = (req_valid && rst_n) ? (valid_array[req_index] && (tag_array[req_index] == req_tag)) : 1'b0;
+
+    // X-safe memory outputs
+    assign mem_addr       = latched_mem_addr;
+    assign mem_write_data = latched_mem_write_data;
+    assign mem_write_en   = latched_mem_write_en;
+    assign mem_req_valid  = rst_n && mem_req_valid_reg;
 
     integer i;
 
@@ -92,17 +94,17 @@ module garuda_l1_dcache #(
             resp_read_data <= {DATA_WIDTH{1'b0}};
             mem_req_valid_reg <= 1'b0;
             latched_mem_write_en <= 1'b0;
-            latched_mem_addr <= {ADDR_WIDTH{1'b0}};
+            latched_mem_addr <= 32'h8000_0000;
             latched_mem_write_data <= {DATA_WIDTH{1'b0}};
 
             for (i = 0; i < NUM_LINES; i = i + 1) begin
-                valid_array[i] <= 1'b0;
-                tag_array[i] <= {TAG_BITS{1'b0}};
+                valid_array[i] = 1'b0;
+                tag_array[i] = {TAG_BITS{1'b0}};
             end
         end else begin
             if (flush || invalidate) begin
                 for (i = 0; i < NUM_LINES; i = i + 1) begin
-                    valid_array[i] <= 1'b0;
+                    valid_array[i] = 1'b0;
                 end
             end
 
@@ -114,7 +116,11 @@ module garuda_l1_dcache #(
                     stall <= 1'b0;
                     mem_req_valid_reg <= 1'b0;
                     latched_mem_write_en <= 1'b0;
-                    if (req_valid) stall <= 1'b1;
+                    if (req_valid) begin
+                        stall <= 1'b1;
+                        latched_mem_addr <= (req_write_en) ? safe_req_addr : {safe_req_addr[ADDR_WIDTH-1:OFFSET_BITS], {OFFSET_BITS{1'b0}}};
+                        latched_mem_write_data <= req_write_data;
+                    end
                 end
 
                 ST_COMPARE: begin
@@ -128,7 +134,7 @@ module garuda_l1_dcache #(
                         stall <= 1'b1;
                         mem_req_valid_reg <= 1'b1;
                         latched_mem_write_en <= req_write_en;
-                        latched_mem_addr <= (req_write_en) ? req_addr : {req_addr[ADDR_WIDTH-1:OFFSET_BITS], {OFFSET_BITS{1'b0}}};
+                        latched_mem_addr <= (req_write_en) ? safe_req_addr : {safe_req_addr[ADDR_WIDTH-1:OFFSET_BITS], {OFFSET_BITS{1'b0}}};
                         latched_mem_write_data <= req_write_data;
 
                         if (req_write_en && hit) begin
@@ -143,6 +149,9 @@ module garuda_l1_dcache #(
                 ST_WRITE_THRU: begin
                     stall <= 1'b1;
                     if (mem_resp_valid) begin
+                        resp_valid <= 1'b1;
+                        resp_hit <= 1'b1;
+                        stall <= 1'b0;
                         mem_req_valid_reg <= 1'b0;
                         latched_mem_write_en <= 1'b0;
                     end
@@ -151,9 +160,6 @@ module garuda_l1_dcache #(
                 ST_REFILL: begin
                     stall <= 1'b1;
                     if (mem_resp_valid) begin
-                        tag_array[req_index] <= req_tag;
-                        valid_array[req_index] <= 1'b1;
-                        data_array[req_index][word_offset] <= mem_read_data;
                         mem_req_valid_reg <= 1'b0;
                     end
                 end
@@ -161,7 +167,6 @@ module garuda_l1_dcache #(
                 ST_RESP: begin
                     resp_hit <= 1'b1;
                     resp_valid <= 1'b1;
-                    resp_read_data <= (latched_mem_write_en) ? latched_mem_write_data : data_array[req_index][word_offset];
                     stall <= 1'b0;
                 end
             endcase
@@ -171,17 +176,31 @@ module garuda_l1_dcache #(
     always @(*) begin
         next_state = state;
         case (state)
-            ST_IDLE: if (req_valid) next_state = ST_COMPARE;
+            ST_IDLE: begin
+                if (req_valid) next_state = ST_COMPARE;
+            end
             ST_COMPARE: begin
                 if (hit && !req_write_en) next_state = ST_IDLE;
                 else if (req_write_en) next_state = ST_WRITE_THRU;
                 else next_state = ST_REFILL;
             end
-            ST_WRITE_THRU: if (mem_resp_valid) next_state = ST_RESP;
-            ST_REFILL: if (mem_resp_valid) next_state = ST_RESP;
+            ST_WRITE_THRU: begin
+                if (mem_resp_valid) next_state = ST_IDLE;
+            end
+            ST_REFILL: begin
+                if (mem_resp_valid) next_state = ST_RESP;
+            end
             ST_RESP: next_state = ST_IDLE;
             default: next_state = ST_IDLE;
         endcase
+    end
+
+    always @(posedge clk) begin
+        if (rst_n) begin
+            $display("[DC] state=%b req_valid=%b req_addr=%h resp_valid=%b resp_read_data=%h stall=%b",
+                     state, req_valid, req_addr, resp_valid, resp_read_data, stall);
+            $fflush();
+        end
     end
 
 endmodule

@@ -1,0 +1,7 @@
+WARNING: src/memory/garuda_memory_controller.v:46: $readmemh(program.hex): Not enough words in the file for the requested range [0:16383].
+=========================================================================
+GARUDA SEMESTA V12.3-R2.2 — CPU LOAD/STORE TRANSACTION ACCEPTANCE TESTBENCH
+Architect & Author: Anggit Prasetyo Mituhu
+=========================================================================
+
+[DEBUG PROGRESS] Cycle 0, PC=0x80000000, halted=0

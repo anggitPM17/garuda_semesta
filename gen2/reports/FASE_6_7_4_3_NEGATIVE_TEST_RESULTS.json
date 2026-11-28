@@ -1,0 +1,55 @@
+[
+  {
+    "test_id": "NEG_1_UNSTABLE_PAYLOAD",
+    "description": "Deliberately mutate address during response backpressure stall",
+    "fault_injected": true,
+    "detected": true,
+    "sim_exit_code": 1,
+    "status": "PASS",
+    "evidence_log": "/workspace/reports/negative_tests/NEG_1_UNSTABLE_PAYLOAD.log"
+  },
+  {
+    "test_id": "NEG_2_DUPLICATE_STORE",
+    "description": "Deliberately commit store twice for single request",
+    "fault_injected": true,
+    "detected": true,
+    "sim_exit_code": 1,
+    "status": "PASS",
+    "evidence_log": "/workspace/reports/negative_tests/NEG_2_DUPLICATE_STORE.log"
+  },
+  {
+    "test_id": "NEG_3_MISSING_RESPONSE",
+    "description": "Deliberately suppress response valid to trigger watchdog timeout",
+    "fault_injected": true,
+    "detected": true,
+    "sim_exit_code": 1,
+    "status": "PASS",
+    "evidence_log": "/workspace/reports/negative_tests/NEG_3_MISSING_RESPONSE.log"
+  },
+  {
+    "test_id": "NEG_4_COUNT_MISMATCH",
+    "description": "Deliberately inject scoreboard transaction count expectation mismatch",
+    "fault_injected": true,
+    "detected": true,
+    "sim_exit_code": 1,
+    "status": "PASS",
+    "evidence_log": "/workspace/reports/negative_tests/NEG_4_COUNT_MISMATCH.log"
+  },
+  {
+    "test_id": "NEG_5_NONZERO_EXIT",
+    "description": "Deliberately trigger $fatal in simulator fixture",
+    "fault_injected": true,
+    "detected": true,
+    "sim_exit_code": 1,
+    "status": "PASS",
+    "evidence_log": "/workspace/reports/negative_tests/NEG_5_NONZERO_EXIT.log"
+  },
+  {
+    "test_id": "NEG_6_STALE_LOG_REJECTION",
+    "description": "Verify runner log validator rejects stale/missing evidence",
+    "fault_injected": true,
+    "detected": true,
+    "status": "PASS",
+    "evidence_log": "/workspace/reports/negative_tests/NEG_6_STALE_LOG_REJECTION.log"
+  }
+]

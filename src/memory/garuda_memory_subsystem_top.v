@@ -177,22 +177,25 @@ module garuda_memory_subsystem_top #(
     wire        l1_resp_valid;
     wire        l2_backpressure;
 
+    wire safe_dcache_valid  = rst_n && (dcache_mem_valid === 1'b1);
+    wire safe_adapter_valid = rst_n && (adapter_l2_req_valid === 1'b1);
+
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             l1_arb_busy <= 1'b0;
             l1_arb_active_master <= 1'b0;
-            latched_l2_req_addr <= 32'd0;
+            latched_l2_req_addr <= 32'h8000_0000;
             latched_l2_req_write_data <= 32'd0;
             latched_l2_req_write_en <= 1'b0;
         end else begin
             if (!l1_arb_busy && !l2_backpressure) begin
-                if (dcache_mem_valid) begin
+                if (safe_dcache_valid) begin
                     l1_arb_busy <= 1'b1;
                     l1_arb_active_master <= 1'b1;
                     latched_l2_req_addr <= dcache_mem_addr;
                     latched_l2_req_write_data <= dcache_mem_write_data;
                     latched_l2_req_write_en <= dcache_mem_write_en;
-                end else if (adapter_l2_req_valid) begin
+                end else if (safe_adapter_valid) begin
                     l1_arb_busy <= 1'b1;
                     l1_arb_active_master <= 1'b0;
                     latched_l2_req_addr <= adapter_l2_req_addr;
@@ -205,10 +208,10 @@ module garuda_memory_subsystem_top #(
         end
     end
 
-    wire [ADDR_WIDTH-1:0] l2_req_addr       = l1_arb_busy ? latched_l2_req_addr : (dcache_mem_valid ? dcache_mem_addr : adapter_l2_req_addr);
+    wire [ADDR_WIDTH-1:0] l2_req_addr       = l1_arb_busy ? latched_l2_req_addr : (safe_dcache_valid ? dcache_mem_addr : adapter_l2_req_addr);
     wire [DATA_WIDTH-1:0] l2_req_write_data = l1_arb_busy ? latched_l2_req_write_data : dcache_mem_write_data;
-    wire                  l2_req_write_en   = l1_arb_busy ? latched_l2_req_write_en : (dcache_mem_valid ? dcache_mem_write_en : 1'b0);
-    wire                  l2_req_valid      = l1_arb_busy | dcache_mem_valid | adapter_l2_req_valid;
+    wire                  l2_req_write_en   = l1_arb_busy ? latched_l2_req_write_en : (safe_dcache_valid ? dcache_mem_write_en : 1'b0);
+    wire                  l2_req_valid      = l1_arb_busy | safe_dcache_valid | safe_adapter_valid;
 
     assign dcache_mem_backpressure = l2_backpressure || (l1_arb_busy && l1_arb_active_master == 1'b0);
     assign adapter_l2_req_ready    = !l2_backpressure && (!l1_arb_busy || l1_arb_active_master == 1'b0);

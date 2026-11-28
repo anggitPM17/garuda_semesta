@@ -1,0 +1,13 @@
+=========================================================
+ GARUDA SEMESTA GEN2 — FASE 6.7.2 HANDSHAKE REPAIR TEST
+=========================================================
+WARNING: rtl/core/rv64i_memory_model.v:227: $readmemh(reports/single_hart_program.hex): Not enough words in the file for the requested range [0:1023].
+PASS: Response valid held stable during backpressure stall.
+
+=========================================================
+[FATAL TIMEOUT] Simulation timed out waiting for EBREAK.
+>>> TEST RESULT: FAILURE (FAIL) <<<
+=========================================================
+FATAL: tb/garuda_rv64i_core_tb.v:85: WATCHDOG TIMEOUT — Core failed to reach EBREAK
+       Time: 5000000000  Scope: garuda_rv64i_core_tb
+
